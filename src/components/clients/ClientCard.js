@@ -10,7 +10,7 @@ const ClientCard = ({ client, onDelete }) => {
   // Helper to format the currency
   const formattedTotalAmount = (parseFloat(client.totalAmount) || 0).toLocaleString('en-US', {
     style: 'currency',
-    currency: 'USD', // You can make this dynamic later
+    currency: 'INR', // You can make this dynamic later
   });
 
   return (
