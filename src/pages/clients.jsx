@@ -9,12 +9,14 @@ import ClientStats from '../components/clients/ClientStats';
 import ClientSearch from '../components/clients/ClientSearch';
 import ClientGrid from '../components/clients/ClientGrid';
 import EmptyClientsState from '../components/clients/EmptyClientState';
+import { useRouter } from 'next/router'; 
 
 const ClientsPage = () => {
   const [clients, setClients] = useState([]); // Start with an empty array
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const router = useRouter(); 
   
   // Fetch clients when the page loads
   useEffect(() => {
@@ -33,6 +35,19 @@ const ClientsPage = () => {
     };
     fetchClients();
   }, []);
+
+
+   useEffect(() => {
+    // router.isReady is true when the router has parsed the URL on the client-side
+    if (router.isReady) {
+      if (router.query.action === 'add') {
+        setShowAddModal(true);
+        // Optional but recommended: clean the URL so the modal doesn't pop up on refresh
+        router.replace('/clients', undefined, { shallow: true });
+      }
+    }
+  }, [router.isReady, router.query]);
+
 
   const filteredClients = useMemo(() =>
     clients.filter(client =>

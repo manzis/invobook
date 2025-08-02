@@ -23,7 +23,7 @@ const formatDate = (dateString) => {
   });
 };
 
-export const InvoiceTemplate = ({ invoiceData }) => {
+export const ModernBlueTemplate = ({ invoiceData }) => {
   const { business, client, invoice, user } = invoiceData;
 
   // Safety check remains crucial

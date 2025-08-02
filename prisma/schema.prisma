@@ -61,6 +61,7 @@ model InvoiceSetting {
   taxRate           Float    @default(0)
   currency          String   @default("USD")
   invoicePrefix     String   @default("INV-")
+  templateName      String   @default("modern-blue") 
   nextInvoiceNumber Int      @default(1)
   defaultNotes      String?
   defaultTerms      String?

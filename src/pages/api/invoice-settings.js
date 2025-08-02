@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       let settings = await prisma.invoiceSetting.findUnique({
         where: { businessId: businessId },
       });
-
+      
       // If no settings exist for this business yet, create and return default ones
       if (!settings) {
         settings = await prisma.InvoiceSetting.create({
