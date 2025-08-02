@@ -170,6 +170,7 @@ const BusinessDetailsForm = ({ onComplete, onBack, isLoading, error }) => {
             onChange={(e) => handleInputChange('country', e.target.value)}
             className="block w-full px-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
+            <option value="US">Nepal</option>
             <option value="US">United States</option>
             <option value="CA">Canada</option>
             <option value="GB">United Kingdom</option>
