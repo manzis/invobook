@@ -11,63 +11,102 @@ export default async function handler(req, res) {
     return res.status(401).json({ message: 'Not authenticated.' });
   }
 
+  let userId;
   try {
     const decoded = verify(authToken, SECRET_KEY);
-    const userId = decoded.userId;
+    userId = decoded.userId;
+    if (!userId) {
+        throw new Error("Invalid token: userId not found.");
+    }
+  } catch (error) {
+    console.error("Authentication error in /api/clients:", error);
+    return res.status(401).json({ message: 'Your session is invalid or has expired.' });
+  }
 
-    // --- UPDATED GET REQUEST: Fetch clients with invoice aggregates ---
-    if (req.method === 'GET') {
-      const clients = await prisma.client.findMany({
-        where: { userId: userId },
-        // Use `include` to fetch related data
-        include: {
-          // We're interested in the `invoices` relation for each client
-          invoices: {
-            select: {
-              total: true, // Select the 'total' field from each invoice
-              date: true,  // Also get the date for "Last Invoice"
+
+  // --- HANDLE GET REQUEST ---
+  if (req.method === 'GET') {
+    try {
+        const clients = await prisma.client.findMany({
+            where: { userId: userId },
+            include: {
+                invoices: {
+                    select: { total: true, date: true, },
+                },
             },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+            orderBy: { createdAt: 'desc' },
+        });
 
-      // --- Post-process the data to calculate the aggregates ---
-      const clientsWithAggregates = clients.map(client => {
-        const totalValue = client.invoices.reduce((sum, inv) => sum + parseFloat(inv.total), 0);
-        const totalInvoices = client.invoices.length;
-        
-        // Find the most recent invoice date
-        let lastInvoiceDate = null;
-        if (totalInvoices > 0) {
-            lastInvoiceDate = client.invoices.reduce((latest, inv) => {
-                const invDate = new Date(inv.date);
-                return invDate > latest ? invDate : latest;
-            }, new Date(0)).toISOString().split('T')[0];
+        const clientsWithAggregates = clients.map(client => {
+            const totalValue = client.invoices.reduce((sum, inv) => sum + parseFloat(inv.total || 0), 0);
+            const totalInvoices = client.invoices.length;
+            
+            let lastInvoiceDate = null;
+            if (totalInvoices > 0) {
+                lastInvoiceDate = client.invoices.reduce((latest, inv) => {
+                    const invDate = new Date(inv.date);
+                    return invDate > latest ? invDate : latest;
+                }, new Date(0)).toISOString().split('T')[0]; // Get YYYY-MM-DD
+            }
+
+            const { invoices, ...clientData } = client;
+            return {
+                ...clientData,
+                totalInvoices,
+                totalAmount: totalValue,
+                lastInvoice: lastInvoiceDate,
+            };
+        });
+
+        return res.status(200).json(clientsWithAggregates);
+
+    } catch (error) {
+        console.error("Error fetching clients:", error);
+        return res.status(500).json({ message: 'Failed to fetch clients.' });
+    }
+  }
+  
+  // --- **FIXED**: HANDLE POST REQUEST ---
+  else if (req.method === 'POST') {
+    try {
+        const { name, email, phone, company, address, city, taxId } = req.body;
+
+        // Server-side validation
+        if (!name || !email) {
+            return res.status(400).json({ message: 'Client name and email are required.' });
         }
 
-        // We return a new object with the calculated fields,
-        // and remove the original invoices array to keep the payload clean.
-        const { invoices, ...clientData } = client;
-        return {
-          ...clientData,
-          totalInvoices,
-          totalAmount: totalValue,
-          lastInvoice: lastInvoiceDate,
-        };
-      });
+        const newClient = await prisma.client.create({
+            data: {
+                name,
+                email,
+                phone,
+                company,
+                address,
+                city,
+                taxId,
+                user: { connect: { id: userId } }, // Connect to the logged-in user
+            },
+        });
+        
+        // **CRUCIAL**: Send a success response with the newly created client data.
+        // 201 means "Created".
+        return res.status(201).json(newClient);
 
-      return res.status(200).json(clientsWithAggregates);
+    } catch (error) {
+        // Handle potential errors like a non-unique email
+        if (error.code === 'P2002') { // Prisma's unique constraint violation code
+            return res.status(409).json({ message: 'A client with this email already exists.' });
+        }
+        console.error("Error creating client:", error);
+        return res.status(500).json({ message: 'Failed to create client.' });
     }
-    
-    // --- POST Request (no changes needed) ---
-    else if (req.method === 'POST') {
-      // ... your existing create client logic is correct
-    }
-    
-    // ...
-  } catch (error) {
-    console.error("Clients API Error:", error);
-    return res.status(500).json({ message: 'An internal server error occurred.' });
+  }
+  
+  // --- Fallback for other methods ---
+  else {
+    // If the request method is not GET or POST, send a 405 Method Not Allowed response.
+    res.setHeader('Allow', ['GET', 'POST']);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
