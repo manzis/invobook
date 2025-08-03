@@ -23,10 +23,6 @@ export default async function handler(req, res) {
     const blob = await put(filename, req, {
       access: 'public',
       
-      // --- THIS IS THE FIX ---
-      // Tell Vercel Blob to automatically add a unique random suffix
-      // to the filename. This prevents overwrites and is the best practice
-      // for user-uploaded content.
       addRandomSuffix: true, 
     });
 

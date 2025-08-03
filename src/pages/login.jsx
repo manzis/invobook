@@ -1,7 +1,7 @@
 // /pages/login.js
 
 import React from 'react';
-import AuthContainer from '../components/Login/AuthContainer';
+import AuthContainer from '../components/login/AuthContainer';
 
 const LoginPage = () => {
     return <AuthContainer />;

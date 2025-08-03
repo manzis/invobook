@@ -7,4 +7,4 @@ const PlaceholderTab = ({ title, message }) => (
   </div>
 );
 
-export default PlaceholderTab;
+export default PlaceholderTab;  

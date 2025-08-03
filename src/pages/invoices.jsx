@@ -159,7 +159,7 @@ const InvoicesPage = () => {
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-8">
+      <div className="p-8"> 
         <StatsCards invoices={invoices} />
         <InvoiceFilters
           searchTerm={searchTerm}

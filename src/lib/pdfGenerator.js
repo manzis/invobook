@@ -8,7 +8,7 @@ import { put } from '@vercel/blob';
 
 // --- Step 1: Correctly import each template with a UNIQUE name ---
 // IMPORTANT: Please verify these paths are correct for your project structure.
-import { InvoiceTemplate as ModernBlueTemplate } from '../components/pdf/modern-blue'; 
+import { ModernBlueTemplate } from '../components/pdf/modern-blue'; 
 import { ModernGreenTemplate } from '../components/pdf/modern-green';
 import { ClassicTemplate } from '../components/pdf/classic-black';
 
