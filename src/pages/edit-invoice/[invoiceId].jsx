@@ -74,7 +74,7 @@ const EditInvoicePage = () => {
         }
 
         // Format the fetched data to match the form state structure
-        const currencySymbol = CURRENCY_SYMBOLS[fetchedInvoice.currency] || '$';
+        const currencySymbol = 'Rs';
         setInvoiceData({
           ...fetchedInvoice,
           currencySymbol,
