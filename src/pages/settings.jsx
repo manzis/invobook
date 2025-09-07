@@ -1,5 +1,3 @@
-// /pages/settings.jsx (or wherever the file is located)
-
 import React, { useState, useEffect } from 'react';
 import { User, FileText, Palette, Bell, Shield, CreditCard } from 'lucide-react';
 
@@ -13,21 +11,18 @@ import PlaceholderTab from '../components/settings/PlaceholderTab';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  const [isLoadingData, setIsLoadingData] = useState(true); // For initial data fetch
-  const [isSaving, setIsSaving] = useState(false); // For the save button action
-  const [statusMessage, setStatusMessage] = useState(''); // For feedback like "Saved!" or "Error!"
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  // State will be initialized as null and fetched from the API
   const [profileData, setProfileData] = useState(null);
   const [invoiceSettings, setInvoiceSettings] = useState(null);
   const [notifications, setNotifications] = useState(null);
 
-  // Fetch all settings data when the component mounts
   useEffect(() => {
     const fetchAllSettings = async () => {
       setIsLoadingData(true);
       try {
-        // Use Promise.all to fetch data in parallel for better performance
         const [profileRes, invoiceRes] = await Promise.all([
           fetch('/api/profile'),
           fetch('/api/invoice-settings')
@@ -39,14 +34,16 @@ const SettingsPage = () => {
         const fetchedProfile = await profileRes.json();
         const fetchedInvoiceSettings = await invoiceRes.json();
         
-        // Populate the state with fetched profile data
+        // Populate state with the separated address fields
         setProfileData({
           name: fetchedProfile.name || '',
-          email: fetchedProfile.email || '', // Email is read-only
-          phone: fetchedProfile.business?.phone || '', // <-- Get phone from business
+          email: fetchedProfile.email || '',
+          phone: fetchedProfile.business?.phone || '',
           company: fetchedProfile.business?.businessName || '',
           address: fetchedProfile.business?.address || '',
           city: fetchedProfile.business?.city || '',
+          state: fetchedProfile.business?.state || '',       // <-- ADDED
+          zipCode: fetchedProfile.business?.zipCode || '',   // <-- ADDED
           website: fetchedProfile.business?.website || '',
           logoUrl: fetchedProfile.business?.logoUrl || null, 
           taxId: fetchedProfile.business?.taxId || '',
@@ -70,22 +67,21 @@ const SettingsPage = () => {
     };
 
     fetchAllSettings();
-  }, []); // Empty array ensures this runs only once on mount
+  }, []);
+
 const handleSaveChanges = async () => {
   setIsSaving(true);
   setStatusMessage('');
   
-  // Create a mutable copy of the profile data that we can modify
   let profilePayload = { ...profileData };
 
   try {
-    // --- STEP 1: UPLOAD LOGO IF A NEW ONE EXISTS ---
     if (profilePayload.logoFile) {
       setStatusMessage('Uploading logo...');
       
       const file = profilePayload.logoFile;
       const response = await fetch(
-        `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`, // Use encodeURIComponent for safety
+        `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`,
         { method: 'POST', body: file }
       );
 
@@ -94,22 +90,17 @@ const handleSaveChanges = async () => {
         throw new Error(newBlob.message || 'Logo upload failed.');
       }
       
-      // Add the new public URL to our payload object
       profilePayload.logoUrl = newBlob.url;
     }
     
-    // Always remove the temporary file object before sending to the backend
     delete profilePayload.logoFile;
 
-    // --- STEP 2: SAVE ALL SETTINGS ---
     setStatusMessage('Saving settings...');
+    // The profilePayload now automatically includes city, state, and zipCode
     const [profileResponse, invoiceResponse] = await Promise.all([
       fetch('/api/profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          
-          // --- THIS IS THE FIX ---
-          // Send the modified `profilePayload` object, not the original `profileData` state.
           body: JSON.stringify(profilePayload), 
       }),
       fetch('/api/invoice-settings', {
@@ -133,7 +124,6 @@ const handleSaveChanges = async () => {
   }
 };
 
-  // --- Complete tabs array ---
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'invoice', label: 'Invoice Settings', icon: FileText },
@@ -143,7 +133,6 @@ const handleSaveChanges = async () => {
     { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
   
-  // --- Complete renderContent function ---
   const renderContent = () => {
     if (isLoadingData) {
       return (
@@ -160,6 +149,7 @@ const handleSaveChanges = async () => {
     switch (activeTab) {
       case 'profile':
         return <ProfileSettings data={profileData} setData={setProfileData} />;
+      // ... other cases remain the same
       case 'invoice':
         return <InvoiceSettings data={invoiceSettings} setData={setInvoiceSettings} />;
       case 'templates':
@@ -177,10 +167,10 @@ const handleSaveChanges = async () => {
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <SettingsHeader 
           onSave={handleSaveChanges} 
-          isLoading={isSaving} // Pass the correct loading state
+          isLoading={isSaving}
           statusMessage={statusMessage} 
         />
         <div className="flex flex-col lg:flex-row gap-8">

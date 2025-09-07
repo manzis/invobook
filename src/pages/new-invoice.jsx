@@ -135,11 +135,12 @@ useEffect(() => {
         setIsSaving(false);
         return;
     }
-    if (!invoiceData.clientName || !invoiceData.clientEmail) {
-        alert("Client name and email are required.");
+    if (!invoiceData.clientName) {
+        alert("Client name  is required.");
         setIsSaving(false);
         return;
     }
+    
 
     try {
         const payload = { ...invoiceData, status };
@@ -287,7 +288,7 @@ const handleInvoiceDataChange = (field, value) => {
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <InvoiceHeader 
         onCreateInvoice={handleCreateInvoice} 
           isSaving={isSaving} />

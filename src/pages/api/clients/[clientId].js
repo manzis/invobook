@@ -1,5 +1,3 @@
-// /pages/api/clients/[clientId].js (Final version with invoice check)
-
 import { verify } from 'jsonwebtoken';
 import prisma from '../../../lib/prisma';
 
@@ -15,42 +13,62 @@ export default async function handler(req, res) {
   try {
     const decoded = verify(authToken, SECRET_KEY);
     const userId = decoded.userId;
+
+    // First, verify this client actually belongs to the logged-in user for any method
+    const client = await prisma.client.findFirst({
+      where: { id: clientId, userId: userId },
+    });
+
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found or you do not have permission.' });
+    }
+
+    // --- HANDLE PUT REQUEST (UPDATE) ---
+    if (req.method === 'PUT') {
+        const { name, email, company, phone, address, city, taxId } = req.body;
+
+        // Basic validation
+        if (!name || !email) {
+            return res.status(400).json({ message: 'Name and email are required.' });
+        }
+
+        const updatedClient = await prisma.client.update({
+            where: { id: clientId },
+            data: {
+                name,
+                email,
+                company: company || null,
+                phone: phone || null,
+                address: address || null,
+                city: city || null,
+                taxId: taxId || null,
+            },
+        });
+
+        return res.status(200).json(updatedClient);
+    }
     
     // --- HANDLE DELETE REQUEST ---
-    if (req.method === 'DELETE') {
-      // First, verify this client actually belongs to the logged-in user
-      const client = await prisma.client.findFirst({
-        where: { id: clientId, userId: userId },
-      });
-
-      if (!client) {
-        return res.status(404).json({ message: 'Client not found or you do not have permission.' });
-      }
-
-      // --- NEW: Check for associated invoices before deleting ---
+    else if (req.method === 'DELETE') {
       const invoiceCount = await prisma.invoice.count({
-        where: {
-          clientId: clientId,
-        },
+        where: { clientId: clientId },
       });
 
-      // If invoices are found, prevent deletion and return a specific error
       if (invoiceCount > 0) {
-        // HTTP 409 Conflict is the appropriate status code here
         return res.status(409).json({
           message: 'This client cannot be deleted because they are associated with existing invoices.',
         });
       }
       
-      // --- If no invoices are found, proceed with deletion ---
       await prisma.client.delete({
         where: { id: clientId },
       });
       
-      return res.status(204).end(); // 204 No Content is standard for a successful delete
+      return res.status(204).end();
     }
     
-    res.setHeader('Allow', ['DELETE']);
+    // If the method is not PUT or DELETE, it's not allowed
+    res.setHeader('Allow', ['PUT', 'DELETE']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
     
   } catch (error) {

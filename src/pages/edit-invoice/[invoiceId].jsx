@@ -106,7 +106,7 @@ const EditInvoicePage = () => {
   // --- NEW: Function to handle the UPDATE submission ---
   const handleUpdateInvoice = async (status = 'PENDING') => {
     setIsSaving(true);
-    if (!invoiceData.items.length || !invoiceData.clientName || !invoiceData.clientEmail) {
+    if (!invoiceData.items.length || !invoiceData.clientName && !invoiceData.clientCompany) {
       alert("Please ensure the invoice has items and client details.");
       setIsSaving(false);
       return;
@@ -190,7 +190,7 @@ const EditInvoicePage = () => {
   // The JSX is identical to NewInvoicePage, but passes different props to the Header
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-8">
+      <div className="p-4 mb:p-8">
         <EditInvoiceHeader
           isEditing={true} // <-- Tell the header we are in "edit" mode
           onSaveInvoice={handleUpdateInvoice} // <-- Pass the update function

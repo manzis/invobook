@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #003</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7fa;
+            color: #1a202c;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 40px;
+        }
+
+        /* --- Header --- */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .header-left .invoice-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0;
+        }
+
+        .header-left .invoice-status {
+            display: inline-block;
+            background-color: #ef4444;
+            color: #ffffff;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+        }
+
+        .header-right {
+            text-align: right;
+            color: #4a5568;
+        }
+
+        .header-right .billed-by {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .header-right .company-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 5px 0;
+        }
+
+        .header-right .company-address {
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        .foobar-logo {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        
+        .foobar-logo .logo-mark {
+            width: 40px;
+            height: 40px;
+            background-color: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+        
+        .foobar-logo .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b82f6;
+            letter-spacing: 1px;
+        }
+
+        /* --- Billing & Invoice Details --- */
+        .billing-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .billed-to, .invoice-info, .payment-record {
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .section-title {
+            color: #1a202c;
+            font-weight: 600;
+            border-left: 3px solid #3b82f6;
+            padding-left: 10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .billed-to .client-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+        
+        .billed-to p, .billed-to div {
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+        
+        .billed-to span {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .invoice-info-grid {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 8px 15px;
+        }
+
+        .invoice-info-grid .label, .payment-record .label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .invoice-info-grid .value, .payment-record .value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .payment-record .due-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .payment-record .label { margin-bottom: 8px; }
+
+        /* --- Items Table --- */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table th, .items-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .items-table thead {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .items-table th {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .items-table th:nth-child(2), .items-table td:nth-child(2) { text-align: center; } /* HSN */
+        .items-table th:nth-child(3), .items-table td:nth-child(3) { text-align: center; } /* Qty */
+        .items-table th:nth-child(4), .items-table td:nth-child(4) { text-align: center; } /* GST */
+        .items-table th:nth-child(5), .items-table td:nth-child(5) { text-align: right; } /* Taxable Amount */
+        .items-table th:nth-child(6), .items-table td:nth-child(6) { text-align: right; } /* SGST */
+        .items-table th:nth-child(7), .items-table td:nth-child(7) { text-align: right; } /* CGST */
+        .items-table th:nth-child(8), .items-table td:nth-child(8) { text-align: right; } /* Amount */
+
+
+        .items-table tbody tr {
+            font-size: 14px;
+        }
+
+        .items-table tbody td:first-child {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* --- Totals Section --- */
+        .totals-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .invoice-meta {
+            font-size: 13px;
+        }
+        
+        .invoice-meta div {
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .invoice-meta span {
+            font-weight: 600;
+            color: #1a202c;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .invoice-total-words {
+            margin-top: 20px;
+        }
+
+        .invoice-total-words .label {
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .invoice-total-words .words-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .calculations {
+            width: 300px;
+            font-size: 14px;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        
+        .calc-row:not(:last-child) {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .calc-row .label {
+            color: #4a5568;
+        }
+
+        .calc-row .value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .total-due {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #1a202c;
+        }
+
+        .total-due .label {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .total-due .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+
+        /* --- Footer --- */
+        .invoice-footer {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            font-size: 13px;
+            color: #4a5568;
+        }
+        
+        .footer-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .footer-section p, .footer-section ul {
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+        }
+        
+        .footer-section ul {
+            list-style-position: inside;
+        }
+
+        .bank-details {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 8px;
+        }
+        
+        .bank-details .label {
+            font-weight: 500;
+        }
+        
+        .bank-details .value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .upi-qr {
+            display: flex;
+            align-items: center;
+        }
+        
+        .upi-qr img {
+            width: 100px;
+            height: 100px;
+            margin-left: 20px;
+        }
+        
+        .footer-contact {
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="invoice-container">
+        <!-- Header -->
+        <header class="invoice-header">
+            <div class="header-left">
+                <h1 class="invoice-title">INVOICE</h1>
+            </div>
+            <div class="header-right">
+                <div class="billed-by">Billed by</div>
+                <h2 class="company-name">Foobar Labs</h2>
+                <p class="company-address">
+                    46, Raghuveer Dham Society<br>
+                    Surat, Gujarat, India - 394210
+                </p>
+                <div class="foobar-logo">
+                    <div class="logo-mark">F</div>
+                    <div class="logo-text">FOOBAR LABS</div>
+                </div>
+            </div>
+        </header>
+        <span class="invoice-status" style="position: absolute; top: 115px; left: 245px;">Unpaid</span>
+
+        <!-- Billing Details -->
+        <section class="billing-details">
+            <div class="billed-to">
+                <div class="section-title">Billed to</div>
+                <div class="client-name">Studio Den</div>
+                <p>
+                    305, 3rd Floor Orion mall, Bengaluru,<br>
+                    Karnataka, India - 560055
+                </p>
+                <div><span>GST</span> 29VGCED1234K2Z6</div>
+                <div><span>PAN</span> VGCED1234K</div>
+            </div>
+            <div class="invoice-info">
+                <div class="section-title">Invoice Details</div>
+                <div class="invoice-info-grid">
+                    <span class="label">Invoice #</span><span class="value">003</span>
+                    <span class="label">Invoice Date</span><span class="value">FEB 19, 2020</span>
+                    <span class="label">Due Date</span><span class="value">FEB 19, 2020</span>
+                </div>
+            </div>
+            <div class="payment-record">
+                <div class="section-title">Payment Record</div>
+                <div class="label">Paid Amount</div>
+                <div class="value">₹0</div>
+                <div class="label" style="margin-top: 10px;">Due Amount</div>
+                <div class="due-amount">₹36,000</div>
+            </div>
+        </section>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item #/Item description</th>
+                    <th>HSN</th>
+                    <th>Qty.</th>
+                    <th>GST</th>
+                    <th>Taxable Amount</th>
+                    <th>SGST</th>
+                    <th>CGST</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Basic Web Development</td>
+                    <td>02</td>
+                    <td>10</td>
+                    <td>9%</td>
+                    <td>₹ 10,000.00</td>
+                    <td>₹900</td>
+                    <td>₹900</td>
+                    <td><strong>₹ 11,800.00</strong></td>
+                </tr>
+                <tr>
+                    <td>Logo Design</td>
+                    <td>06</td>
+                    <td>1</td>
+                    <td>9%</td>
+                    <td>₹ 10,000.00</td>
+                    <td>₹900</td>
+                    <td>₹900</td>
+                    <td><strong>₹ 11,800.00</strong></td>
+                </tr>
+                <tr>
+                    <td>Web Design</td>
+                    <td>06</td>
+                    <td>1</td>
+                    <td>9%</td>
+                    <td>₹ 10,000.00</td>
+                    <td>₹900</td>
+                    <td>₹900</td>
+                    <td><strong>₹ 11,800.00</strong></td>
+                </tr>
+                <tr>
+                    <td>Full Stack Web development</td>
+                    <td>06</td>
+                    <td>1</td>
+                    <td>9%</td>
+                    <td>₹ 10,000.00</td>
+                    <td>₹900</td>
+                    <td>₹900</td>
+                    <td><strong>₹ 11,800.00</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <section class="totals-section">
+            <div class="invoice-meta">
+                <div><span>Country of supply</span> India</div>
+                <div><span>Place of supply</span> Gujarat</div>
+                <div class="invoice-total-words">
+                    <div class="label">Invoice total in words</div>
+                    <div class="words-value">Forty Two thousand Four Hundred and Eighty</div>
+                </div>
+            </div>
+            <div class="calculations">
+                <div class="calc-row">
+                    <span class="label">Sub Total</span>
+                    <span class="value">₹40,000</span>
+                </div>
+                <div class="calc-row">
+                    <span class="label">Discount(10%)</span>
+                    <span class="value">₹40,000</span>
+                </div>
+                <div class="calc-row">
+                    <span class="label">Taxable Amount</span>
+                    <span class="value">₹36,000</span>
+                </div>
+                <div class="calc-row">
+                    <span class="label">SGST</span>
+                    <span class="value">₹3240</span>
+                </div>
+                <div class="calc-row">
+                    <span class="label">CGST</span>
+                    <span class="value">₹36,000</span>
+                </div>
+                <div class="calc-row total-due">
+                    <span class="label">Total Due</span>
+                    <span class="value">₹36,000</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="invoice-footer">
+            <div class="footer-section">
+                <h4>Terms and Conditions</h4>
+                <ol style="padding-left: 15px;">
+                    <li>Please pay within 15 days from the date of invoice, overdue interest @ 14% will be charged on delayed payments.</li>
+                    <li>Please quote invoice number when remitting funds.</li>
+                </ol>
+
+                <h4 style="margin-top: 20px;">Additional Notes</h4>
+                <p>
+                    It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here'.
+                </p>
+                <p class="footer-contact">
+                    For any enquiries, email us on <strong>foobarlabs@gmail.com</strong> or call us on <strong>+91 98765 43210</strong>
+                </p>
+            </div>
+            <div class="footer-section">
+                <h4>Bank & Payment Details</h4>
+                <div class="bank-details">
+                    <span class="label">Account Holder Name</span><span class="value">Foobar Labs</span>
+                    <span class="label">Account Number</span><span class="value">45366287787</span>
+                    <span class="label">IFSC</span><span class="value">HDFC0018159</span>
+                    <span class="label">Account Type</span><span class="value">Savings</span>
+                    <span class="label">Bank</span><span class="value">HDFC Bank</span>
+                </div>
+                <div class="upi-qr" style="margin-top:15px">
+                    <div class="bank-details">
+                         <span class="label">UPI</span><span class="value">foobarlabs@okhdfc</span>
+                    </div>
+                    <div style="text-align: right; flex-grow: 1;">
+                        <div style="font-size: 11px; font-weight: 500; margin-bottom: 5px;">UPI - Scan to Pay</div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=upi://pay?pa=foobarlabs@okhdfc" alt="UPI QR Code">
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+</body>
+</html>

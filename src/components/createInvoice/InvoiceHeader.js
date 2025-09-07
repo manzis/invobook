@@ -3,12 +3,12 @@ import { Eye, Save, Send } from 'lucide-react';
 
 const InvoiceHeader = ({ onCreateInvoice, isSaving }) => {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-wrap items-center justify-between mb-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Invoice</h1>
         <p className="text-gray-600">Fill in the details to generate your invoice</p>
       </div>
-      <div className="flex items-center space-x-3">
+      <div className="flex flex-wrap  gap-4 items-center space-x-3">
         <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
           <Eye className="w-4 h-4" />
           <span>Preview</span>

@@ -109,6 +109,14 @@ const InvoicesPage = () => {
     router.push(`/edit-invoice/${invoiceId}`);
   };
 
+  const handleUpdateInvoiceState = (updatedInvoice) => {
+    setInvoices(currentInvoices =>
+      currentInvoices.map(inv =>
+        inv.id === updatedInvoice.id ? updatedInvoice : inv
+      )
+    );
+  };
+
   const handleBulkAction = async (action) => {
     const originalInvoices = [...invoices];
     const actionText = action.toLowerCase().replace('_', ' ');
@@ -159,7 +167,7 @@ const InvoicesPage = () => {
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-8"> 
+     
         <StatsCards invoices={invoices} />
         <InvoiceFilters
           searchTerm={searchTerm}
@@ -180,16 +188,17 @@ const InvoicesPage = () => {
           onDeleteInvoice={handleDeleteInvoice}
           onDownloadPDF={handleDownloadPDF}
           onEditInvoice={handleInvoiceEdit}
+          onUpdateInvoiceState={handleUpdateInvoiceState} 
+          
         />
         
-      </div>
     </div>
   );
 };
 
 return (
     <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <InvoiceListHeader />
         {renderContent()}
       </div>

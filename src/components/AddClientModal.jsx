@@ -1,14 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Building, Mail, Phone, MapPin, Hash } from 'lucide-react'; // Added Hash icon
+import { User, Building, Mail, Phone, MapPin, Hash } from 'lucide-react';
 
-const AddClientModal = ({ isOpen, onClose, onClientAdded }) => {
-  // --- UPDATED: Add city and taxId to the initial state ---
-  const initialState = { name: '', company: '', email: '', phone: '', address: '', city: '', taxId: '' };
-  const [formData, setFormData] = useState(initialState);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) => {
+  // Determine if we are in "edit" mode
+  const isEditMode = Boolean(clientToEdit);
+
+  const getInitialState = () => {
+    if (isEditMode) {
+      // If editing, pre-fill the form with the client's data
+      return {
+        name: clientToEdit.name || '',
+        company: clientToEdit.company || '',
+        email: clientToEdit.email || '',
+        phone: clientToEdit.phone || '',
+        address: clientToEdit.address || '',
+        city: clientToEdit.city || '',
+        taxId: clientToEdit.taxId || '',
+      };
+    }
+    // If adding, return a blank state
+    return { name: '', company: '', email: '', phone: '', address: '', city: '', taxId: '' };
+  };
+
+  const [formData, setFormData] = useState(getInitialState());
   const [error, setError] = useState('');
+
+  // Effect to update the form when the clientToEdit prop changes
+  useEffect(() => {
+    setFormData(getInitialState());
+  }, [clientToEdit, isOpen]); // Reset form when client or open state changes
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -17,101 +38,76 @@ const AddClientModal = ({ isOpen, onClose, onClientAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setError('');
-    try {
-      const res = await fetch('/api/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData), // The full formData object is sent
-      });
-      const newClient = await res.json();
-      if (!res.ok) throw new Error(newClient.message || "Failed to create the client.");
-      onClientAdded(newClient);
-      handleClose();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // The onSave prop now handles the API call
+    // Pass the form data and the client's ID (if it exists)
+    onSave(formData, clientToEdit?.id);
   };
 
-  const handleClose = () => {
-    setFormData(initialState); // Reset to the initial state
-    setError('');
-    onClose();
-  };
-
-  const [isBrowser, setIsBrowser] = useState(false);
-  useEffect(() => { setIsBrowser(true); }, []);
-
-  if (!isOpen || !isBrowser) return null;
+  // The modal will not render if it's not open
+  if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 relative">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Add New Client</h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">×</button>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isEditMode ? 'Edit Client' : 'Add New Client'}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 font-bold text-2xl">&times;</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Form fields are the same as before */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="name" type="text" value={formData.name} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="John Doe" required />
+                <input name="name" type="text" placeholder="Enter client name" value={formData.name} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" required />
               </div>
             </div>
-            {/* Company */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
               <div className="relative">
                 <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="company" type="text" value={formData.company} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="Company Name" />
+                <input name="company" type="text" placeholder="Enter client company" value={formData.company} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" />
               </div>
             </div>
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="email" type="email" value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="john@company.com" required />
+                <input name="email" type="email" placeholder="Enter client email"value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" required />
               </div>
             </div>
-            {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="phone" type="tel" value={formData.phone} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="+1 (555) 123-4567" />
+                <input name="phone" placeholder="Enter client phone no"type="tel" value={formData.phone} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" />
               </div>
             </div>
           </div>
-          {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-              <textarea name="address" rows={2} value={formData.address} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="123 Business Street..." />
+              <textarea name="address" placeholder="Enter client address" rows={2} value={formData.address} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" />
             </div>
           </div>
-          
-          {/* --- ADDED: City and Tax ID Fields --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="city" type="text" value={formData.city} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="New York" />
+                <input name="city" type="text" placeholder="Enter client city" value={formData.city} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID (Optional)</label>
               <div className="relative">
                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="taxId" type="text" value={formData.taxId} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" placeholder="e.g., VAT, EIN" />
+                <input name="taxId" type="text"placeholder="Enter client Tax id like: vat pan etc" value={formData.taxId} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" />
               </div>
             </div>
           </div>
@@ -119,9 +115,12 @@ const AddClientModal = ({ isOpen, onClose, onClientAdded }) => {
           {error && <div className="text-center text-red-500 text-sm">{error}</div>}
           
           <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={handleClose} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
             <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400">
-              {isSubmitting ? 'Adding Client...' : 'Add Client'}
+              {isSubmitting 
+                ? (isEditMode ? 'Saving...' : 'Adding...') 
+                : (isEditMode ? 'Save Changes' : 'Add Client')
+              }
             </button>
           </div>
         </form>
@@ -131,4 +130,4 @@ const AddClientModal = ({ isOpen, onClose, onClientAdded }) => {
   );
 };
 
-export default AddClientModal;
+export default ClientModal;

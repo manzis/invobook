@@ -1,29 +1,24 @@
+
 import React, { useState } from 'react';
 import { User, Building, Mail, Phone, MapPin, Upload, Globe } from 'lucide-react';
 
 const ProfileSettings = ({ data, setData }) => {
-  // This local state is ONLY for the visual preview of a newly selected file.
   const [previewUrl, setPreviewUrl] = useState(null);
 
-  // If the parent component is still fetching data, show a placeholder.
   if (!data) {
     return <div>Loading profile form...</div>;
   }
 
-  // This handler for text inputs is correct and remains the same.
+  // No changes needed here, this generic handler works for the new fields too.
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  // This handler for the file input is correct and remains the same.
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 1. Store the actual File object in the parent's state for upload.
       setData(prevData => ({ ...prevData, logoFile: file }));
-      
-      // 2. Create a temporary URL for instant preview.
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
@@ -37,6 +32,7 @@ const ProfileSettings = ({ data, setData }) => {
         
         <h4 className="text-md font-medium text-gray-800 mb-4 border-b border-gray-200 pb-2">Business Details</h4>
         
+      
         {/* --- CORRECTED BUSINESS LOGO SECTION --- */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Business Logo</label>
@@ -77,30 +73,50 @@ const ProfileSettings = ({ data, setData }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Company Name */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
             <div className="relative">
               <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input type="text" name="company" value={data.company || ''} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg"/>
             </div>
           </div>
-           <div>
+
+          {/* Tax ID */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID</label>
             <input type="text" name="taxId" value={data.taxId || ''} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg"/>
           </div>
-          <div>
+
+          {/* Address (Spanning full width) */}
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input type="text" name="address" value={data.address || ''} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg"/>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">City, State ZIP</label>
-            <input type="text" name="city" value={data.city || ''} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg"/>
+          
+          {/* --- NEW: SEPARATED CITY, STATE, AND ZIP FIELDS --- */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+              <input type="text" name="city" value={data.city || ''} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg"/>
+            </div>
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+              <input type="text" name="state" value={data.state || ''} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg"/>
+            </div>
+             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code</label>
+              <input type="text" name="zipCode" value={data.zipCode || ''} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg"/>
+            </div>
           </div>
-           <div>
+
+          {/* Website */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
             <div className="relative">
                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -108,19 +124,20 @@ const ProfileSettings = ({ data, setData }) => {
             </div>
           </div>
           
-            <div>
+          {/* Phone */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input type="tel" name="phone" value={data.phone || ''} onChange={handleChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg"/>
-              </div>
             </div>
+          </div>
         </div>
 
-        {/* --- Personal Information Section --- */}
+        {/* --- Personal Information Section (no changes) --- */}
         <h4 className="text-md font-medium text-gray-800 mt-8 mb-4 border-b border-gray-200 pb-2">Personal Information</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+             <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -142,3 +159,4 @@ const ProfileSettings = ({ data, setData }) => {
 };
 
 export default ProfileSettings;
+

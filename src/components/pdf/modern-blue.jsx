@@ -1,12 +1,12 @@
 import React from 'react';
 
 // Helper for formatting currency.
-const formatCurrency = (amount, currency = 'INR') => {
+const formatCurrency = (amount, currency = 'NPR') => {
   const numericAmount = parseFloat(amount);
   if (isNaN(numericAmount)) {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(0);
   }
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-IN', { 
     style: 'currency',
     currency: currency,
   }).format(numericAmount);
@@ -86,14 +86,17 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
             .invoice-table { width: 100%; border-collapse: collapse; text-align: left; }
             .invoice-table th, .invoice-table td {
               padding: 6px; /* Reduced padding */
-              font-size: 13px; /* Reduced font size for table items */
+              font-size: 12px; /* Reduced font size for table items */
             }
-            .invoice-table thead { background-color: #f1f5f9; padding-top: 2px; }
-            .invoice-table thead th { font-weight: 600; color: #1e293b; }
+            .invoice-table thead { background-color: #f1f5f9; }
+            .invoice-table thead th { font-weight: 600; color: #1e293b;  }
             .invoice-table tbody tr { border-bottom: 1px solid #e2e8f0; }
 
             /* --- Utility --- */
-            .text-right { text-align: right; }
+            .text-right { text-align: right;}
+            .text-left { text-align: right; display: flex; gap: 12px; }
+            .business-details { display: flex; flex-direction: column;  }
+            
           `}
         </style>
       </head>
@@ -101,7 +104,9 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
         <div className="invoice-box">
           
           <header style={{ paddingBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
+           
+          
+             <div>
               <h1>INVOICE {invoice.invoiceNumber}</h1>
               <div style={{
                 marginTop: '8px', padding: '4px 12px', borderRadius: '9999px', display: 'inline-block',
@@ -112,13 +117,19 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
                 {invoice.status}
               </div>
             </div>
-            <div className="text-right">
-              {business.logoUrl && <img src={business.logoUrl} alt="Business Logo" style={{ maxWidth: '120px', marginBottom: '8px' }} />}
-              <h2>{business.businessName}</h2>
+
+             <div className="text-left">
+              
+              <div className ="business-details">
+              <h2 style ={{margin: '0 0 4px 0'}} >{business.businessName}</h2>
               <p>{business.address}</p>
               <p>{business.city}, {business.state} - {business.zipCode}</p>
-              {business.taxId && <p style={{ marginTop: '4px' }}><strong>GSTIN:</strong> {business.taxId}</p>}
+              {business.taxId && <p style={{ marginTop: '4px' }}><strong>PAN:</strong> {business.taxId}</p>}
+              </div>
+              {business.logoUrl && <img src={business.logoUrl} alt="Business Logo" style={{ maxWidth: '100px', marginBottom: '8px', borderRadius: '6px', objectFit: 'contain' }} />}
+
             </div>
+
           </header>
 
           <div style={{ paddingBottom: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '24px', display: 'flex', justifyContent: 'space-between' }}>
@@ -126,8 +137,9 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
               <p style={{ color: '#64748b', fontWeight: 500 }}>Billed To</p>
               <h3>{client.company || client.name}</h3>
               <p>{client.address}</p>
-              <p>{client.city}, India</p>
+              <p>{client.city}</p>
               {client.taxId && <p style={{ marginTop: '8px' }}><strong>GSTIN:</strong> {client.taxId}</p>}
+              <p><strong>{client.phone}</strong></p>
             </div>
             <div className="text-right" style={{ minWidth: '220px' }}>
               <div style={{ marginBottom: '12px' }}>
@@ -137,8 +149,8 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
               </div>
               <div>
                  <p style={{ color: '#64748b', fontWeight: 500 }}>Payment Details</p>
-                 <p><strong>Paid:</strong> {formatCurrency(invoice.amountPaid, business.currency)}</p>
-                 <p style={{ fontSize: '14px', fontWeight: 700, color: '#1d4ed8' }}>
+                 <p style={{ paddingBottom: '4px'}}><strong>Paid:</strong> {formatCurrency(invoice.amountPaid, business.currency)}</p>
+                 <p style={{ fontSize: '14px',  fontWeight: 700, color: '#f2f4f7ff' , background:'#3960c9ff' , padding:'6px' }}>
                     <strong>Balance Due:</strong> {formatCurrency(invoice.balanceDue, business.currency)}
                  </p>
               </div>
@@ -148,12 +160,12 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
           {/* This main content wrapper will grow to push the footer down */}
           <main className="content-wrap">
             <table className="invoice-table">
-              <thead>
+              <thead >
                 <tr>
                   <th>Description</th>
-                  <th style={{ width: '10%' }}>Qty</th>
-                  <th style={{ width: '20%' }}>Rate</th>
-                  <th className="text-right" style={{ width: '20%' }}>Amount</th>
+                  <th style={{ width: '7%' }}>Qty</th>
+                  <th style={{ width: '13%' }}>Rate</th>
+                  <th className="text-right" style={{ width: '18%' }}>Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,7 +181,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
             </table>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <div style={{ width: '45%' }}>
+              <div style={{ width: '37%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontWeight: 500 }}>Subtotal</span>
                   <span>{formatCurrency(invoice.subtotal, business.currency)}</span>

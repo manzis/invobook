@@ -1,140 +1,142 @@
-// prisma/schema.prisma
+  // prisma/schema.prisma
 
-generator client {
-  provider = "prisma-client-js"
-}
+  generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["filteredRelationCount"] // Add this line
+  }
 
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+  datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+  }
 
-enum InvoiceStatus {
-  DRAFT
-  PENDING
-  PAID
-  OVERDUE
-}
+  enum InvoiceStatus {
+    DRAFT
+    PENDING
+    PAID
+    PARTIALLY_PAID // <-- ADD THIS NEW STATUS
+    OVERDUE
+  }
 
-enum DiscountType {
-  PERCENTAGE
-  FIXED
-}
+  enum DiscountType {
+    PERCENTAGE
+    FIXED
+  }
 
-model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String
-  hashedPassword String // We will store a hashed password, not the real one
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  model User {
+    id             String    @id @default(cuid())
+    email          String    @unique
+    name           String
+    hashedPassword String // We will store a hashed password, not the real one
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
 
-  business Business? // A user can have one business (optional)
-  clients Client[]
-  invoices Invoice[]
-}
+    business Business? // A user can have one business (optional)
+    clients Client[]
+    invoices Invoice[]
+  }
 
-model Business {
-  id           String   @id @default(cuid())
-  businessName String
-  logoUrl      String? 
-  businessType String
-  address      String?
-  city         String?
-  state        String?
-  zipCode      String?
-  country      String?
-  phone        String?
-  website      String?
-  taxId        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  model Business {
+    id           String   @id @default(cuid())
+    businessName String
+    logoUrl      String? 
+    businessType String
+    address      String?
+    city         String?
+    state        String?
+    zipCode      String?
+    country      String?
+    phone        String?
+    website      String?
+    taxId        String?
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique // This creates the one-to-one link
-  invoiceSettings InvoiceSetting?
-}
+    user   User   @relation(fields: [userId], references: [id])
+    userId String @unique // This creates the one-to-one link
+    invoiceSettings InvoiceSetting?
+  }
 
-model InvoiceSetting {
-  id                String   @id @default(cuid())
-  defaultDueDays    Int      @default(30)
-  taxRate           Float    @default(0)
-  currency          String   @default("USD")
-  invoicePrefix     String   @default("INV-")
-  templateName      String   @default("modern-blue") 
-  nextInvoiceNumber Int      @default(1)
-  defaultNotes      String?
-  defaultTerms      String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  model InvoiceSetting {
+    id                String   @id @default(cuid())
+    defaultDueDays    Int      @default(30)
+    taxRate           Float    @default(0)
+    currency          String   @default("USD")
+    invoicePrefix     String   @default("INV-")
+    templateName      String   @default("modern-blue") 
+    nextInvoiceNumber Int      @default(1)
+    defaultNotes      String?
+    defaultTerms      String?
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @updatedAt
 
-  // This is the link back to the Business
-  business   Business @relation(fields: [businessId], references: [id])
-  businessId String   @unique // @unique enforces the one-to-one relationship
-}
+    // This is the link back to the Business
+    business   Business @relation(fields: [businessId], references: [id])
+    businessId String   @unique // @unique enforces the one-to-one relationship
+  }
 
-model Client {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  phone     String?
-  company   String?
-  address   String?
-  city      String?  // This should already be here
-  taxId     String?  // <-- ADD THIS LINE
-  status    String   @default("active")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  model Client {
+    id        String   @id @default(cuid())
+    name      String
+    email     String
+    phone     String?
+    company   String?
+    address   String?
+    city      String?  // This should already be here
+    taxId     String?  // <-- ADD THIS LINE
+    status    String   @default("active")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-  invoices Invoice[]
-}
-
-// --- ADD THIS NEW INVOICE MODEL ---
-model Invoice {
-  id            String        @id @default(cuid())
-  invoiceNumber String
-  date          DateTime
-  dueDate       DateTime
-  pdfUrl          String? 
-  subtotal      Decimal // Use Decimal for financial accuracy
-  taxRate       Float         @default(0)
-  taxAmount     Decimal
-  shippingCost  Decimal       @default(0)
-  total         Decimal
-  amountPaid      Decimal       @default(0)
-  balanceDue      Decimal
-  discountType    DiscountType  @default(PERCENTAGE) // Stores the user's choice
-  discountValue   Decimal       @default(0) 
-  discountAmount  Decimal       @default(0) 
-  notes         String?
-  terms         String?
-  status        InvoiceStatus @default(DRAFT)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-// ... Relationships ...
-  items   InvoiceItem[]
-  user    User          @relation(fields: [userId], references: [id])
-  userId  String
-  client  Client        @relation(fields: [clientId], references: [id])
-  clientId String
-
-  @@unique([userId, invoiceNumber])
-}
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+    invoices Invoice[]
+  }
 
 
-// --- ADD THIS NEW INVOICE ITEM MODEL ---
-model InvoiceItem {
-  id          String  @id @default(cuid())
-  description String
-  quantity    Float   // Float allows for quantities like 1.5 (e.g., hours)
-  rate        Decimal // Use Decimal for financial accuracy
-  amount      Decimal // Use Decimal for financial accuracy
+  model Invoice {
+    id            String        @id @default(cuid())
+    invoiceNumber String
+    date          DateTime
+    dueDate       DateTime
+    pdfUrl          String? 
+    subtotal      Decimal // Use Decimal for financial accuracy
+    taxRate       Float         @default(0)
+    taxAmount     Decimal
+    shippingCost  Decimal       @default(0)
+    total         Decimal
+    amountPaid      Decimal       @default(0)
+    balanceDue      Decimal
+    discountType    DiscountType  @default(PERCENTAGE) // Stores the user's choice
+    discountValue   Decimal       @default(0) 
+    discountAmount  Decimal       @default(0) 
+    notes         String?
+    terms         String?
+    status        InvoiceStatus @default(DRAFT)
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
 
-  // --- Relationship ---
-  // An item belongs to one invoice. If the invoice is deleted, delete its items too.
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  invoiceId String
-}
+  // ... Relationships ...
+    items   InvoiceItem[]
+    user    User          @relation(fields: [userId], references: [id])
+    userId  String
+    client  Client        @relation(fields: [clientId], references: [id])
+    clientId String
+
+    @@unique([userId, invoiceNumber])
+  }
+
+
+  // --- ADD THIS NEW INVOICE ITEM MODEL ---
+  model InvoiceItem {
+    id          String  @id @default(cuid())
+    description String
+    quantity    Float   // Float allows for quantities like 1.5 (e.g., hours)
+    rate        Decimal // Use Decimal for financial accuracy
+    amount      Decimal // Use Decimal for financial accuracy
+
+    // --- Relationship ---
+    // An item belongs to one invoice. If the invoice is deleted, delete its items too.
+    invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    invoiceId String
+  }

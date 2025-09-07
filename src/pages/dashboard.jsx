@@ -191,14 +191,14 @@ const Dashboard = () => {
 
   return (
     <div className="flex-1 overflow-auto ">
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {getFirstName()}!</h1>
             <p className="text-gray-600">Here's what's happening with your invoices today.</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-wrap gap-4 items-center space-x-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
