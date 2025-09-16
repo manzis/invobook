@@ -8,7 +8,7 @@ import RecentActivity from '../components/RecentActivity';
 import { useAuth } from '../context/AuthContext';
 import { DollarSign, FileText, Clock, TrendingUp, Search, Filter } from 'lucide-react';
 import { PlusCircle, Users, Download } from 'lucide-react';
-import TemplatesSidebar from '../components/TemplatesSidebar'; 
+import TemplatesSidebar from '../components/templatesSidebar'; 
 
 const Dashboard = () => {
 
