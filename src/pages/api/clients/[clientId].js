@@ -28,8 +28,8 @@ export default async function handler(req, res) {
         const { name, email, company, phone, address, city, taxId } = req.body;
 
         // Basic validation
-        if (!name || !email) {
-            return res.status(400).json({ message: 'Name and email are required.' });
+        if (!name || !phone) {
+            return res.status(400).json({ message: 'Name and Phone no are required.' });
         }
 
         const updatedClient = await prisma.client.update({

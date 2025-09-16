@@ -60,14 +60,21 @@ export default async function handler(req, res) {
     const taxAmount = taxableAmount * (taxRate / 100);
     const total = taxableAmount + taxAmount + shippingCost;
     const balanceDue = total - amountPaid;
-    // --- END OF CORRECTED BLOCK ---
+    
 
-    let finalStatus = invoiceData.status || 'PENDING';
-      
-      // If the balance is zero or less, and the status isn't DRAFT, automatically mark it as PAID.
-      if (balanceDue <= 0 && finalStatus !== 'DRAFT') {
+      let finalStatus = invoiceData.status || 'PENDING';
+
+    // Only update status automatically if it's not a draft
+    if (finalStatus !== 'DRAFT') {
+      if (balanceDue <= 0) {
+        // If the balance is zero or less, the invoice is fully PAID.
         finalStatus = 'PAID';
+      } else if (amountPaid > 0) {
+        // If not fully paid, but some amount has been paid, it's PARTIALLY_PAID.
+        finalStatus = 'PARTIALLY_PAID';
       }
+      
+    }
 
 
     // --- Create the Invoice and its Items ---

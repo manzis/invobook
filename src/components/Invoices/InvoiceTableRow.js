@@ -9,6 +9,8 @@ import {
   CheckCircle,
   MoreVertical,
   Mail,
+  FileText,
+  Image as ImageIcon,
   MessageSquare,
   XCircle,
 } from 'lucide-react';
@@ -24,7 +26,8 @@ const InvoiceTableRow = ({
   onUpdateInvoiceState,
 }) => {
   // --- STATE FOR UI INTERACTIVITY ---
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isDownloadingImage, setIsDownloadingImage] = useState(false);
   const [isEnteringPartial, setIsEnteringPartial] = useState(false); // Controls the view inside the menu
   const [partialAmount, setPartialAmount] = useState('');
 
@@ -35,26 +38,59 @@ const InvoiceTableRow = ({
     if (closeMenu) closeMenu();
   };
 
-  const handleDownloadPDF = async () => {
-    if (invoice.pdfUrl) {
-      window.open(invoice.pdfUrl, '_blank');
-      return;
-    }
-    setIsDownloading(true);
+   // --- UPDATED PDF DOWNLOAD HANDLER ---
+  const handleDownloadPDF = async (closeMenu) => {
+    setIsDownloadingPdf(true);
     try {
+      // Call API without the format parameter
       const res = await fetch(`/api/downloadInvoice/${invoice.id}`, { method: 'POST' });
-      if (!res.ok) throw new Error('Could not generate PDF.');
-      const data = await res.json();
-      onUpdateInvoiceState({ ...invoice, pdfUrl: data.pdfUrl });
-      window.open(data.pdfUrl, '_blank');
+      if (!res.ok) throw new Error('Could not download PDF.');
+      
+      // The response is the raw file data (Blob)
+      const pdfBlob = await res.blob();
+      const url = window.URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      window.open(url, '_blank');
+      a.download = `invoice-${invoice.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
     } catch (error) {
-      console.error(error);
       alert(error.message);
     } finally {
-      setIsDownloading(false);
+      setIsDownloadingPdf(false);
+      if (closeMenu) closeMenu();
     }
   };
 
+  // --- NEW IMAGE DOWNLOAD HANDLER ---
+  const handleDownloadImage = async (closeMenu) => {
+    setIsDownloadingImage(true);
+    try {
+      // Call the SAME API but with the `format=image` parameter
+      const res = await fetch(`/api/downloadInvoice/${invoice.id}?format=image`, { method: 'POST' });
+      if (!res.ok) throw new Error('Could not convert PDF to image.');
+      
+      const imageBlob = await res.blob();
+      const imageUrl = URL.createObjectURL(imageBlob);
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = `invoice-${invoice.invoiceNumber}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(imageUrl);
+
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsDownloadingImage(false);
+      if (closeMenu) closeMenu();
+    }
+  };
   /**
    * Handles payment actions and closes the main menu on success.
    * @param {'full' | 'partial'} type - The type of payment.
@@ -97,6 +133,7 @@ const InvoiceTableRow = ({
   const formattedDueDate = new Date(invoice.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const formattedTotal = parseFloat(invoice.total).toLocaleString('en-US', { style: 'currency', currency: 'NPR' });
   const status = invoice.status.toLowerCase().replace('_', ' ');
+  const formattedDue = parseFloat(invoice.balanceDue).toLocaleString('en-US', { style: 'currency', currency: 'NPR' });
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
@@ -106,14 +143,49 @@ const InvoiceTableRow = ({
       <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-900">{clientName}</p></td>
       <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm font-medium text-gray-900">{formattedTotal}</p></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2 text-sm text-gray-500"><Calendar className="w-4 h-4"/><span>{formattedDate}</span></div></td>
-      <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-500">{formattedDueDate}</p></td>
+      <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-500">{formattedDue}</p></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2">{getStatusIcon(status)}<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${getStatusColor(status)}`}>{status}</span></div></td>
       
       {/* --- ACTION BUTTONS COLUMN --- */}
       <td className="px-6 py-4 whitespace-nowrap text-right">
         <div className="flex items-center justify-end space-x-1">
           <button onClick={() => onEditInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-emerald-600"><Edit className="w-4 h-4"/></button>
-          <button onClick={handleDownloadPDF} disabled={isDownloading} className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50">{isDownloading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div> : <Download className="w-4 h-4"/>}</button>
+          <Menu as="div" className="relative inline-block text-left">
+            {({ close }) => (
+              <>
+                <Menu.Button 
+                  disabled={isDownloadingPdf || isDownloadingImage}
+                  className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {(isDownloadingPdf || isDownloadingImage) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                  ) : (
+                    <Download className="w-4 h-4"/>
+                  )}
+                </Menu.Button>
+                <Transition as={Fragment} /* ... */>
+                  <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none">
+                    <div className="px-1 py-1">
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button onClick={() => handleDownloadPDF(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}>
+                            <FileText className="w-4 h-4 mr-2"/> Download PDF
+                          </button>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button onClick={() => handleDownloadImage(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}>
+                            <ImageIcon className="w-4 h-4 mr-2"/> Download Image
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </div>
+                  </Menu.Items>
+                </Transition>
+              </>
+            )}
+          </Menu>
 
           {/* SIMPLIFIED 3-DOT MENU */}
           <Menu as="div" className="relative inline-block text-left">

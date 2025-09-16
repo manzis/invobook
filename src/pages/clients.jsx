@@ -41,16 +41,17 @@ const ClientsPage = () => {
   }, []);
 
 
-   useEffect(() => {
-    // router.isReady is true when the router has parsed the URL on the client-side
+useEffect(() => {
     if (router.isReady) {
       if (router.query.action === 'add') {
-        setShowAddModal(true);
-        // Optional but recommended: clean the URL so the modal doesn't pop up on refresh
+        // FIX: Use the correct state setter function here
+        setIsModalOpen(true); 
+        
+        // Clean the URL so the modal doesn't pop up on refresh
         router.replace('/clients', undefined, { shallow: true });
       }
     }
-  }, [router.isReady, router.query]);
+}, [router.isReady, router.query]);
 
 
   const filteredClients = useMemo(() =>
@@ -82,28 +83,43 @@ const ClientsPage = () => {
     const url = isEditMode ? `/api/clients/${clientId}` : '/api/clients';
     const method = isEditMode ? 'PUT' : 'POST';
 
-    try {
+  try {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
+      // THE FIX: Gracefully handle predictable API errors (like 409 Conflict)
+      if (!res.ok) {
+        // 1. Get the specific error message from your API
+        const errorData = await res.json();
+        
+        // 2. Show the user a simple, clean alert with that message
+        alert(errorData.message);
+        
+        // 3. IMPORTANT: Stop the function here to prevent a crash
+        return; 
+      }
+
+      // This code only runs on a successful response (200 or 201)
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Failed to save the client.");
 
       if (isEditMode) {
-        // Find and update the client in the local state
         setClients(prev => prev.map(c => (c.id === clientId ? result : c)));
       } else {
-        // Add the new client to the top of the list
         setClients(prev => [result, ...prev]);
       }
+      
+      // Close the modal only on success
       handleCloseModal();
+
     } catch (error) {
+      // This 'catch' block is now for unexpected network or runtime errors
       console.error("Save Client Error:", error);
-      alert(`Error: ${error.message}`); // You can replace this with a more elegant notification
+      alert("An unexpected error occurred. Please check your connection and try again.");
     } finally {
+      // This will always run, ensuring the submit button is re-enabled
       setIsSubmitting(false);
     }
   };

@@ -77,14 +77,14 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="email" type="email" placeholder="Enter client email"value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" required />
+                <input name="email" type="email" placeholder="Enter client email"value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg"  />
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input name="phone" placeholder="Enter client phone no"type="tel" value={formData.phone} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" />
+                <input name="phone" placeholder="Enter client phone no"type="number" value={formData.phone} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg" required/>
               </div>
             </div>
           </div>

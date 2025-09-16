@@ -20,6 +20,10 @@ const InvoicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInvoices, setSelectedInvoices] = useState([]);
+    const [showStats, setShowStats] = useState(true);
+
+  const [startDate, setStartDate] = useState('');
+const [endDate, setEndDate] = useState('');
 
   // --- useEffect for fetching data ---
   useEffect(() => {
@@ -43,16 +47,44 @@ const InvoicesPage = () => {
   }, []);
 
   // --- useMemo for filtering invoices ---
-  const filteredInvoices = useMemo(() =>
-    invoices.filter(invoice => {
-      const clientName = invoice.client?.name?.toLowerCase() || '';
-      const invoiceNumber = invoice.invoiceNumber?.toLowerCase() || '';
-      const status = invoice.status?.toLowerCase() || '';
-      const search = searchTerm.toLowerCase();
-      const matchesSearch = clientName.includes(search) || invoiceNumber.includes(search);
-      const matchesStatus = statusFilter.toLowerCase() === 'all' || status === statusFilter.toLowerCase();
-      return matchesSearch && matchesStatus;
-    }), [invoices, searchTerm, statusFilter]);
+const filteredInvoices = useMemo(() => {
+  // Return early if there are no invoices to filter
+  if (!invoices) return [];
+
+  return invoices.filter(invoice => {
+    // --- 1. Search Term Filtering (Client Name or Invoice Number) ---
+    const clientName = invoice.client?.name?.toLowerCase() || '';
+    const invoiceNumber = invoice.invoiceNumber?.toLowerCase() || '';
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = clientName.includes(search) || invoiceNumber.includes(search);
+
+    // --- 2. Status Filtering ---
+    const status = invoice.status?.toLowerCase() || '';
+    // Make sure statusFilter exists before calling toLowerCase
+    const matchesStatus = !statusFilter || statusFilter.toLowerCase() === 'all' || status === statusFilter.toLowerCase();
+
+    // --- 3. NEW: Date Range Filtering ---
+    const invoiceDate = new Date(invoice.date);
+    
+    // Parse start and end dates. If they are not provided, these will be null.
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+
+    // To make the range inclusive, we adjust the time.
+    // Start date should be the very beginning of the selected day (00:00:00).
+    if (start) start.setHours(0, 0, 0, 0);
+    // End date should be the very end of the selected day (23:59:59).
+    if (end) end.setHours(23, 59, 59, 999);
+    
+    // The invoice date must be after the start date AND before the end date.
+    // If a date is not selected, its condition will be true.
+    const matchesDate = (!start || invoiceDate >= start) && (!end || invoiceDate <= end);
+    
+    // --- Combine all filters ---
+    // An invoice is included only if it matches all three conditions.
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+}, [invoices, searchTerm, statusFilter, startDate, endDate]);
 
   // --- Action Handlers ---
   const handleSelectInvoice = (invoiceId) => {
@@ -168,7 +200,8 @@ const InvoicesPage = () => {
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
      
-        <StatsCards invoices={invoices} />
+        {showStats && <StatsCards invoices={invoices} />}
+
         <InvoiceFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -177,6 +210,10 @@ const InvoicesPage = () => {
           selectedInvoicesCount={selectedInvoices.length}
           onBulkDelete={() => handleBulkAction('DELETE')}
           onBulkMarkPaid={() => handleBulkAction('MARK_PAID')}
+          startDate={startDate}
+  setStartDate={setStartDate}
+  endDate={endDate}
+  setEndDate={setEndDate}Í
         />
 
         <InvoiceTable
@@ -199,7 +236,9 @@ const InvoicesPage = () => {
 return (
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="p-4 md:p-8">
-        <InvoiceListHeader />
+        <InvoiceListHeader 
+           showStats={showStats}
+          onToggleStats={() => setShowStats(prev => !prev)}/>
         {renderContent()}
       </div>
     </div>
