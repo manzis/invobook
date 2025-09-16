@@ -3,7 +3,7 @@
 import { PrismaClient } from '@prisma/client';
 import { renderToString } from 'react-dom/server';
 import playwright from 'playwright-core';
-import chromium from 'chrome-aws-lambda';
+import chromium from '@sparticuz/chromium';
 import { put } from '@vercel/blob';
 
 // --- Import your React PDF templates ---
@@ -21,6 +21,24 @@ const getExecutablePath = async () => {
   }
   return playwright.chromium.executablePath();
 };
+
+
+async function getBrowser() {
+  // VERCEL PRODUCTION / PREVIEW ENVIRONMENT
+  if (process.env.VERCEL_ENV) {
+    return playwright.chromium.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+  }
+  // LOCAL DEVELOPMENT ENVIRONMENT
+  else {
+    return playwright.chromium.launch({
+      headless: true,
+    });
+  }
+}
 
 
 /**
@@ -81,22 +99,20 @@ export async function generateInvoicePDFBuffer(invoiceId) {
   const html = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
 
   // 4. Use Playwright to convert the HTML string into a PDF file in memory.
-  const browser = await playwright.chromium.launch({
-    args: process.env.VERCEL_ENV === 'production' ? chromium.args : [],
-    executablePath: await getExecutablePath(),
-    headless: true,
-  });
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle' });
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    printBackground: true,
-    margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' },
-  });
-  await browser.close();
-
-  // 5. Return the raw PDF data (Buffer) and the invoice number for use in other functions.
-  return { pdfBuffer, invoiceNumber: invoiceRecord.invoiceNumber };
+  let browser = null;
+  try {
+    browser = await getBrowser(); // <-- Use the new smart helper
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle' });
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' },
+    });
+    return { pdfBuffer, invoiceNumber: invoiceRecord.invoiceNumber };
+  } finally {
+    if (browser) await browser.close();
+  }
 }
 
 /**
