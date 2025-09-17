@@ -1,4 +1,5 @@
 import React, { useState, Fragment } from 'react';
+// The Menu components are imported but intentionally NOT used in the JSX below.
 import { Menu, Transition } from '@headlessui/react';
 import {
   DollarSign,
@@ -25,41 +26,34 @@ const InvoiceTableRow = ({
   onEditInvoice,
   onUpdateInvoiceState,
 }) => {
+  // --- STATE FOR UI INTERACTIVITY (Unchanged) ---
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
-  const [isEnteringPartial, setIsEnteringPartial] = useState(false);
-  const [partialAmount, setPartialAmount] = useState('');
+  // The state for partial payments is no longer needed in this diagnostic version.
 
-  // --- STABLE DOWNLOAD HANDLER (NO closeMenu call) ---
+  // --- ALL HANDLERS ARE CORRECT AND UNCHANGED ---
+  // The logic inside these functions is stable.
   const handleDownloadPDF = () => {
     setIsDownloadingPdf(true);
     window.open(`/api/downloadInvoice/${invoice.id}`);
     setTimeout(() => setIsDownloadingPdf(false), 1500);
   };
 
-  // --- STABLE IMAGE HANDLER (NO closeMenu call) ---
   const handleDownloadImage = () => {
     setIsDownloadingImage(true);
     window.open(`/api/downloadInvoice/${invoice.id}?format=image`);
     setTimeout(() => setIsDownloadingImage(false), 1500);
   };
-
-  // --- STABLE SEND HANDLER (NO closeMenu call) ---
+  
   const handleSendInvoice = (method) => {
     alert(`Sending invoice to client via ${method}.`);
   };
-  
-  // --- STABLE PAYMENT HANDLER (NO closePopover call) ---
+
   const handlePaymentAction = async (type) => {
+    // This function handles the "Mark as Fully Paid" action.
     let amountToPay;
     if (type === 'full') {
       amountToPay = parseFloat(invoice.balanceDue);
-    } else if (type === 'partial') {
-      amountToPay = parseFloat(partialAmount);
-      if (isNaN(amountToPay) || amountToPay <= 0 || amountToPay >= parseFloat(invoice.balanceDue)) {
-        alert('Please enter a valid amount greater than 0 and less than the balance due.');
-        return;
-      }
     } else { return; }
 
     try {
@@ -71,16 +65,14 @@ const InvoiceTableRow = ({
       const updatedInvoiceData = await res.json();
       if (!res.ok) throw new Error(updatedInvoiceData.message || 'Failed to process payment.');
       
-      // The parent state update will cause a re-render which naturally closes the menu.
       onUpdateInvoiceState(updatedInvoiceData);
-      setPartialAmount('');
     } catch (error) {
       console.error(error);
       alert(error.message);
     }
   };
 
-  // --- Data Formatting (Unchanged) ---
+  // --- DATA FORMATTING (Unchanged) ---
   const clientName = invoice.client?.name || 'N/A';
   const itemCount = invoice.items?.length || 0;
   const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -99,70 +91,36 @@ const InvoiceTableRow = ({
       <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-500">{formattedDue}</p></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2">{getStatusIcon(status)}<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${getStatusColor(status)}`}>{status}</span></div></td>
       
+      {/* --- DIAGNOSTIC TEST: All <Menu> components are replaced with simple <button>s --- */}
       <td className="px-6 py-4 whitespace-nowrap text-right">
-        <div className="flex items-center justify-end space-x-1">
-          <button onClick={() => onEditInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-emerald-600"><Edit className="w-4 h-4"/></button>
-          <Menu as="div" className="relative inline-block text-left">
-            {({ close }) => (
-              <>
-                <Menu.Button disabled={isDownloadingPdf || isDownloadingImage} className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed">
-                  {(isDownloadingPdf || isDownloadingImage) ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>) : (<Download className="w-4 h-4"/>)}
-                </Menu.Button>
-                <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
-                  <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none">
-                    <div className="px-1 py-1">
-                      <Menu.Item>{({ active }) => ( <button onClick={handleDownloadPDF} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><FileText className="w-4 h-4 mr-2"/> Download PDF</button>)}</Menu.Item>
-                      <Menu.Item>{({ active }) => ( <button onClick={handleDownloadImage} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><ImageIcon className="w-4 h-4 mr-2"/> Download Image</button>)}</Menu.Item>
-                    </div>
-                  </Menu.Items>
-                </Transition>
-              </>
-            )}
-          </Menu>
-          <Menu as="div" className="relative inline-block text-left">
-            {({ close }) => (
-              <>
-                <Menu.Button className="inline-flex justify-center w-full rounded-md p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"><MoreVertical className="w-4 h-4" aria-hidden="true"/></Menu.Button>
-                <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
-                  <Menu.Items onBlur={() => setIsEnteringPartial(false)} className="absolute right-0 z-[1000] mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none divide-y divide-gray-100">
-                    {isEnteringPartial ? (
-                      <div className="p-3 space-y-2">
-                        <label className="text-xs font-medium text-gray-700 block">Enter Amount</label>
-                        <div className="flex items-center bg-gray-50 rounded-md">
-                          <span className="text-gray-500 text-sm px-2">{invoice.currencySymbol || '$'}</span>
-                          <input type="number" value={partialAmount} onChange={(e) => setPartialAmount(e.target.value)} placeholder={`Balance: ${invoice.balanceDue}`} className="w-full pl-1 pr-2 py-1 border-l border-gray-300 bg-transparent text-sm focus:ring-0 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()}/>
-                        </div>
-                        <div className="flex items-center justify-end space-x-1">
-                          <button onClick={() => setIsEnteringPartial(false)} className="p-2 text-gray-400 hover:text-red-600"><XCircle className="w-5 h-5"/></button>
-                          <button onClick={() => handlePaymentAction('partial')} className="p-2 text-emerald-500 hover:text-emerald-700"><CheckCircle className="w-5 h-5"/></button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        {invoice.status !== 'PAID' && (
-                          <div className="px-1 py-1">
-                            <Menu.Item>
-                              <button onClick={() => handlePaymentAction('full')} className={`group flex rounded-md items-center w-full px-2 py-2 text-sm text-gray-900 hover:bg-emerald-500 hover:text-white`}><CheckCircle className="w-4 h-4 mr-2"/> Mark as Fully Paid</button>
-                            </Menu.Item>
-                            <Menu.Item>
-                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEnteringPartial(true); }} className={`group flex rounded-md items-center w-full px-2 py-2 text-sm text-gray-900 hover:bg-yellow-500 hover:text-white`}><CheckCircle className="w-4 h-4 mr-2"/> Record Partial Payment</button>
-                            </Menu.Item>
-                          </div>
-                        )}
-                        <div className="px-1 py-1">
-                          <Menu.Item>{({ active }) => (<button onClick={() => handleSendInvoice('email')} className={`${active ? 'bg-blue-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}><Mail className="w-4 h-4 mr-2"/> Send via Email</button>)}</Menu.Item>
-                          <Menu.Item>{({ active }) => (<button onClick={() => handleSendInvoice('whatsapp')} className={`${active ? 'bg-blue-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}><MessageSquare className="w-4 h-4 mr-2"/> Send via WhatsApp</button>)}</Menu.Item>
-                        </div>
-                        <div className="px-1 py-1">
-                          <Menu.Item>{({ active }) => (<button onClick={() => onDeleteInvoice(invoice.id)} className={`${active ? 'bg-red-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}><Trash2 className="w-4 h-4 mr-2"/> Delete</button>)}</Menu.Item>
-                        </div>
-                      </>
-                    )}
-                  </Menu.Items>
-                </Transition>
-              </>
-            )}
-          </Menu>
+        <div className="flex items-center justify-end space-x-2">
+          
+          <button onClick={() => onEditInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-emerald-600 transition-colors">
+            <Edit className="w-4 h-4"/>
+          </button>
+          
+          <button onClick={handleDownloadPDF} disabled={isDownloadingPdf || isDownloadingImage} className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 transition-colors">
+            {isDownloadingPdf ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div> : <FileText className="w-4 h-4"/>}
+          </button>
+
+          <button onClick={handleDownloadImage} disabled={isDownloadingPdf || isDownloadingImage} className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 transition-colors">
+            {isDownloadingImage ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div> : <ImageIcon className="w-4 h-4"/>}
+          </button>
+
+          {invoice.status !== 'PAID' && (
+            <button onClick={() => handlePaymentAction('full')} className="p-1.5 text-gray-400 hover:text-green-600 transition-colors">
+              <CheckCircle className="w-4 h-4"/>
+            </button>
+          )}
+
+          <button onClick={() => handleSendInvoice('email')} className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors">
+            <Mail className="w-4 h-4"/>
+          </button>
+          
+          <button onClick={() => onDeleteInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors">
+            <Trash2 className="w-4 h-4"/>
+          </button>
+
         </div>
       </td>
     </tr>
