@@ -37,6 +37,7 @@ const InvoiceTableRow = ({
     alert(`Sending invoice to client via ${method}.`);
     if (closeMenu) closeMenu();
   };
+  
 
    // --- UPDATED PDF DOWNLOAD HANDLER ---
   const handleDownloadPDF = async (closeMenu) => {
