@@ -1,9 +1,9 @@
-// /pages/invoices.jsx (Corrected with useCallback for Stability)
+// /pages/invoices.jsx (Corrected and Final)
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'; // 1. Import useCallback
-import { useRouter } from 'next/router';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/router'; // 1. Import useRouter
 import InvoiceListHeader from '../components/Invoices/InvoiceListHeader';
 import StatsCards from '../components/Invoices/StatsCards';
 import InvoiceFilters from '../components/Invoices/InvoiceFilters';
@@ -11,18 +11,21 @@ import InvoiceTable from '../components/Invoices/InvoiceTable';
 import EmptyState from '../components/Invoices/EmptyState';
 
 const InvoicesPage = () => {
+  // --- 2. Initialize useRouter at the top level of the component ---
   const router = useRouter(); 
   
+  // --- All other hooks must also be at the top level ---
   const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInvoices, setSelectedInvoices] = useState([]);
-  const [showStats, setShowStats] = useState(true);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+    const [showStats, setShowStats] = useState(true);
 
-  // --- useEffect for fetching data (Correct, no changes needed) ---
+  const [startDate, setStartDate] = useState('');
+const [endDate, setEndDate] = useState('');
+
+  // --- useEffect for fetching data ---
   useEffect(() => {
     const fetchInvoices = async () => {
       setIsLoading(true);
@@ -43,41 +46,60 @@ const InvoicesPage = () => {
     fetchInvoices();
   }, []);
 
-  // --- useMemo for filtering invoices (Correct, no changes needed) ---
-  const filteredInvoices = useMemo(() => {
-    if (!invoices) return [];
-    return invoices.filter(invoice => {
-      const clientName = invoice.client?.name?.toLowerCase() || '';
-      const invoiceNumber = invoice.invoiceNumber?.toLowerCase() || '';
-      const search = searchTerm.toLowerCase();
-      const matchesSearch = clientName.includes(search) || invoiceNumber.includes(search);
-      const status = invoice.status?.toLowerCase() || '';
-      const matchesStatus = !statusFilter || statusFilter.toLowerCase() === 'all' || status === statusFilter.toLowerCase();
-      const invoiceDate = new Date(invoice.date);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      if (start) start.setHours(0, 0, 0, 0);
-      if (end) end.setHours(23, 59, 59, 999);
-      const matchesDate = (!start || invoiceDate >= start) && (!end || invoiceDate <= end);
-      return matchesSearch && matchesStatus && matchesDate;
-    });
-  }, [invoices, searchTerm, statusFilter, startDate, endDate]);
+  // --- useMemo for filtering invoices ---
+const filteredInvoices = useMemo(() => {
+  // Return early if there are no invoices to filter
+  if (!invoices) return [];
 
-  // --- STABILIZED ACTION HANDLERS with useCallback ---
+  return invoices.filter(invoice => {
+    // --- 1. Search Term Filtering (Client Name or Invoice Number) ---
+    const clientName = invoice.client?.name?.toLowerCase() || '';
+    const invoiceNumber = invoice.invoiceNumber?.toLowerCase() || '';
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = clientName.includes(search) || invoiceNumber.includes(search);
 
-  const handleSelectInvoice = useCallback((invoiceId) => {
+    // --- 2. Status Filtering ---
+    const status = invoice.status?.toLowerCase() || '';
+    // Make sure statusFilter exists before calling toLowerCase
+    const matchesStatus = !statusFilter || statusFilter.toLowerCase() === 'all' || status === statusFilter.toLowerCase();
+
+    // --- 3. NEW: Date Range Filtering ---
+    const invoiceDate = new Date(invoice.date);
+    
+    // Parse start and end dates. If they are not provided, these will be null.
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+
+    // To make the range inclusive, we adjust the time.
+    // Start date should be the very beginning of the selected day (00:00:00).
+    if (start) start.setHours(0, 0, 0, 0);
+    // End date should be the very end of the selected day (23:59:59).
+    if (end) end.setHours(23, 59, 59, 999);
+    
+    // The invoice date must be after the start date AND before the end date.
+    // If a date is not selected, its condition will be true.
+    const matchesDate = (!start || invoiceDate >= start) && (!end || invoiceDate <= end);
+    
+    // --- Combine all filters ---
+    // An invoice is included only if it matches all three conditions.
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+}, [invoices, searchTerm, statusFilter, startDate, endDate]);
+
+  // --- Action Handlers ---
+  const handleSelectInvoice = (invoiceId) => {
     setSelectedInvoices(prev => prev.includes(invoiceId) ? prev.filter(id => id !== invoiceId) : [...prev, invoiceId]);
-  }, []);
+  };
 
-  const handleSelectAll = useCallback(() => {
+  const handleSelectAll = () => {
     if (selectedInvoices.length === filteredInvoices.length && filteredInvoices.length > 0) {
       setSelectedInvoices([]);
     } else {
       setSelectedInvoices(filteredInvoices.map(invoice => invoice.id));
     }
-  }, [selectedInvoices.length, filteredInvoices]);
+  };
 
-  const handleDeleteInvoice = useCallback(async (invoiceId) => {
+  const handleDeleteInvoice = async (invoiceId) => {
     if (!window.confirm("Are you sure you want to delete this invoice?")) return;
     const originalInvoices = [...invoices];
     setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
@@ -89,9 +111,9 @@ const InvoicesPage = () => {
       alert("Error: Could not delete the invoice.");
       setInvoices(originalInvoices);
     }
-  }, [invoices]);
+  };
 
-  const handleMarkAsPaid = useCallback(async (invoiceId) => {
+  const handleMarkAsPaid = async (invoiceId) => {
     const originalInvoices = [...invoices];
     setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, status: 'PAID' } : inv));
     try {
@@ -108,21 +130,26 @@ const InvoicesPage = () => {
       alert("Error: Could not mark as paid.");
       setInvoices(originalInvoices);
     }
-  }, [invoices]);
-  
-  const handleInvoiceEdit = useCallback((invoiceId) => {
-    router.push(`/edit-invoice/${invoiceId}`);
-  }, [router]);
+  };
 
-  const handleUpdateInvoiceState = useCallback((updatedInvoice) => {
+  const handleDownloadPDF = (invoiceId) => {
+    console.log('Download PDF:', invoiceId);
+  };
+  
+  const handleInvoiceEdit = (invoiceId) => {
+    // Now `router` is defined and this will work
+    router.push(`/edit-invoice/${invoiceId}`);
+  };
+
+  const handleUpdateInvoiceState = (updatedInvoice) => {
     setInvoices(currentInvoices =>
       currentInvoices.map(inv =>
         inv.id === updatedInvoice.id ? updatedInvoice : inv
       )
     );
-  }, []);
+  };
 
-  const handleBulkAction = useCallback(async (action) => {
+  const handleBulkAction = async (action) => {
     const originalInvoices = [...invoices];
     const actionText = action.toLowerCase().replace('_', ' ');
     if (!window.confirm(`Are you sure you want to ${actionText} ${selectedInvoices.length} selected invoices?`)) return;
@@ -153,54 +180,70 @@ const InvoicesPage = () => {
       alert(`Error: Could not ${actionText} invoices.`);
       setInvoices(originalInvoices);
     }
-  }, [invoices, selectedInvoices]);
+  };
 
-  // --- Render logic (no changes here, but removed the inner function anti-pattern for clarity) ---
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-16">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+      );
+    }
+
+    // --- NEW: This is the core logic for the empty state ---
+    // If loading is finished and there are no invoices at all, show the EmptyState component.
+    if (invoices.length === 0) {
+      return <EmptyState onNewInvoiceClick={() => router.push('/new-invoice')} />;
+    }
+
   return (
+    <div className="flex-1 overflow-auto bg-gray-50">
+     
+        {showStats && <StatsCards invoices={invoices} />}
+
+        <InvoiceFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          selectedInvoicesCount={selectedInvoices.length}
+          onBulkDelete={() => handleBulkAction('DELETE')}
+          onBulkMarkPaid={() => handleBulkAction('MARK_PAID')}
+          startDate={startDate}
+  setStartDate={setStartDate}
+  endDate={endDate}
+  setEndDate={setEndDate}Í
+        />
+
+        <InvoiceTable
+          invoices={filteredInvoices}
+          selectedInvoices={selectedInvoices}
+          onSelectAll={handleSelectAll}
+          onSelectInvoice={handleSelectInvoice}
+          onMarkAsPaid={handleMarkAsPaid}
+          onDeleteInvoice={handleDeleteInvoice}
+          onDownloadPDF={handleDownloadPDF}
+          onEditInvoice={handleInvoiceEdit}
+          onUpdateInvoiceState={handleUpdateInvoiceState} 
+          
+        />
+        
+    </div>
+  );
+};
+
+return (
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="p-4 md:p-8">
         <InvoiceListHeader 
            showStats={showStats}
-          onToggleStats={() => setShowStats(prev => !prev)}
-        />
-        
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center p-16">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          </div>
-        ) : invoices.length === 0 ? (
-          <EmptyState onNewInvoiceClick={() => router.push('/new-invoice')} />
-        ) : (
-          <div className="flex-1 overflow-auto bg-gray-50">
-            {showStats && <StatsCards invoices={invoices} />}
-            <InvoiceFilters
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              selectedInvoicesCount={selectedInvoices.length}
-              onBulkDelete={() => handleBulkAction('DELETE')}
-              onBulkMarkPaid={() => handleBulkAction('MARK_PAID')}
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-            />
-            <InvoiceTable
-              invoices={filteredInvoices}
-              selectedInvoices={selectedInvoices}
-              onSelectAll={handleSelectAll}
-              onSelectInvoice={handleSelectInvoice}
-              onMarkAsPaid={handleMarkAsPaid}
-              onDeleteInvoice={handleDeleteInvoice}
-              onEditInvoice={handleInvoiceEdit}
-              onUpdateInvoiceState={handleUpdateInvoiceState}
-            />
-          </div>
-        )}
+          onToggleStats={() => setShowStats(prev => !prev)}/>
+        {renderContent()}
       </div>
     </div>
   );
 };
+
 
 export default InvoicesPage;

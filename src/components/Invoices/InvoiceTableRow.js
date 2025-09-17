@@ -1,40 +1,53 @@
-// /components/Invoices/InvoiceTableRow.jsx (Corrected and Stabilized)
-
 import React, { useState, Fragment } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import {
-  DollarSign, Calendar, Edit, Download, Trash2, CheckCircle, MoreVertical,
-  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle,
+  DollarSign,
+  Calendar,
+  Edit,
+  Download,
+  Trash2,
+  CheckCircle,
+  MoreVertical,
+  Mail,
+  FileText,
+  Image as ImageIcon,
+  MessageSquare,
+  XCircle,
 } from 'lucide-react';
+
 import { getStatusIcon, getStatusColor } from '../../utils/InvoicesUtils';
 
+// The component props are restored to your original working version
 const InvoiceTableRow = ({
   invoice,
   isSelected,
   onSelectInvoice,
   onDeleteInvoice,
   onEditInvoice,
-  onUpdateInvoiceState, // This function must be stable (wrapped in useCallback) from the parent
-  onMarkAsPaid, // Add this prop for consistency
+  onUpdateInvoiceState,
 }) => {
+  // --- STATE FOR UI INTERACTIVITY ---
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
   const [isEnteringPartial, setIsEnteringPartial] = useState(false);
   const [partialAmount, setPartialAmount] = useState('');
 
-  // --- STABLE PDF DOWNLOAD HANDLER ---
+  // --- NEW STABLE PDF DOWNLOAD HANDLER ---
+  // This is the specific fix for the client-side error.
   const handleDownloadPDF = (closeMenu) => {
     setIsDownloadingPdf(true);
-    // This is the stable way: Let the browser handle the GET request.
+    // The stable way: Let the browser handle the GET request directly.
     window.open(`/api/downloadInvoice/${invoice.id}`);
     
+    // Reset the button state after a short delay
     setTimeout(() => {
       setIsDownloadingPdf(false);
       if (closeMenu) closeMenu();
     }, 1500);
   };
 
-  // --- STABLE IMAGE DOWNLOAD HANDLER ---
+  // --- NEW STABLE IMAGE DOWNLOAD HANDLER ---
+  // This is the other specific fix for the client-side error.
   const handleDownloadImage = (closeMenu) => {
     setIsDownloadingImage(true);
     // The browser handles this GET request as well.
@@ -46,6 +59,7 @@ const InvoiceTableRow = ({
     }, 1500);
   };
 
+  // --- ALL OTHER HANDLERS ARE RESTORED TO YOUR ORIGINAL WORKING CODE ---
   const handleSendInvoice = (method, closeMenu) => {
     alert(`Sending invoice to client via ${method}.`);
     if (closeMenu) closeMenu();
@@ -81,7 +95,7 @@ const InvoiceTableRow = ({
     }
   };
 
-  // --- Data Formatting (No Changes) ---
+  // --- DATA FORMATTING (Unchanged) ---
   const clientName = invoice.client?.name || 'N/A';
   const itemCount = invoice.items?.length || 0;
   const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -91,7 +105,6 @@ const InvoiceTableRow = ({
   const formattedDue = parseFloat(invoice.balanceDue).toLocaleString('en-US', { style: 'currency', currency: 'NPR' });
 
   return (
-    // --- JSX (No Changes) ---
     <tr className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap"><input type="checkbox" checked={isSelected} onChange={() => onSelectInvoice(invoice.id)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"/></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-3"><div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><DollarSign className="w-4 h-4 text-blue-600"/></div><div><p className="text-sm font-medium text-gray-900">{invoice.invoiceNumber}</p><p className="text-xs text-gray-500">{itemCount} items</p></div></div></td>
@@ -100,6 +113,7 @@ const InvoiceTableRow = ({
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2 text-sm text-gray-500"><Calendar className="w-4 h-4"/><span>{formattedDate}</span></div></td>
       <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-500">{formattedDue}</p></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2">{getStatusIcon(status)}<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${getStatusColor(status)}`}>{status}</span></div></td>
+      
       <td className="px-6 py-4 whitespace-nowrap text-right">
         <div className="flex items-center justify-end space-x-1">
           <button onClick={() => onEditInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-emerald-600"><Edit className="w-4 h-4"/></button>
@@ -112,12 +126,8 @@ const InvoiceTableRow = ({
                 <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
                   <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none">
                     <div className="px-1 py-1">
-                      <Menu.Item>
-                        {({ active }) => ( <button onClick={() => handleDownloadPDF(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><FileText className="w-4 h-4 mr-2"/> Download PDF</button>)}
-                      </Menu.Item>
-                      <Menu.Item>
-                        {({ active }) => ( <button onClick={() => handleDownloadImage(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><ImageIcon className="w-4 h-4 mr-2"/> Download Image</button>)}
-                      </Menu.Item>
+                      <Menu.Item>{({ active }) => ( <button onClick={() => handleDownloadPDF(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><FileText className="w-4 h-4 mr-2"/> Download PDF</button>)}</Menu.Item>
+                      <Menu.Item>{({ active }) => ( <button onClick={() => handleDownloadImage(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><ImageIcon className="w-4 h-4 mr-2"/> Download Image</button>)}</Menu.Item>
                     </div>
                   </Menu.Items>
                 </Transition>
@@ -127,9 +137,7 @@ const InvoiceTableRow = ({
           <Menu as="div" className="relative inline-block text-left">
             {({ close }) => (
               <>
-                <Menu.Button className="inline-flex justify-center w-full rounded-md p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none">
-                  <MoreVertical className="w-4 h-4" aria-hidden="true"/>
-                </Menu.Button>
+                <Menu.Button className="inline-flex justify-center w-full rounded-md p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"><MoreVertical className="w-4 h-4" aria-hidden="true"/></Menu.Button>
                 <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
                   <Menu.Items onBlur={() => setIsEnteringPartial(false)} className="absolute right-0 z-[1000] mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none divide-y divide-gray-100">
                     {isEnteringPartial ? (
@@ -149,10 +157,10 @@ const InvoiceTableRow = ({
                         {invoice.status !== 'PAID' && (
                           <div className="px-1 py-1">
                             <Menu.Item>
-                              {({ active }) => (<button onClick={() => onMarkAsPaid(invoice.id)} className={`${active ? 'bg-emerald-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}><CheckCircle className="w-4 h-4 mr-2"/> Mark as Fully Paid</button>)}
+                              <button onClick={() => handlePaymentAction('full', close)} className={`group flex rounded-md items-center w-full px-2 py-2 text-sm text-gray-900 hover:bg-emerald-500 hover:text-white`}><CheckCircle className="w-4 h-4 mr-2"/> Mark as Fully Paid</button>
                             </Menu.Item>
                             <Menu.Item>
-                              {({ active }) => ( <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEnteringPartial(true); }} className={`${active ? 'bg-yellow-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}> <CheckCircle className="w-4 h-4 mr-2"/> Record Partial Payment</button>)}
+                              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEnteringPartial(true); }} className={`group flex rounded-md items-center w-full px-2 py-2 text-sm text-gray-900 hover:bg-yellow-500 hover:text-white`}><CheckCircle className="w-4 h-4 mr-2"/> Record Partial Payment</button>
                             </Menu.Item>
                           </div>
                         )}
