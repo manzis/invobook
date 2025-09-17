@@ -103,7 +103,6 @@ const InvoiceTableRow = ({
         <div className="flex items-center justify-end space-x-1">
           <button onClick={() => onEditInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-emerald-600"><Edit className="w-4 h-4"/></button>
           <Menu as="div" className="relative inline-block text-left">
-            {/* The "close" function is available here, but we will not pass it to our handlers */}
             {({ close }) => (
               <>
                 <Menu.Button disabled={isDownloadingPdf || isDownloadingImage} className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed">
