@@ -88,9 +88,9 @@ export const ModernGreenTemplate = ({ invoiceData }) => {
               padding: 6px; /* Reduced padding */
               font-size: 12px; /* Reduced font size for table items */
             }
-            .invoice-table thead { background-color: #f1f5f9; }
-            .invoice-table thead th { font-weight: 600; color: #1e293b;  }
-            .invoice-table tbody tr { border-bottom: 1px solid #e2e8f0; }
+            .invoice-table thead { background-color: #f1f9f3ff; }
+            .invoice-table thead th { font-weight: 600; color: #0f1d0fff;  }
+            .invoice-table tbody tr { border-bottom: 1px solid #e2f0e6ff; }
 
             /* --- Utility --- */
             .text-right { text-align: right;}
@@ -148,7 +148,7 @@ export const ModernGreenTemplate = ({ invoiceData }) => {
               <div>
                  <p style={{ color: '#7f8b69ff', fontWeight: 500 }}>Payment Details</p>
                  <p style={{ paddingBottom: '4px'}}><strong>Paid:</strong> {formatCurrency(invoice.amountPaid, business.currency)}</p>
-                 <p style={{ fontSize: '14px',  fontWeight: 700, color: '#f2f4f7ff' , background:'#83c939ff' , padding:'6px' }}>
+                 <p style={{ fontSize: '14px',  fontWeight: 700, color: '#ffffffff' , background:'#1eb500ff' , padding:'6px' }}>
                     <strong>Balance Due:</strong> {formatCurrency(invoice.balanceDue, business.currency)}
                  </p>
               </div>
@@ -196,7 +196,7 @@ export const ModernGreenTemplate = ({ invoiceData }) => {
                   <span style={{ fontWeight: 500 }}>Tax ({invoice.taxRate.toString()}%)</span>
                   <span>{formatCurrency(invoice.taxAmount, business.currency)}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '15px', borderTop: '2px solid #e2e8f0', paddingTop: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '15px', borderTop: '2px solid #e2f0e5ff', paddingTop: '12px' }}>
                   <span>Total</span>
                   <span>{formatCurrency(invoice.total, business.currency)}</span>
                 </div>
