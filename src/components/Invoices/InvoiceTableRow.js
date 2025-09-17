@@ -44,7 +44,7 @@ const InvoiceTableRow = ({
     } else if (type === 'partial') {
       amountToPay = parseFloat(partialAmount);
       if (isNaN(amountToPay) || amountToPay <= 0 || amountToPay >= parseFloat(invoice.balanceDue)) {
-        alert('Please enter a valid amount greater than 0 and less than the balance due.');
+        alert('Please enter  valid amount greater than 0 and less than the balance due.');
         return;
       }
     } else { return; }
