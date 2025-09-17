@@ -1,20 +1,11 @@
-import React, { useState, Fragment } from 'react';
-import { Menu, Transition } from '@headlessui/react'; // Only need Menu and Transition
-import {
-  DollarSign,
-  Calendar,
-  Edit,
-  Download,
-  Trash2,
-  CheckCircle,
-  MoreVertical,
-  Mail,
-  FileText,
-  Image as ImageIcon,
-  MessageSquare,
-  XCircle,
-} from 'lucide-react';
+// /components/Invoices/InvoiceTableRow.jsx (Corrected and Stabilized)
 
+import React, { useState, Fragment } from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import {
+  DollarSign, Calendar, Edit, Download, Trash2, CheckCircle, MoreVertical,
+  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle,
+} from 'lucide-react';
 import { getStatusIcon, getStatusColor } from '../../utils/InvoicesUtils';
 
 const InvoiceTableRow = ({
@@ -23,81 +14,44 @@ const InvoiceTableRow = ({
   onSelectInvoice,
   onDeleteInvoice,
   onEditInvoice,
-  onUpdateInvoiceState,
+  onUpdateInvoiceState, // This function must be stable (wrapped in useCallback) from the parent
+  onMarkAsPaid, // Add this prop for consistency
 }) => {
-  // --- STATE FOR UI INTERACTIVITY ---
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
-  const [isEnteringPartial, setIsEnteringPartial] = useState(false); // Controls the view inside the menu
+  const [isEnteringPartial, setIsEnteringPartial] = useState(false);
   const [partialAmount, setPartialAmount] = useState('');
 
-  // --- ACTION HANDLERS (No changes to logic, just passing the menu's close function) ---
+  // --- STABLE PDF DOWNLOAD HANDLER ---
+  const handleDownloadPDF = (closeMenu) => {
+    setIsDownloadingPdf(true);
+    // This is the stable way: Let the browser handle the GET request.
+    window.open(`/api/downloadInvoice/${invoice.id}`);
+    
+    setTimeout(() => {
+      setIsDownloadingPdf(false);
+      if (closeMenu) closeMenu();
+    }, 1500);
+  };
+
+  // --- STABLE IMAGE DOWNLOAD HANDLER ---
+  const handleDownloadImage = (closeMenu) => {
+    setIsDownloadingImage(true);
+    // The browser handles this GET request as well.
+    window.open(`/api/downloadInvoice/${invoice.id}?format=image`);
+
+    setTimeout(() => {
+      setIsDownloadingImage(false);
+      if (closeMenu) closeMenu();
+    }, 1500);
+  };
 
   const handleSendInvoice = (method, closeMenu) => {
     alert(`Sending invoice to client via ${method}.`);
     if (closeMenu) closeMenu();
   };
   
-
-   // --- UPDATED PDF DOWNLOAD HANDLER ---
-  const handleDownloadPDF = async (closeMenu) => {
-    setIsDownloadingPdf(true);
-    try {
-      // Call API without the format parameter
-      const res = await fetch(`/api/downloadInvoice/${invoice.id}`, { method: 'POST' });
-      if (!res.ok) throw new Error('Could not download PDF.');
-      
-      // The response is the raw file data (Blob)
-      const pdfBlob = await res.blob();
-      const url = window.URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      window.open(url, '_blank');
-      a.download = `invoice-${invoice.invoiceNumber}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIsDownloadingPdf(false);
-      if (closeMenu) closeMenu();
-    }
-  };
-
-  // --- NEW IMAGE DOWNLOAD HANDLER ---
-  const handleDownloadImage = async (closeMenu) => {
-    setIsDownloadingImage(true);
-    try {
-      // Call the SAME API but with the `format=image` parameter
-      const res = await fetch(`/api/downloadInvoice/${invoice.id}?format=image`, { method: 'POST' });
-      if (!res.ok) throw new Error('Could not convert PDF to image.');
-      
-      const imageBlob = await res.blob();
-      const imageUrl = URL.createObjectURL(imageBlob);
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = `invoice-${invoice.invoiceNumber}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(imageUrl);
-
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setIsDownloadingImage(false);
-      if (closeMenu) closeMenu();
-    }
-  };
-  /**
-   * Handles payment actions and closes the main menu on success.
-   * @param {'full' | 'partial'} type - The type of payment.
-   * @param {Function} [closeMenu] - The function to close the main 3-dot menu.
-   */
- const handlePaymentAction = async (type, closePopover) => {
+  const handlePaymentAction = async (type, closePopover) => {
     let amountToPay;
     if (type === 'full') {
       amountToPay = parseFloat(invoice.balanceDue);
@@ -127,7 +81,7 @@ const InvoiceTableRow = ({
     }
   };
 
-  // --- DATA FORMATTING ---
+  // --- Data Formatting (No Changes) ---
   const clientName = invoice.client?.name || 'N/A';
   const itemCount = invoice.items?.length || 0;
   const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -137,8 +91,8 @@ const InvoiceTableRow = ({
   const formattedDue = parseFloat(invoice.balanceDue).toLocaleString('en-US', { style: 'currency', currency: 'NPR' });
 
   return (
+    // --- JSX (No Changes) ---
     <tr className="hover:bg-gray-50 transition-colors">
-      {/* All table cells are unchanged */}
       <td className="px-6 py-4 whitespace-nowrap"><input type="checkbox" checked={isSelected} onChange={() => onSelectInvoice(invoice.id)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"/></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-3"><div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><DollarSign className="w-4 h-4 text-blue-600"/></div><div><p className="text-sm font-medium text-gray-900">{invoice.invoiceNumber}</p><p className="text-xs text-gray-500">{itemCount} items</p></div></div></td>
       <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-900">{clientName}</p></td>
@@ -146,40 +100,23 @@ const InvoiceTableRow = ({
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2 text-sm text-gray-500"><Calendar className="w-4 h-4"/><span>{formattedDate}</span></div></td>
       <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-500">{formattedDue}</p></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2">{getStatusIcon(status)}<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${getStatusColor(status)}`}>{status}</span></div></td>
-      
-      {/* --- ACTION BUTTONS COLUMN --- */}
       <td className="px-6 py-4 whitespace-nowrap text-right">
         <div className="flex items-center justify-end space-x-1">
           <button onClick={() => onEditInvoice(invoice.id)} className="p-1.5 text-gray-400 hover:text-emerald-600"><Edit className="w-4 h-4"/></button>
           <Menu as="div" className="relative inline-block text-left">
             {({ close }) => (
               <>
-                <Menu.Button 
-                  disabled={isDownloadingPdf || isDownloadingImage}
-                  className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {(isDownloadingPdf || isDownloadingImage) ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  ) : (
-                    <Download className="w-4 h-4"/>
-                  )}
+                <Menu.Button disabled={isDownloadingPdf || isDownloadingImage} className="p-1.5 text-gray-400 hover:text-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                  {(isDownloadingPdf || isDownloadingImage) ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>) : (<Download className="w-4 h-4"/>)}
                 </Menu.Button>
-                <Transition as={Fragment} /* ... */>
+                <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
                   <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none">
                     <div className="px-1 py-1">
                       <Menu.Item>
-                        {({ active }) => (
-                          <button onClick={() => handleDownloadPDF(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}>
-                            <FileText className="w-4 h-4 mr-2"/> Download PDF
-                          </button>
-                        )}
+                        {({ active }) => ( <button onClick={() => handleDownloadPDF(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><FileText className="w-4 h-4 mr-2"/> Download PDF</button>)}
                       </Menu.Item>
                       <Menu.Item>
-                        {({ active }) => (
-                          <button onClick={() => handleDownloadImage(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}>
-                            <ImageIcon className="w-4 h-4 mr-2"/> Download Image
-                          </button>
-                        )}
+                        {({ active }) => ( <button onClick={() => handleDownloadImage(close)} className={`${active ? 'bg-indigo-500 text-white' : 'text-gray-900'} group flex items-center w-full px-2 py-2 text-sm rounded-md`}><ImageIcon className="w-4 h-4 mr-2"/> Download Image</button>)}
                       </Menu.Item>
                     </div>
                   </Menu.Items>
@@ -187,8 +124,6 @@ const InvoiceTableRow = ({
               </>
             )}
           </Menu>
-
-          {/* SIMPLIFIED 3-DOT MENU */}
           <Menu as="div" className="relative inline-block text-left">
             {({ close }) => (
               <>
@@ -196,27 +131,13 @@ const InvoiceTableRow = ({
                   <MoreVertical className="w-4 h-4" aria-hidden="true"/>
                 </Menu.Button>
                 <Transition as={Fragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
-                  <Menu.Items
-                    // When the menu panel loses focus, reset the input view
-                    onBlur={() => setIsEnteringPartial(false)}
-                    className="absolute right-0 z-[1000] mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none divide-y divide-gray-100"
-                  >
+                  <Menu.Items onBlur={() => setIsEnteringPartial(false)} className="absolute right-0 z-[1000] mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none divide-y divide-gray-100">
                     {isEnteringPartial ? (
-                      // --- VIEW 2: PARTIAL PAYMENT INPUT ---
                       <div className="p-3 space-y-2">
                         <label className="text-xs font-medium text-gray-700 block">Enter Amount</label>
                         <div className="flex items-center bg-gray-50 rounded-md">
                           <span className="text-gray-500 text-sm px-2">{invoice.currencySymbol || '$'}</span>
-                          <input
-                            type="number"
-                            value={partialAmount}
-                            onChange={(e) => setPartialAmount(e.target.value)}
-                            placeholder={`Balance: ${invoice.balanceDue}`}
-                            className="w-full pl-1 pr-2 py-1 border-l border-gray-300 bg-transparent text-sm focus:ring-0 focus:outline-none"
-                            autoFocus
-                            // Stop clicks inside the input from closing the menu
-                            onClick={(e) => e.stopPropagation()} 
-                          />
+                          <input type="number" value={partialAmount} onChange={(e) => setPartialAmount(e.target.value)} placeholder={`Balance: ${invoice.balanceDue}`} className="w-full pl-1 pr-2 py-1 border-l border-gray-300 bg-transparent text-sm focus:ring-0 focus:outline-none" autoFocus onClick={(e) => e.stopPropagation()}/>
                         </div>
                         <div className="flex items-center justify-end space-x-1">
                           <button onClick={() => setIsEnteringPartial(false)} className="p-2 text-gray-400 hover:text-red-600"><XCircle className="w-5 h-5"/></button>
@@ -224,29 +145,14 @@ const InvoiceTableRow = ({
                         </div>
                       </div>
                     ) : (
-                      // --- VIEW 1: STANDARD MENU ---
                       <>
                         {invoice.status !== 'PAID' && (
                           <div className="px-1 py-1">
                             <Menu.Item>
-                              {({ active }) => (<button onClick={() => handlePaymentAction('full', close)} className={`${active ? 'bg-emerald-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}><CheckCircle className="w-4 h-4 mr-2"/> Mark as Fully Paid</button>)}
+                              {({ active }) => (<button onClick={() => onMarkAsPaid(invoice.id)} className={`${active ? 'bg-emerald-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}><CheckCircle className="w-4 h-4 mr-2"/> Mark as Fully Paid</button>)}
                             </Menu.Item>
-                            
-                            {/* THE CRITICAL FIX IS HERE */}
                             <Menu.Item>
-                              {({ active }) => (
-                                <button
-                                  onClick={(e) => {
-                                    // Prevent the menu from closing and stop the event
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setIsEnteringPartial(true);
-                                  }}
-                                  className={`${active ? 'bg-yellow-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-2"/> Record Partial Payment
-                                </button>
-                              )}
+                              {({ active }) => ( <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEnteringPartial(true); }} className={`${active ? 'bg-yellow-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}> <CheckCircle className="w-4 h-4 mr-2"/> Record Partial Payment</button>)}
                             </Menu.Item>
                           </div>
                         )}

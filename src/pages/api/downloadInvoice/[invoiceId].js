@@ -1,76 +1,61 @@
-// /pages/api/downloadInvoice/[invoiceId].js (Final, More Robust Version)
+// /pages/api/downloadInvoice/[invoiceId].js (Corrected and Final Version)
 
 import { generateInvoicePDFBuffer } from '../../../lib/pdfGenerator';
 import fs from 'fs';
 import path from 'path';
-import { execFile } from 'child_process'; // <-- Import Node's own process executor
+import { execFile } from 'child_process';
 
-// Helper to find the correct Homebrew path.
+// Helper to find the correct Homebrew path. (No changes)
 const getPopplerDirectory = () => {
   if (process.env.VERCEL_ENV) return undefined;
   const armPath = '/opt/homebrew/bin';
   if (fs.existsSync(armPath)) return armPath;
   const intelPath = '/usr/local/bin';
   if (fs.existsSync(intelPath)) return intelPath;
-  return undefined; // Let the system try to find it
+  return undefined;
 };
 
-// --- NEW: A promise-based wrapper for the conversion process ---
+// Promise-based wrapper for the conversion process. (No changes)
 const convertPdfToImage = (pdfPath, outPrefix, popplerDir) => {
   return new Promise((resolve, reject) => {
     const pdftocairoPath = popplerDir ? path.join(popplerDir, 'pdftocairo') : 'pdftocairo';
-    const args = [
-      '-png',       // Output format is PNG
-      '-f', '1',     // Start from page 1
-      '-l', '1',     // End at page 1
-      pdfPath,      // The input PDF file
-      outPrefix     // The prefix for the output image file(s)
-    ];
-
-    const options = {
-      timeout: 10000, // Kill the process if it takes longer than 10 seconds
-    };
+    const args = ['-png', '-f', '1', '-l', '1', pdfPath, outPrefix];
+    const options = { timeout: 10000 };
 
     execFile(pdftocairoPath, args, options, (error, stdout, stderr) => {
       if (error) {
         console.error("ExecFile Error:", { stdout, stderr });
-        // The error object from execFile is more detailed
         return reject(error);
       }
-      // If the process completes without error
       resolve(stdout);
     });
   });
 };
 
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
+  // --- CHANGE 1: Switched from POST to GET ---
+  // This now correctly handles the request from the client's window.open()
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', ['GET']); // Let browsers know GET is the only allowed method
+    return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
+  }
 
   const { invoiceId, format } = req.query;
 
   try {
     const { pdfBuffer, invoiceNumber } = await generateInvoicePDFBuffer(invoiceId);
 
+    // Image logic: Force download ('attachment') - this is correct.
     if (format === 'image') {
-      console.log(`[${invoiceId}] Starting image conversion...`);
       const tempPdfPath = path.join('/tmp', `invoice-${invoiceNumber}.pdf`);
       const tempImagePrefix = path.join('/tmp', `image-${invoiceNumber}`);
       
       try {
-        console.log(`[${invoiceId}] Writing temporary PDF to: ${tempPdfPath}`);
         fs.writeFileSync(tempPdfPath, pdfBuffer);
-        
-        console.log(`[${invoiceId}] Calling conversion process...`);
-        // --- THE CHANGE IS HERE: We now call our new robust function ---
         await convertPdfToImage(tempPdfPath, tempImagePrefix, getPopplerDirectory());
-        console.log(`[${invoiceId}] Conversion process successful.`);
-
         const imagePath = `${tempImagePrefix}-1.png`;
-        console.log(`[${invoiceId}] Reading converted image from: ${imagePath}`);
         const imageBuffer = fs.readFileSync(imagePath);
 
-        console.log(`[${invoiceId}] Cleaning up temporary files...`);
         fs.unlinkSync(tempPdfPath);
         fs.unlinkSync(imagePath);
 
@@ -82,13 +67,21 @@ export default async function handler(req, res) {
         console.error(`[${invoiceId}] CRITICAL: PDF to Image conversion failed.`, conversionError);
         return res.status(500).json({
           message: 'Server error during image conversion.',
-          details: `Process failed with code ${conversionError.code}. Check server logs for stderr output.`
+          details: `Process failed. Check server logs.`
         });
       }
       
     } else {
+      // PDF logic: Open in tab ('inline')
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoiceNumber}.pdf"`);
+
+      // --- CHANGE 2: Use 'inline' to open in the tab ---
+      // This tells the browser to display the file, not just download it.
+      res.setHeader(
+        'Content-Disposition',
+        `inline; filename="invoice-${invoiceNumber}.pdf"`
+      );
+      
       return res.status(200).send(pdfBuffer);
     }
   } catch (error) {
