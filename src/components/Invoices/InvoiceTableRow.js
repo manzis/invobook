@@ -38,29 +38,23 @@ const InvoiceTableRow = ({
     if (closeMenu) closeMenu();
   };
 
-   // --- UPDATED PDF DOWNLOAD HANDLER ---
-  const handleDownloadPDF = async (closeMenu) => {
+// /src/components/Invoices/InvoiceTableRow.js
+
+const handleDownloadPDF = (closeMenu) => {
+  // 1. Give the user immediate feedback
   setIsDownloadingPdf(true);
-  try {
-    const res = await fetch(`/api/downloadInvoice/${invoice.id}`, { method: 'POST' });
-    if (!res.ok) throw new Error('Could not download PDF.');
-    
-    const pdfBlob = await res.blob();
-    const url = window.URL.createObjectURL(pdfBlob);
-    
-    // This is the only action needed to open the PDF in a new tab.
-    window.open(url, '_blank');
 
-    // It's a good practice to clean up the object URL after a short delay,
-    // though the browser will also do it when the tab is closed.
-    setTimeout(() => window.URL.revokeObjectURL(url), 100);
-
-  } catch (error) {
-    alert(error.message);
-  } finally {
+  // 2. Open the API endpoint directly in a new tab.
+  // This sends a standard GET request that the browser handles natively.
+  // There is no `fetch`, no `blob`, no `createObjectURL`.
+  window.open(`/api/downloadInvoice/${invoice.id}`);
+  
+  // 3. Reset the button's loading state after a short delay.
+  // This is now safe because we are not handling any complex browser state.
+  setTimeout(() => {
     setIsDownloadingPdf(false);
     if (closeMenu) closeMenu();
-  }
+  }, 1500); // 1.5 seconds should be plenty.
 };
 
   // --- NEW IMAGE DOWNLOAD HANDLER ---
