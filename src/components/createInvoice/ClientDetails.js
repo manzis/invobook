@@ -33,7 +33,8 @@ const ClientDetails = ({
     return allClients.filter(client =>
       client.name.toLowerCase().includes(searchTerm) ||
       client.email.toLowerCase().includes(searchTerm) ||
-      client.company?.toLowerCase().includes(searchTerm)
+      client.company?.toLowerCase().includes(searchTerm)||
+      client.phone.toLowerCase().includes(searchTerm)
     );
   }, [clientName, allClients]);
 
