@@ -1,19 +1,34 @@
 // pages/_app.js
 
-import Layout from '../components/layout'; // Your default layout
-import { AuthProvider } from '../context/AuthContext'; // Import the AuthProvider
+import Layout from '../components/layout';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import LogoutLoader from '../components/logout'; // Import the new loader
 import '../styles/globals.css';
 
-function MyApp({ Component, pageProps }) {
-  // Use per-page layout if defined, else default to Layout
+// Create this new wrapper component
+function AppContent({ Component, pageProps }) {
+  // Now we can safely use the hook here
+  const { isLoggingOut } = useAuth();
   const getLayout = Component.getLayout || ((page) => <Layout>{page}</Layout>);
 
   return (
-    // Wrap the entire application, including the layout logic, with AuthProvider.
-    // This ensures that authentication state (user, loading, etc.) is available
-    // everywhere, inside any layout and on any page.
-    <AuthProvider>
+    <>
+      {/* If isLoggingOut is true, show the loader */}
+      {isLoggingOut && <LogoutLoader />}
+      
+      {/* Your existing layout and page logic */}
       {getLayout(<Component {...pageProps} />)}
+    </>
+  );
+}
+
+
+function MyApp({ Component, pageProps }) {
+  return (
+    // Wrap the AppContent component, which now contains all UI logic,
+    // with the AuthProvider.
+    <AuthProvider>
+      <AppContent Component={Component} pageProps={pageProps} />
     </AuthProvider>
   );
 }
