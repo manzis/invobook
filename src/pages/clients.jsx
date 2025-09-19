@@ -28,7 +28,7 @@ const ClientsPage = () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/clients');
-        if (!res.ok) throw new Error("Failed to fetch clients");
+        if (!res.ok) throw new Error("Failed to fetch clients data");
         const data = await res.json();
         setClients(data);
       } catch (error) {
