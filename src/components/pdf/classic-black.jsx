@@ -113,7 +113,8 @@ export const ClassicTemplate = ({ invoiceData }) => {
                             {/* --- FIX: Always show business name --- */}
                             <h1 style={{ marginBottom: '12px' }}>{business.businessName}</h1>
                             <p>{business.address},{business.city}, {business.state} - {business.zipCode}</p>
-                            {business.taxId && <p><b>GSTIN:</b> {business.taxId}</p>}
+                            <p>{business.city}, {business.state} - {business.zipCode}</p>
+                            {business.taxId && <p><b>PAN:</b> {business.taxId}</p>}
 
                            
                         </div>
@@ -136,8 +137,9 @@ export const ClassicTemplate = ({ invoiceData }) => {
                                 <p style={{ color: '#868e96' }}>Billed To:</p>
                                 <p><b>{client.company || client.name}</b></p>
                                 <p>{client.address}</p>
+                                <p>{client.city}</p>
                                 {client.phone && <p>{client.phone}</p>}
-                                {client.taxId && <p><b>GSTIN:</b> {client.taxId}</p>}
+                                {client.taxId && <p><b>PAN:</b> {client.taxId}</p>}
                             </div>
  {/* --- RELOCATED BALANCE DUE BOX --- */}
                             <div className="balance-due-box">

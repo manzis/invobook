@@ -23,8 +23,8 @@ export default async function handler(req, res) {
 
     // --- Handle New vs. Existing Client ---
     if (!clientId) {
-      if (!invoiceData.clientName && !invoiceData.clientCompany) {
-        return res.status(400).json({ message: 'New client name and business are required.' });
+      if (!invoiceData.clientName && !invoiceData.clientPhone) {
+        return res.status(400).json({ message: 'New client name and phone are required.' });
       }
       const newClient = await prisma.client.create({
         data: {
