@@ -112,7 +112,7 @@ export const ClassicTemplate = ({ invoiceData }) => {
                             )}
                             {/* --- FIX: Always show business name --- */}
                             <h1 style={{ marginBottom: '12px' }}>{business.businessName}</h1>
-                            <p>{business.address},{business.city}, {business.state} - {business.zipCode}</p>
+                            <p>{business.address}</p>
                             <p>{business.city}, {business.state} - {business.zipCode}</p>
                             {business.taxId && <p><b>PAN:</b> {business.taxId}</p>}
 
