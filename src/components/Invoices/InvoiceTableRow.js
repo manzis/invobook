@@ -103,7 +103,7 @@ const InvoiceTableRow = ({
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2">{getStatusIcon(status)}<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${getStatusColor(status)}`}>{status}</span></div></td>
       
       <td className="px-6 py-4 whitespace-nowrap text-right">
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center justify-end space-x-1">
           <button onClick={() => onEditInvoice(invoice.id)} className={`${actionButtonClasses} ${actionButtonHoverClasses.edit}`}>
             <Edit className="w-4 h-4"/>
           </button>
