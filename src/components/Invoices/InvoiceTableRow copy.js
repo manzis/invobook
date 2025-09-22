@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   DollarSign, Calendar, Edit, Download, Trash2, CheckCircle, MoreVertical,
-  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle, Share, ArrowLeft,
+  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle, Share,
 } from 'lucide-react';
 
 import { getStatusIcon, getStatusColor } from '../../utils/InvoicesUtils';
@@ -20,7 +20,6 @@ const InvoiceTableRow = ({
   const [isEnteringPartial, setIsEnteringPartial] = useState(false);
   const [partialAmount, setPartialAmount] = useState('');
   const [isSharing, setIsSharing] = useState(false);
-  const [menuView, setMenuView] = useState('main'); // 'main' or 'share'
 
   // --- STABLE HANDLERS ---
   const handleDownloadPDF = () => {
@@ -35,7 +34,7 @@ const InvoiceTableRow = ({
     setTimeout(() => setIsDownloadingImage(false), 1500);
   };
 
-  const handleShare = async (format) => {
+const handleShare = async (format) => {
     setIsSharing(true);
     const isImage = format === 'image';
     const url = isImage ? `/api/downloadInvoice/${invoice.id}?format=image` : `/api/downloadInvoice/${invoice.id}`;
@@ -61,8 +60,8 @@ const InvoiceTableRow = ({
           alert("Sharing this file type is not supported on your device.");
         }
       } catch (error) {
-        console.error('Error sharing: Cancelled by the user', error);
-        
+        console.error('Error sharing:', error);
+        alert('An error occurred while preparing the file for sharing.');
       }
     } else {
       alert('Web Share is not supported by your browser. Please use the download option instead.');
@@ -121,13 +120,11 @@ const InvoiceTableRow = ({
     yellow: "focus:bg-yellow-500 focus:text-white",
     blue: "focus:bg-blue-500 focus:text-white",
     red: "focus:bg-red-500 focus:text-white",
-    gray: "focus:bg-gray-200 focus:text-gray-800",
   };
   const actionButtonClasses = "p-1.5 text-gray-400 rounded-md transition-colors";
   const actionButtonHoverClasses = {
     edit: "hover:bg-emerald-50 hover:text-emerald-600",
     download: "hover:bg-indigo-50 hover:text-indigo-600",
-    share: "hover:bg-blue-50 hover:text-blue-600",
     more: "hover:bg-gray-100 hover:text-gray-600",
   };
 
@@ -165,12 +162,7 @@ const InvoiceTableRow = ({
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
 
-          <DropdownMenu.Root onOpenChange={(open) => {
-            if (!open) {
-                setIsEnteringPartial(false);
-                setMenuView('main'); // Reset menu view on close
-            }
-          }}>
+          <DropdownMenu.Root onOpenChange={(open) => !open && setIsEnteringPartial(false)}>
             <DropdownMenu.Trigger asChild>
               <button className={`${actionButtonClasses} ${actionButtonHoverClasses.more}`}>
                 <MoreVertical className="w-4 h-4" aria-hidden="true"/>
@@ -179,18 +171,18 @@ const InvoiceTableRow = ({
             <DropdownMenu.Portal>
               <DropdownMenu.Content className={contentClasses} sideOffset={5} collisionPadding={30} >
                 {isEnteringPartial ? (
-                    <div onSelect={(e) => e.preventDefault()} className="p-2 space-y-2">
-                                      <label className="text-xs font-medium text-gray-700 block">Enter Amount</label>
-                                      <div className="flex items-center bg-gray-50 rounded-md">
-                                        <span className="text-gray-500 text-sm px-2">{invoice.currencySymbol || '$'}</span>
-                                        <input type="number" value={partialAmount} onChange={(e) => setPartialAmount(e.target.value)} placeholder={`Balance: ${invoice.balanceDue}`} className="w-full pl-1 pr-2 py-1 border-l border-gray-300 bg-transparent text-sm focus:ring-0 focus:outline-none" autoFocus/>
-                                      </div>
-                                      <div className="flex items-center justify-end space-x-1">
-                                        <button onClick={() => setIsEnteringPartial(false)} className="p-2 text-gray-400 hover:text-red-600"><XCircle className="w-5 h-5"/></button>
-                                        <button onClick={() => handlePaymentAction('partial')} className="p-2 text-emerald-500 hover:text-emerald-700"><CheckCircle className="w-5 h-5"/></button>
-                                      </div>
-                                    </div>
-                ) : menuView === 'main' ? (
+                  <div onSelect={(e) => e.preventDefault()} className="p-2 space-y-2">
+                    <label className="text-xs font-medium text-gray-700 block">Enter Amount</label>
+                    <div className="flex items-center bg-gray-50 rounded-md">
+                      <span className="text-gray-500 text-sm px-2">{invoice.currencySymbol || '$'}</span>
+                      <input type="number" value={partialAmount} onChange={(e) => setPartialAmount(e.target.value)} placeholder={`Balance: ${invoice.balanceDue}`} className="w-full pl-1 pr-2 py-1 border-l border-gray-300 bg-transparent text-sm focus:ring-0 focus:outline-none" autoFocus/>
+                    </div>
+                    <div className="flex items-center justify-end space-x-1">
+                      <button onClick={() => setIsEnteringPartial(false)} className="p-2 text-gray-400 hover:text-red-600"><XCircle className="w-5 h-5"/></button>
+                      <button onClick={() => handlePaymentAction('partial')} className="p-2 text-emerald-500 hover:text-emerald-700"><CheckCircle className="w-5 h-5"/></button>
+                    </div>
+                  </div>
+                ) : (
                   <>
                     {invoice.status !== 'PAID' && (
                       <DropdownMenu.Group>
@@ -202,28 +194,27 @@ const InvoiceTableRow = ({
                     <DropdownMenu.Group>
                       <DropdownMenu.Item onSelect={() => handleSendInvoice('email')} className={`${itemClasses} ${itemColorClasses.blue}`}><Mail className="w-4 h-4 mr-2"/> Send via Email</DropdownMenu.Item>
                       <DropdownMenu.Item onSelect={() => handleSendInvoice('whatsapp')} className={`${itemClasses} ${itemColorClasses.blue}`}><MessageSquare className="w-4 h-4 mr-2"/> Send via WhatsApp</DropdownMenu.Item>
-                      <DropdownMenu.Item onSelect={(e) => { e.preventDefault(); setMenuView('share'); }} className={`${itemClasses} ${itemColorClasses.blue}`}>
-                        <Share className="w-4 h-4 mr-2"/> Share
-                      </DropdownMenu.Item>
+                       <DropdownMenu.Sub>
+                        <DropdownMenu.SubTrigger className={`${itemClasses} ${itemColorClasses.blue}`}>
+                          <Share className="w-4 h-4 mr-2"/> Share
+                        </DropdownMenu.SubTrigger>
+                        <DropdownMenu.Portal>
+                          <DropdownMenu.SubContent className={`${contentClasses} w-20`} sideOffset={5} collisionPadding={30}>
+                            <DropdownMenu.Item onSelect={() => handleShare('image')} className={`${itemClasses} ${itemColorClasses.indigo}`}>
+                              <ImageIcon className="w-4 h-4 mr-2"/> Image
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Item onSelect={() => handleShare('pdf')} className={`${itemClasses} ${itemColorClasses.indigo}`}>
+                              <FileText className="w-4 h-4 mr-2"/> PDF
+                            </DropdownMenu.Item>
+                          </DropdownMenu.SubContent>
+                        </DropdownMenu.Portal>
+                      </DropdownMenu.Sub>
                     </DropdownMenu.Group>
                     <DropdownMenu.Separator className="h-px bg-gray-100 my-1" />
                     <DropdownMenu.Group>
                       <DropdownMenu.Item onSelect={() => onDeleteInvoice(invoice.id)} className={`${itemClasses} ${itemColorClasses.red}`}><Trash2 className="w-4 h-4 mr-2"/> Delete</DropdownMenu.Item>
                     </DropdownMenu.Group>
                   </>
-                ) : (
-                  // Share Submenu View
-                  <DropdownMenu.Group>
-                     <DropdownMenu.Item onSelect={(e) => { e.preventDefault(); setMenuView('main'); }} className={`${itemClasses} ${itemColorClasses.gray}`}>
-                        <ArrowLeft className="w-4 h-4 mr-2"/> Back
-                      </DropdownMenu.Item>
-                    <DropdownMenu.Item onSelect={() => handleShare('image')} className={`${itemClasses} ${itemColorClasses.indigo}`}>
-                      <ImageIcon className="w-4 h-4 mr-2"/> Image
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onSelect={() => handleShare('pdf')} className={`${itemClasses} ${itemColorClasses.indigo}`}>
-                      <FileText className="w-4 h-4 mr-2"/> PDF
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Group>
                 )}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
