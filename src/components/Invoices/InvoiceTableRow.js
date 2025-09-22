@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { createPortal } from 'react-dom'; // Import createPortal
 import {
   DollarSign, Calendar, Edit, Download, Trash2, CheckCircle, MoreVertical,
-  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle, Share, ArrowLeft,
+  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle, Share, ArrowLeft,Loader2
 } from 'lucide-react';
 
 import { getStatusIcon, getStatusColor } from '../../utils/InvoicesUtils';
@@ -21,6 +22,16 @@ const InvoiceTableRow = ({
   const [partialAmount, setPartialAmount] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [menuView, setMenuView] = useState('main'); // 'main' or 'share'
+
+  // A new component for the full-screen loader overlay
+const LoaderOverlay = () => (
+  <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black/40 transition-opacity duration-300">
+    <div className="flex flex-col items-center space-y-3">
+      <Loader2 className="w-10 h-10 animate-spin text-white" />
+      <span className="text-lg font-medium text-white">Preparing to share...</span>
+    </div>
+  </div>
+);
 
   // --- STABLE HANDLERS ---
   const handleDownloadPDF = () => {
@@ -132,6 +143,12 @@ const InvoiceTableRow = ({
   };
 
   return (
+     <>
+      {isSharing && createPortal(
+        <LoaderOverlay />,
+        document.body
+      )}
+
     <tr className="hover:bg-gray-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap"><input type="checkbox" checked={isSelected} onChange={() => onSelectInvoice(invoice.id)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"/></td>
       <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-3"><div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><DollarSign className="w-4 h-4 text-blue-600"/></div><div><p className="text-sm font-medium text-gray-900">{invoice.invoiceNumber}</p><p className="text-xs text-gray-500">{itemCount} items</p></div></div></td>
@@ -178,7 +195,7 @@ const InvoiceTableRow = ({
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content className={contentClasses} sideOffset={5} collisionPadding={30} >
-                {isEnteringPartial ? (
+                  {isEnteringPartial ? (
                     <div onSelect={(e) => e.preventDefault()} className="p-2 space-y-2">
                                       <label className="text-xs font-medium text-gray-700 block">Enter Amount</label>
                                       <div className="flex items-center bg-gray-50 rounded-md">
@@ -231,6 +248,7 @@ const InvoiceTableRow = ({
         </div>
       </td>
     </tr>
+    </>
   );
 };
 
