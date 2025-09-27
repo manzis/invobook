@@ -30,11 +30,23 @@
     hashedPassword String // We will store a hashed password, not the real one
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt
+    customTemplates CustomTemplate[]
 
     business Business? // A user can have one business (optional)
     clients Client[]
     invoices Invoice[]
   }
+
+  model CustomTemplate {
+  id           String @id @default(cuid())
+  templateName String // The unique key for the template, e.g., "custom-acme-corp"
+  userId       String // The ID of the user who has access
+
+  // A user can have many custom templates assigned to them
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateName]) // Ensures a user can't be assigned the same template twice
+}
 
   model Business {
     id           String   @id @default(cuid())
@@ -69,6 +81,9 @@
     defaultTerms      String?
     createdAt         DateTime @default(now())
     updatedAt         DateTime @updatedAt
+
+    paymentInfo       String?  // For bank details, etc.
+    paymentImageUrl   String? 
 
     // This is the link back to the Business
     business   Business @relation(fields: [businessId], references: [id])

@@ -54,7 +54,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
               font-size: 12px;
               line-height: 1.5;
               margin: 0;
-              padding: 0;
+              padding: 12px;
               box-sizing: border-box;
             }
             *, *:before, *:after {
@@ -160,7 +160,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
           {/* This main content wrapper will grow to push the footer down */}
           <main className="content-wrap">
             <table className="invoice-table">
-              <thead >
+              <thead  >
                 <tr>
                   <th>Description</th>
                   <th style={{ width: '7%' }}>Qty</th>
@@ -170,7 +170,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
               </thead>
               <tbody>
                 {invoice.items.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} >
                     <td>{item.description}</td>
                     <td>{item.quantity.toString()}</td>
                     <td>{formatCurrency(item.rate, business.currency)}</td>

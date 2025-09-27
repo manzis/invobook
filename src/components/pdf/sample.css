@@ -1,25 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Header</title>
-
-    <!-- Using the 'Inter' font from Google Fonts which closely matches the design -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-    <style>
-
-        @font-face {
+@font-face {
     font-family: 'DinBold';
     src: url('fonts/dinBold.woff2') format('woff2'),
 }
 
 body {
     font-family: 'Inter', sans-serif;
-    margin: 0px;
 }
 
 .invoice-format {
@@ -35,7 +20,7 @@ body {
     flex-direction: column;
     gap: 20px;
     background-color: white;
-    padding: 0rem 3rem 0rem 3rem;
+    padding: 3rem 3rem 0rem 0rem;
 }
 
 .invoice-header {
@@ -49,11 +34,12 @@ body {
     border-bottom: 1px solid #e5e7eb;
     /* A light grey bottom border */
     height: 150px;
-    padding: 0rem 3rem 0rem 3rem;
 }
 
 .header-column {
+    /* Styling for each of the three columns */
     padding: 2.5rem 3rem;
+    /* Generous padding for spacing */
     display: flex;
     flex-direction: column;
 
@@ -69,7 +55,6 @@ body {
     flex: 1.5;
     /* Makes this column wider than the others */
     align-items: flex-start;
-    padding: 0px;
 }
 
 .logo-text {
@@ -411,7 +396,7 @@ body {
     padding-top: 3rem;
     padding-bottom: 3rem;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .terms-contact {
@@ -435,7 +420,6 @@ body {
     line-height: 24px;
 }
 
-
 .text-value {
 
     text-align: left;
@@ -444,185 +428,3 @@ body {
     color: white;
     line-height: 24px;
 }
-
-.payment-info{
-    display: flex;
-    flex-direction: column;
-}
-
-.payment-image{
-    height: 100%;
-}
-
-
-    </style>
-
-</head>
-
-<body>
-
-    <div class="invoice-format">
-
-           <header class="invoice-header">
-            <!-- Column 1: Logo -->
-            <div class="header-column logo-column">
-                <img src="logo" alt="company logo"/>
-            </div>
-
-            <!-- Column 2: Invoice Title -->
-            <div class="header-column title-column">
-                <h1 class="invoice-title">Invoice</h1>
-                <p class="invoice-id">#3456</p>
-            </div>
-
-            <!-- Column 3: Invoice Metadata -->
-            <div class="header-column meta-column">
-                <table class="meta-table">
-                    <tbody>
-                        <tr>
-                            <td class="meta-label">Invoice #</td>
-                            <td class="meta-value">07292022</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-label">Issue Date</td>
-                            <td class="meta-value">Jul 29, 2022</td>
-                        </tr>
-                        <tr>
-                            <td class="meta-label">Due Date</td>
-                            <td class="meta-value">Aug 29, 2022</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </header>
-
-    <div class="header-group">
-
-     
-
-        <!-- ROW 2 : NEWLY ADDED BILLING SECTION -->
-        <section class="billing-section">
-            <div class="billing-address">
-                <div class="label">Bill to:</div>
-                <div class="text">Bhagwan Essentials<br>
-                    Bhaktapur, Nikoshera<br>
-                    345678, PAN: 856698689</div>
-            </div>
-
-            <div class="billing-address">
-                <div class="label">Billed By:</div>
-                <div class="text">Bhagwan Essentials<br>
-                    Bhaktapur, Nikoshera<br>
-                    345678, PAN: 856698689</div>
-            </div>
-
-            <div class="total-due">
-                <div class="label-due">Total Due:</div>
-                <div class="amount">NPR 6,768.75</div>
-            </div>
-        </section>
-
-        <!-- ROW 3: Invoice ITEMS AND ITS DETAILS -->
-        <section class="invoice-details">
-            <table class="invoice-table">
-                <thead>
-                    <tr class="table-label">
-                        <th class="item-header">ITEMS</th>
-                        <th class="quantity-header">QUANTITY</th>
-                        <th class="total-header">TOTAL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="item-row">
-                        <td class="item-description">
-                            <p class="item-name">Bhagwan Essentials | Shivox Creaine HCL</p>
-                            <p class="item-subtext">Size: 125G Flavour: Blueberry</p>
-                        </td>
-                        <td class="quantity">1</td>
-                        <td class="total">NPR 1,200.00</td>
-                    </tr>
-                    <tr class="item-row">
-                        <td class="item-description">
-                            <p class="item-name">Bhagwan Essentials | Shivox Creaine HCL</p>
-                            <p class="item-subtext">Size: 125G Flavour: Blueberry</p>
-                        </td>
-                        <td class="quantity">1</td>
-                        <td class="total">NPR 100.00</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- ROW 4: Invoice Calculations -->
-
-        <section class="invoice-calculation">
-            <div class="notes">
-                <div class="notes-label">Notes</div>
-                <div class="notes-description">Thank you for your purchase !</div>
-            </div>
-            <div class="calculation-table">
-
-                <div class="sub-calculation-field">
-
-                <div class="calc-field-subtotal">
-                    <div class="calc-label"> Subtotal</div>
-                    <div class="calc-value">NPR 7125.00</div>
-                </div>
-
-                <div class="calc-field-tax">
-                    <div class="calc-label"> Tax(13%)</div>
-                    <div class="calc-value">NPR 71.00</div>
-                </div>
-
-                <div class="calc-field-discount">
-                    <div class="calc-label"> Discount(5%)</div>
-                    <div class="calc-value">NPR 7125.00</div>
-                </div>
-
-                <div class="calc-field-shipping">
-                    <div class="calc-label"> Shipping</div>
-                    <div class="calc-value">NPR 150.00</div>
-                </div>
-                </div>
-
-
-                <div class="calc-field-total">
-                    <div class="calc-total-label"> Total</div>
-                    <div class="calc-total-value">NPR 7125.00</div>
-                </div>
-            </div>
-        </section>
-
-
-
-
-    </div>
-
-
-         <!-- ROW 5: Invoice Footer -->
-          <footer class="invoice-footer">
-            <div class="footer-div">
-                <div class="terms-contact">
-                <div class="terms">
-                    <div class="terms-label">Terms and Conditions</div>
-                    <div class="text-value">Dummy text specifying the terms and regulations and other parts that are not yet identifies or configured</div>
-                </div>
-                <div class="company-details">
-                <div class="contact-label">Contact</div>
-                    <div class="text-value">Bhagwan Essentials<br> care@bhagwanessentials.com <br> +977 9807553740</div>
-                </div>
-                </div>
-
-                <div class="payment-info">
-                    <div class="pay-label">Scan to Pay</div>
-                    <img class="payment-image" alt="qrimage"/>
-                    
-                </div>
-            </div>
-          </footer>
-
-        </div>
-
-</body>
-
-</html>

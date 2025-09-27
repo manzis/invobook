@@ -4,14 +4,29 @@ import playwright from 'playwright-core';
 import chromium from '@sparticuz/chromium';
 import { put } from '@vercel/blob';
 
-// --- Import your React PDF templates ---
+// --- Step 1: Import ALL your React PDF templates ---
+// Default Templates
 import { ModernBlueTemplate } from '../components/pdf/modern-blue'; 
 import { ModernGreenTemplate } from '../components/pdf/modern-green';
 import { ClassicTemplate } from '../components/pdf/classic-black';
 
+// Custom Templates (Import any custom template you create here)
+import { BhagwanEssentialTemplate } from '../components/pdf/custom/bhagwan-essential';
+
 const prisma = new PrismaClient();
 
-// This helper is correct and used by both functions
+// --- Step 2: Create the Template Registry (Map) ---
+// This map links the template name string (from your database) to the actual React component.
+// This replaces the need for a switch statement, making your code scalable.
+const templateMap = {
+  'modern-blue': ModernBlueTemplate,
+  'modern-green': ModernGreenTemplate,
+  'classic-tabular': ClassicTemplate,
+  'bhagwan-essential': BhagwanEssentialTemplate,
+  // 'acme-corp-red': AcmeCorpRedTemplate, // When you add a new template, just add it here.
+};
+
+// This helper function to get the browser instance remains unchanged.
 async function getBrowser() {
   // VERCEL PRODUCTION / PREVIEW ENVIRONMENT
   if (process.env.VERCEL_ENV) {
@@ -30,8 +45,26 @@ async function getBrowser() {
 }
 
 /**
- * CORE FUNCTION: Generates a PDF for an invoice.
- * This function remains unchanged.
+ * Dynamically selects the correct template component based on the name.
+ * @param {string} templateName - The name of the template from database settings.
+ * @returns {React.ComponentType} The corresponding React component.
+ */
+function getTemplateComponent(templateName) {
+  // Look up the component in our map.
+  const SelectedTemplateComponent = templateMap[templateName];
+
+  // If the specific template isn't found, log a warning and fall back to a default.
+  if (!SelectedTemplateComponent) {
+    console.warn(`Template "${templateName}" not found in templateMap. Falling back to 'modern-blue'.`);
+    return templateMap['modern-blue'];
+  }
+  
+  return SelectedTemplateComponent;
+}
+
+/**
+ * CORE FUNCTION: Generates a PDF buffer for an invoice.
+ * This is now updated to use the dynamic template map.
  */
 export async function generateInvoicePDFBuffer(invoiceId) {
   const invoiceRecord = await prisma.invoice.findUnique({
@@ -39,15 +72,7 @@ export async function generateInvoicePDFBuffer(invoiceId) {
     include: {
       items: true,
       client: true,
-      user: {
-        include: {
-          business: {
-            include: {
-              invoiceSettings: true,
-            },
-          },
-        },
-      },
+      user: { include: { business: { include: { invoiceSettings: true } } } },
     },
   });
 
@@ -62,13 +87,9 @@ export async function generateInvoicePDFBuffer(invoiceId) {
     user: invoiceRecord.user,
   };
     
+  // --- DYNAMIC TEMPLATE SELECTION ---
   const templateName = invoiceRecord.user.business.invoiceSettings?.templateName ?? 'modern-blue';
-  let SelectedTemplateComponent;
-  switch (templateName) {
-    case 'modern-green': SelectedTemplateComponent = ModernGreenTemplate; break;
-    case 'classic-tabular': SelectedTemplateComponent = ClassicTemplate; break;
-    case 'modern-blue': default: SelectedTemplateComponent = ModernBlueTemplate; break;
-  }
+  const SelectedTemplateComponent = getTemplateComponent(templateName);
 
   const html = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
 
@@ -80,7 +101,6 @@ export async function generateInvoicePDFBuffer(invoiceId) {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' },
     });
     return { pdfBuffer, invoiceNumber: invoiceRecord.invoiceNumber };
   } finally {
@@ -89,26 +109,16 @@ export async function generateInvoicePDFBuffer(invoiceId) {
 }
 
 /**
- * --- FINAL HIGH-QUALITY A4-SIZED IMAGE FUNCTION WITH PADDING ---
- * Generates a high-resolution PNG image with the exact dimensions of an A4 page
- * and an internal 20px padding.
+ * Generates a high-resolution PNG image for an invoice.
+ * Also updated to use the dynamic template map.
  */
 export async function generateInvoiceImageBuffer(invoiceId) {
-  // 1. Fetch data (This part is correct)
   const invoiceRecord = await prisma.invoice.findUnique({
     where: { id: invoiceId },
     include: {
       items: true,
       client: true,
-      user: {
-        include: {
-          business: {
-            include: {
-              invoiceSettings: true,
-            },
-          },
-        },
-      },
+      user: { include: { business: { include: { invoiceSettings: true } } } },
     },
   });
 
@@ -121,42 +131,31 @@ export async function generateInvoiceImageBuffer(invoiceId) {
     client: invoiceRecord.client,
     business: invoiceRecord.user.business,
     user: invoiceRecord.user,
+    
   };
     
-  // 2. Select and render the template (Correct)
+  // --- DYNAMIC TEMPLATE SELECTION ---
   const templateName = invoiceRecord.user.business.invoiceSettings?.templateName ?? 'modern-blue';
-  let SelectedTemplateComponent;
-  switch (templateName) {
-    case 'modern-green': SelectedTemplateComponent = ModernGreenTemplate; break;
-    case 'classic-tabular': SelectedTemplateComponent = ClassicTemplate; break;
-    case 'modern-blue': default: SelectedTemplateComponent = ModernBlueTemplate; break;
-  }
+  const SelectedTemplateComponent = getTemplateComponent(templateName);
+  
   const html = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
 
-  // 3. Use Playwright with precise A4 settings
   let browser = null;
-  try {
+    try {
     browser = await getBrowser();
-    
-    // Create a new page with 2x resolution for top-notch quality
     const page = await browser.newPage({ deviceScaleFactor: 2 });
     
-    // Set the viewport to A4 dimensions (at 96 DPI) to define our canvas
-    await page.setViewportSize({
-      width: 794,
-      height: 1123,
-    });
+    // Set a width for the page rendering canvas
+    await page.setViewportSize({ width: 794, height: 1123 }); // height is a minimum
     
     await page.setContent(html, { waitUntil: 'networkidle' });
+    await page.addStyleTag({ content: 'body { box-sizing: border-box; }' });
     
-    // --- THIS IS THE KEY CHANGE ---
-    // Inject a CSS rule to add 20px padding to the body.
-    // box-sizing ensures the padding is contained within the body's dimensions.
-    await page.addStyleTag({ content: 'body { padding: 20px; box-sizing: border-box; }' });
-    
-    // Take a screenshot of the entire viewport, which now includes the padding
-    const imageBuffer = await page.screenshot({
+    // --- BUG FIX #2: Correct syntax for screenshot options ---
+    // `fullPage: true` must be INSIDE the options object {}
+    const imageBuffer = await page.screenshot({ 
       type: 'png',
+      fullPage: true // This ensures the entire rendered invoice is captured
     });
 
     return { imageBuffer, invoiceNumber: invoiceRecord.invoiceNumber };
@@ -164,18 +163,20 @@ export async function generateInvoiceImageBuffer(invoiceId) {
     if (browser) await browser.close();
   }
 }
-
 /**
- * Your existing upload function. This remains unchanged.
+ * Generates and uploads the PDF to Vercel Blob storage.
+ * This function does not need any changes as it calls the refactored core function.
  */
 export async function generateAndUploadInvoicePDF(invoiceId) {
   try {
     const { pdfBuffer, invoiceNumber } = await generateInvoicePDFBuffer(invoiceId);
     const fileName = `invoice-${invoiceNumber}-${Date.now()}.pdf`;
+    
     const blob = await put(fileName, pdfBuffer, {
       access: 'public',
       contentType: 'application/pdf',
     });
+    
     return blob.url;
   } catch (error) {
     console.error(`Failed to generate and upload PDF for invoice ${invoiceId}:`, error);

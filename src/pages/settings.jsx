@@ -33,7 +33,7 @@ const SettingsPage = () => {
 
         const fetchedProfile = await profileRes.json();
         const fetchedInvoiceSettings = await invoiceRes.json();
-        
+
         // Populate state with the separated address fields
         setProfileData({
           name: fetchedProfile.name || '',
@@ -45,7 +45,7 @@ const SettingsPage = () => {
           state: fetchedProfile.business?.state || '',       // <-- ADDED
           zipCode: fetchedProfile.business?.zipCode || '',   // <-- ADDED
           website: fetchedProfile.business?.website || '',
-          logoUrl: fetchedProfile.business?.logoUrl || null, 
+          logoUrl: fetchedProfile.business?.logoUrl || null,
           taxId: fetchedProfile.business?.taxId || '',
         });
 
@@ -69,60 +69,83 @@ const SettingsPage = () => {
     fetchAllSettings();
   }, []);
 
-const handleSaveChanges = async () => {
-  setIsSaving(true);
-  setStatusMessage('');
-  
-  let profilePayload = { ...profileData };
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    setStatusMessage('');
 
-  try {
-    if (profilePayload.logoFile) {
-      setStatusMessage('Uploading logo...');
-      
-      const file = profilePayload.logoFile;
-      const response = await fetch(
-        `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`,
-        { method: 'POST', body: file }
-      );
+    let profilePayload = { ...profileData };
+    let invoicePayload = { ...invoiceSettings };
 
-      const newBlob = await response.json();
-      if (!response.ok) {
-        throw new Error(newBlob.message || 'Logo upload failed.');
+    try {
+      if (profilePayload.logoFile) {
+        setStatusMessage('Uploading logo...');
+
+        const file = profilePayload.logoFile;
+        const response = await fetch(
+          `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`,
+          { method: 'POST', body: file }
+        );
+
+        const newBlob = await response.json();
+        if (!response.ok) {
+          throw new Error(newBlob.message || 'Logo upload failed.');
+        }
+
+        profilePayload.logoUrl = newBlob.url;
       }
-      
-      profilePayload.logoUrl = newBlob.url;
-    }
-    
-    delete profilePayload.logoFile;
 
-    setStatusMessage('Saving settings...');
-    // The profilePayload now automatically includes city, state, and zipCode
-    const [profileResponse, invoiceResponse] = await Promise.all([
-      fetch('/api/profile', {
+
+       // --- Step 2: NEW - Handle Payment Image (QR Code) Upload ---
+      // This block checks if a new payment image file has been selected.
+      if (invoicePayload.paymentImageFile) {
+        setStatusMessage('Uploading payment image...');
+        const file = invoicePayload.paymentImageFile;
+
+        // We reuse the same generic upload API
+         const response = await fetch(
+          `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`,
+          { method: 'POST', body: file }
+        );
+
+        const newBlob = await response.json();
+        if (!response.ok) throw new Error(newBlob.message || 'Payment image upload failed.');
+
+        // Set the returned URL on the payload that will be saved to the database.
+        invoicePayload.paymentImageUrl = newBlob.url;
+      }
+
+      // Step 3: Clean up temporary file objects from the payloads
+      delete profilePayload.logoFile;
+      delete invoicePayload.paymentImageFile; // <-- This is important!
+
+      setStatusMessage('Saving settings...');
+      // The profilePayload now automatically includes city, state, and zipCode
+      const [profileResponse, invoiceResponse] = await Promise.all([
+        fetch('/api/profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profilePayload), 
-      }),
-      fetch('/api/invoice-settings', {
+          body: JSON.stringify(profilePayload),
+        }),
+        fetch('/api/invoice-settings', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(invoiceSettings),
-      })
-    ]);
+          body: JSON.stringify(invoicePayload),
+        })
+      ]);
 
-    if (!profileResponse.ok || !invoiceResponse.ok) {
-      throw new Error('Failed to save one or more settings.');
+      if (!profileResponse.ok || !invoiceResponse.ok) {
+        throw new Error('Failed to save one or more settings.');
+      }
+
+      setStatusMessage('Changes saved successfully!');
+
+    } catch (error) {
+      setStatusMessage(`Error: ${error.message}`);
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setStatusMessage(''), 3000);
     }
-    
-    setStatusMessage('Changes saved successfully!');
-
-  } catch (error) {
-    setStatusMessage(`Error: ${error.message}`);
-  } finally {
-    setIsSaving(false);
-    setTimeout(() => setStatusMessage(''), 3000);
-  }
-};
+  };
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -132,7 +155,7 @@ const handleSaveChanges = async () => {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
-  
+
   const renderContent = () => {
     if (isLoadingData) {
       return (
@@ -153,7 +176,7 @@ const handleSaveChanges = async () => {
       case 'invoice':
         return <InvoiceSettings data={invoiceSettings} setData={setInvoiceSettings} />;
       case 'templates':
-        return <TemplatesSettings />;
+        return <TemplatesSettings data={invoiceSettings} setData={setInvoiceSettings} />;
       case 'notifications':
         return <NotificationsSettings data={notifications} setData={setNotifications} />;
       case 'security':
@@ -168,10 +191,10 @@ const handleSaveChanges = async () => {
   return (
     <div className="flex-1 overflow-auto bg-gray-50">
       <div className="p-4 md:p-8">
-        <SettingsHeader 
-          onSave={handleSaveChanges} 
+        <SettingsHeader
+          onSave={handleSaveChanges}
           isLoading={isSaving}
-          statusMessage={statusMessage} 
+          statusMessage={statusMessage}
         />
         <div className="flex flex-col lg:flex-row gap-8">
           <SettingsSidebar tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />

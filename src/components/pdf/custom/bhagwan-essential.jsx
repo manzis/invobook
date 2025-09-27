@@ -1,7 +1,7 @@
 import React from 'react';
 
 // --- Helper Functions ---
-const formatCurrency = (amount, currency = 'USD') => {
+const formatCurrency = (amount, currency = 'NPR') => {
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount)) {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(0);
@@ -31,7 +31,7 @@ const formatDate = (dateString) => {
 };
 
 // --- The Redesigned Classic Invoice Template ---
-export const ClassicTemplate = ({ invoiceData }) => {
+export const BhagwanEssentialTemplate = ({ invoiceData }) => {
     const { business, client, invoice, user } = invoiceData;
 
     if (!invoice || !client || !business || !user) {
@@ -96,10 +96,11 @@ export const ClassicTemplate = ({ invoiceData }) => {
                     .invoice-header { display: flex; background-color: #ffffff; color: #212121; border-bottom: 1px solid #e5e7eb; height: 150px; padding: 0rem 3rem 0rem 3rem;}
                     .header-column { padding: 2.5rem 3rem; display: flex; flex-direction: column; }
                     .header-column:not(:last-child) { border-right: 1px solid #e5e7eb; }
-                    .logo-column { flex: 1.5; align-items: flex-start; justify-content: center; }
+                    .logo-column { flex: 1.5; align-items: flex-start; justify-content: center; padding:0px; }
                     .logo-image {
-                        max-height: 120px; /* Logo size INCREASED */
+                        max-height: 72px; /* Logo size INCREASED */
                         width: auto;
+                        object-fit:cover;
                     }
                     .logo-text { font-size: 5rem; font-weight: 900; letter-spacing: -0.5rem; line-height: 1; color: #000000; }
                     .title-column { display: flex; justify-content: center; }
@@ -109,8 +110,8 @@ export const ClassicTemplate = ({ invoiceData }) => {
                     .meta-table { width: 100%; border-spacing: 0; font-size: 0.95rem; }
                     .label, .meta-label { font-family: DinBold; font-size: 1rem; display: flex; font-weight: 700; color: #212121; line-height: 24px; }
                     .meta-value { color: #111827; text-align: right; line-height: '24px'; font-weight: 400; color: #212121; }
-                    .billing-section { display: flex; width: 100%; justify-content: space-between; height: 150px; align-items:space-between; }
-                    .billing-address { display: flex; max-width: 300px; width:100% justify-content: center; flex-direction: column; }
+                    .billing-section { display: flex; width: 100%; justify-content: space-between; height: 150px; }
+                    .billing-address { display: flex; max-width: 300px; justify-content: center; flex-direction: column; }
                     .text { color: #212121; line-height: 24px; }
                     .total-due { font-family: DinBold; display: flex; flex-direction: column; height: 100%; justify-content: center; gap: 30px; }
                     .label-due { text-align: right; font-size: 1rem; font-weight: 700; line-height: 24px; color: #212121; }
@@ -144,13 +145,13 @@ export const ClassicTemplate = ({ invoiceData }) => {
                     .invoice-footer {
                         /* margin-top is no longer needed for positioning */
                     }
-                    .footer-div { display: flex; background-color: #000000; padding: 3rem; justify-content: space-between; align-items: center; }
-                    .terms-contact { display: flex; gap: 60px; }
+                    .footer-div { display: flex; background-color: #000000; justify-content: space-between; align-items: flex-start; }
+                    .terms-contact { display: flex; gap: 60px; padding: 2.4rem 3rem 2.4rem 3rem; }
                     .terms { display: flex; flex-direction: column; max-width: 250px; justify-content: flex-start; }
                     .contact-label, .terms-label, .pay-label { font-family: DinBold; color: white; line-height: 24px; }
                     .text-value { text-align: left; text-wrap: wrap; font-weight: 400; color: white; line-height: 24px; }
-                    .client-phone { font-weight: 700; /* Makes the font bold */ }
-                    .client-pan { font-family: 'DinBold', sans-serif; /* Applies your custom font */ }
+                    .payment-info{ display: flex; flex-direction: column; border-left: 1px solid #bbbbbbff; padding: 2.4rem 3rem 2.4rem 3rem; justify-content: space-between; align-items: center; gap: 4px; }
+                    .payment-image{ width:150px; height:150px; object-fit:cover;}
                 `}</style>
             </head>
             <body>
@@ -196,15 +197,7 @@ export const ClassicTemplate = ({ invoiceData }) => {
                                     {client.name}<br />
                                     {client.address}{client.address && <br />}
                                     {client.city}{client.city && <br />}
-                                    {/* --- THIS IS THE CHANGE --- */}
-                                    {client.phone && (
-                                        <>
-                                            <span className="client-phone">{client.phone}</span><br />
-                                        </>
-                                    )}
-                                    {client.taxId && (
-                                        <span className="client-pan">PAN: {client.taxId}</span>
-                                    )}
+                                    {client.taxId && `PAN: ${client.taxId}`}
                                 </div>
                             </div>
                             <div className="billing-address">
@@ -213,9 +206,7 @@ export const ClassicTemplate = ({ invoiceData }) => {
                                     {business.businessName}<br />
                                     {business.address}{business.address && <br />}
                                     {business.city}, {business.state} {business.zipCode}{business.city && <br />}
-                                     {business.taxId && (
-                                        <span className="client-pan">PAN: {business.taxId}</span>
-                                    )}
+                                    {business.taxId && `Tax ID: ${business.taxId}`}
                                 </div>
                             </div>
                             <div className="total-due">
@@ -298,14 +289,18 @@ export const ClassicTemplate = ({ invoiceData }) => {
                                     <div className="text-value">
                                         {business.businessName}<br />
                                         {user.email} <br />
-                                        {business.phone}
+                                        {business.phone} <br />
+                                        {business.website}
                                     </div>
                                 </div>
                             </div>
-                            <div className="payment-info">
-                                <div className="pay-label">Scan to Pay</div>
-                                <img src="" alt="qrimage" />
-                            </div>
+                            {business.invoiceSettings.paymentImageUrl && (
+                                <div className="payment-info">
+                                    <div className="pay-label">Scan to Pay</div>
+                                    {/* It's now safe to use invoiceSettings here */}
+                                    <img src={business.invoiceSettings.paymentImageUrl} className='payment-image' alt="Payment QR Code" />
+                                </div>
+                            )}
                         </div>
                     </footer>
                 </div>
