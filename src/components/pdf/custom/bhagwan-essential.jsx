@@ -90,10 +90,10 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                         flex-grow: 1; /* CRITICAL for sticky footer */
                         display: flex;
                         flex-direction: column;
-                        gap: 20px;
+                        gap: 2rem;
                         padding: 2rem 3rem 3rem 3rem;
                     }
-                    .invoice-header { display: flex; background-color: #ffffff; color: #212121; border-bottom: 1px solid #e5e7eb; height: 150px; padding: 0rem 3rem 0rem 3rem;}
+                    .invoice-header { display: flex; background-color: #ffffff; color: #212121; border-bottom: 1px solid #e5e7eb; height: 150px; padding: 0rem 3.5rem 0rem 3.5rem;}
                     .header-column { padding: 2.5rem 3rem; display: flex; flex-direction: column; }
                     .header-column:not(:last-child) { border-right: 1px solid #e5e7eb; }
                     .logo-column { flex: 1.5; align-items: flex-start; justify-content: center; padding:0px; }
@@ -110,12 +110,12 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                     .meta-table { width: 100%; border-spacing: 0; font-size: 0.95rem; }
                     .label, .meta-label { font-family: DinBold; font-size: 1rem; display: flex; font-weight: 700; color: #212121; line-height: 24px; }
                     .meta-value { color: #111827; text-align: right; line-height: '24px'; font-weight: 400; color: #212121; }
-                    .billing-section { display: flex; width: 100%; justify-content: space-between; height: 150px; }
-                    .billing-address { display: flex; max-width: 300px; justify-content: center; flex-direction: column; }
+                    .billing-section { display: flex; width: 100%; justify-content:space-between; }
+                    .billing-address { display: flex; max-width: 300px; justify-content: flex-start; flex-direction: column; }
                     .text { color: #212121; line-height: 24px; }
-                    .total-due { font-family: DinBold; display: flex; flex-direction: column; height: 100%; justify-content: center; gap: 30px; }
+                    .total-due { font-family: DinBold; display: flex; flex-direction: column;  justify-content: space-between;  }
                     .label-due { text-align: right; font-size: 1rem; font-weight: 700; line-height: 24px; color: #212121; }
-                    .amount { font-size: 48px; font-weight: 700; color: #212121; }
+                    .amount { font-size: 48px; font-weight: 700; color: #212121;}
                     .invoice-details { width: 100%; }
                     .invoice-table { width: 100%; border-collapse: collapse; border: 1px solid #e0e0e0; background-color: #ffffff; padding: 100px; border-radius: 8px; }
                     .table-label th { font-size: 12px; padding: 22px 27px; color: #888; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e0e0e0; }
@@ -130,8 +130,8 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                     .item-description .item-subtext { color: #777; font-size: 13px; margin: 0; font-weight: 400; }
                     .quantity { text-align: left; font-weight: 500; color: #212121; }
                     .total { text-align: right; font-weight: 500; color: #212121; }
-                    .invoice-calculation { display: flex; justify-content: space-between; margin-top: 20px;}
-                    .notes { display: flex; flex-direction: column; max-width: 400px; gap: 4px; }
+                    .invoice-calculation { display: flex; justify-content: space-between; margin-top: 20px; align-items:flex-end;}
+                    .notes { display: flex; flex-direction: column; max-width: 400px; gap: 4px; justfy-content: flex-end; height: 100%;}
                     .notes-label { font-family: DinBold; font-size: 1rem; line-height: 24px; }
                     .notes-description { font-size: 15px; }
                     .calculation-table { display: flex; flex-direction: column; border: 1px solid #e0e0e0; width: 400px; gap: 13px; }
@@ -152,6 +152,9 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                     .text-value { text-align: left; text-wrap: wrap; font-weight: 400; color: white; line-height: 24px; }
                     .payment-info{ display: flex; flex-direction: column; border-left: 1px solid #bbbbbbff; padding: 2.4rem 3rem 2.4rem 3rem; justify-content: space-between; align-items: center; gap: 4px; }
                     .payment-image{ width:150px; height:150px; object-fit:cover;}
+                    .phone { font-weight: 600; /* Sets a semi-bold weight as requested */}
+
+                     .tax-id {font-family: 'DinBold', sans-serif; /* Applies your custom bold font with a safe fallback */font-weight: bold; /* Ensures the browser selects the bold version of the font */}
                 `}</style>
             </head>
             <body>
@@ -196,8 +199,16 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                                 <div className="text">
                                     {client.name}<br />
                                     {client.address}{client.address && <br />}
-                                    {client.city}{client.city && <br />}
-                                    {client.taxId && `PAN: ${client.taxId}`}
+                                    {/* MODIFICATION: Conditionally render the phone number with a 'phone' class */}
+                                    {client.phone && (
+                                        <>
+                                            <span className='phone'>{client.phone}</span>
+                                            <br />
+                                        </>
+                                    )}
+
+                                    {/* MODIFICATION: Conditionally render the PAN/Tax ID with a 'tax-id' class */}
+                                    {client.taxId && <span className="tax-id">{`PAN: ${client.taxId}`}</span>}
                                 </div>
                             </div>
                             <div className="billing-address">
@@ -206,7 +217,8 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                                     {business.businessName}<br />
                                     {business.address}{business.address && <br />}
                                     {business.city}, {business.state} {business.zipCode}{business.city && <br />}
-                                    {business.taxId && `Tax ID: ${business.taxId}`}
+                                    {/* MODIFICATION: Conditionally render the Tax ID with a 'tax-id' class */}
+                                    {business.taxId && <span className="tax-id">{`Tax ID: ${business.taxId}`}</span>}
                                 </div>
                             </div>
                             <div className="total-due">
