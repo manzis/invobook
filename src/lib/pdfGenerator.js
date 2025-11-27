@@ -97,7 +97,7 @@ export async function generateInvoicePDFBuffer(invoiceId) {
   try {
     browser = await getBrowser();
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    await page.setContent(html, { waitUntil: 'load',timeout:30000 });
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -148,9 +148,10 @@ export async function generateInvoiceImageBuffer(invoiceId) {
     // Set a width for the page rendering canvas
     await page.setViewportSize({ width: 794, height: 1123 }); // height is a minimum
     
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    await page.setContent(html, { waitUntil: 'load',timeout:30000 });
     await page.addStyleTag({ content: 'body { box-sizing: border-box; }' });
     
+
     // --- BUG FIX #2: Correct syntax for screenshot options ---
     // `fullPage: true` must be INSIDE the options object {}
     const imageBuffer = await page.screenshot({ 
