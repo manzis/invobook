@@ -97,7 +97,7 @@ export async function generateInvoicePDFBuffer(invoiceId) {
   try {
     browser = await getBrowser();
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle' });
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -148,7 +148,7 @@ export async function generateInvoiceImageBuffer(invoiceId) {
     // Set a width for the page rendering canvas
     await page.setViewportSize({ width: 794, height: 1123 }); // height is a minimum
     
-    await page.setContent(html, { waitUntil: 'networkidle' });
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
     await page.addStyleTag({ content: 'body { box-sizing: border-box; }' });
     
     // --- BUG FIX #2: Correct syntax for screenshot options ---
