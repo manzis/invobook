@@ -4,68 +4,72 @@ import playwright from 'playwright-core';
 import chromium from '@sparticuz/chromium';
 import { put } from '@vercel/blob';
 
-// --- Step 1: Import ALL your React PDF templates ---
-// Default Templates
+// --- Imports remain the same ---
 import { ModernBlueTemplate } from '../components/pdf/modern-blue'; 
 import { ModernGreenTemplate } from '../components/pdf/modern-green';
 import { ClassicTemplate } from '../components/pdf/classic-black';
-
-// Custom Templates (Import any custom template you create here)
 import { BhagwanEssentialTemplate } from '../components/pdf/custom/bhagwan-essential';
 
 const prisma = new PrismaClient();
 
-// --- Step 2: Create the Template Registry (Map) ---
-// This map links the template name string (from your database) to the actual React component.
-// This replaces the need for a switch statement, making your code scalable.
 const templateMap = {
   'modern-blue': ModernBlueTemplate,
   'modern-green': ModernGreenTemplate,
   'classic-tabular': ClassicTemplate,
   'bhagwan-essential': BhagwanEssentialTemplate,
-  // 'acme-corp-red': AcmeCorpRedTemplate, // When you add a new template, just add it here.
 };
 
-// This helper function to get the browser instance remains unchanged.
+// --- HELPER: Wrap React Output in Full HTML with Fonts ---
+function wrapHtmlWithDoctype(reactHtml) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
+        <!-- 1. LOAD FONTS: Use Absolute URLs (e.g., Google Fonts) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        
+        <!-- 2. DEFAULT STYLES: Ensure fonts are actually applied -->
+        <style>
+          body {
+            font-family: 'Inter', 'Roboto', sans-serif;
+            -webkit-print-color-adjust: exact; /* Ensures colors print accurately */
+            print-color-adjust: exact;
+          }
+        </style>
+      </head>
+      <body>
+        ${reactHtml}
+      </body>
+    </html>
+  `;
+}
+
 async function getBrowser() {
-  // VERCEL PRODUCTION / PREVIEW ENVIRONMENT
   if (process.env.VERCEL_ENV) {
     return playwright.chromium.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
     });
-  }
-  // LOCAL DEVELOPMENT ENVIRONMENT
-  else {
-    return playwright.chromium.launch({
-      headless: true,
-    });
+  } else {
+    return playwright.chromium.launch({ headless: true });
   }
 }
 
-/**
- * Dynamically selects the correct template component based on the name.
- * @param {string} templateName - The name of the template from database settings.
- * @returns {React.ComponentType} The corresponding React component.
- */
 function getTemplateComponent(templateName) {
-  // Look up the component in our map.
   const SelectedTemplateComponent = templateMap[templateName];
-
-  // If the specific template isn't found, log a warning and fall back to a default.
   if (!SelectedTemplateComponent) {
-    console.warn(`Template "${templateName}" not found in templateMap. Falling back to 'modern-blue'.`);
+    console.warn(`Template "${templateName}" not found. Falling back to 'modern-blue'.`);
     return templateMap['modern-blue'];
   }
-  
   return SelectedTemplateComponent;
 }
 
-/**
- * CORE FUNCTION: Generates a PDF buffer for an invoice.
- * This is now updated to use the dynamic template map.
- */
 export async function generateInvoicePDFBuffer(invoiceId) {
   const invoiceRecord = await prisma.invoice.findUnique({
     where: { id: invoiceId },
@@ -77,7 +81,7 @@ export async function generateInvoicePDFBuffer(invoiceId) {
   });
 
   if (!invoiceRecord || !invoiceRecord.user || !invoiceRecord.user.business) {
-    throw new Error('Missing critical data (user, business, or client) to generate PDF.');
+    throw new Error('Missing critical data to generate PDF.');
   }
 
   const templateData = {
@@ -87,17 +91,28 @@ export async function generateInvoicePDFBuffer(invoiceId) {
     user: invoiceRecord.user,
   };
     
-  // --- DYNAMIC TEMPLATE SELECTION ---
   const templateName = invoiceRecord.user.business.invoiceSettings?.templateName ?? 'modern-blue';
   const SelectedTemplateComponent = getTemplateComponent(templateName);
 
-  const html = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
+  // 1. Render Component
+  const componentHtml = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
+  
+  // 2. Wrap it in full HTML with Font Links
+  const fullHtml = wrapHtmlWithDoctype(componentHtml);
 
   let browser = null;
   try {
     browser = await getBrowser();
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load',timeout:30000 });
+
+    // 3. Set content and wait for basic load
+    await page.setContent(fullHtml, { waitUntil: 'load', timeout: 30000 });
+
+    // 4. CRITICAL FIX: Force browser to wait for fonts to finish downloading
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
@@ -108,10 +123,6 @@ export async function generateInvoicePDFBuffer(invoiceId) {
   }
 }
 
-/**
- * Generates a high-resolution PNG image for an invoice.
- * Also updated to use the dynamic template map.
- */
 export async function generateInvoiceImageBuffer(invoiceId) {
   const invoiceRecord = await prisma.invoice.findUnique({
     where: { id: invoiceId },
@@ -123,7 +134,7 @@ export async function generateInvoiceImageBuffer(invoiceId) {
   });
 
   if (!invoiceRecord || !invoiceRecord.user || !invoiceRecord.user.business) {
-    throw new Error('Missing critical data (user, business, or client) to generate Image.');
+    throw new Error('Missing critical data to generate Image.');
   }
 
   const templateData = {
@@ -131,32 +142,35 @@ export async function generateInvoiceImageBuffer(invoiceId) {
     client: invoiceRecord.client,
     business: invoiceRecord.user.business,
     user: invoiceRecord.user,
-    
   };
     
-  // --- DYNAMIC TEMPLATE SELECTION ---
   const templateName = invoiceRecord.user.business.invoiceSettings?.templateName ?? 'modern-blue';
   const SelectedTemplateComponent = getTemplateComponent(templateName);
   
-  const html = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
+  const componentHtml = renderToString(<SelectedTemplateComponent invoiceData={templateData} />);
+  
+  // Wrap HTML here too
+  const fullHtml = wrapHtmlWithDoctype(componentHtml);
 
   let browser = null;
-    try {
+  try {
     browser = await getBrowser();
     const page = await browser.newPage({ deviceScaleFactor: 2 });
+    await page.setViewportSize({ width: 794, height: 1123 }); 
     
-    // Set a width for the page rendering canvas
-    await page.setViewportSize({ width: 794, height: 1123 }); // height is a minimum
+    await page.setContent(fullHtml, { waitUntil: 'load', timeout: 30000 });
     
-    await page.setContent(html, { waitUntil: 'load',timeout:30000 });
-    await page.addStyleTag({ content: 'body { box-sizing: border-box; }' });
-    
+    // Add specific style for image capture
+    await page.addStyleTag({ content: 'body { box-sizing: border-box; margin: 0; }' });
 
-    // --- BUG FIX #2: Correct syntax for screenshot options ---
-    // `fullPage: true` must be INSIDE the options object {}
+    // WAIT FOR FONTS HERE TOO
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
+
     const imageBuffer = await page.screenshot({ 
       type: 'png',
-      fullPage: true // This ensures the entire rendered invoice is captured
+      fullPage: true 
     });
 
     return { imageBuffer, invoiceNumber: invoiceRecord.invoiceNumber };
@@ -164,10 +178,7 @@ export async function generateInvoiceImageBuffer(invoiceId) {
     if (browser) await browser.close();
   }
 }
-/**
- * Generates and uploads the PDF to Vercel Blob storage.
- * This function does not need any changes as it calls the refactored core function.
- */
+
 export async function generateAndUploadInvoicePDF(invoiceId) {
   try {
     const { pdfBuffer, invoiceNumber } = await generateInvoicePDFBuffer(invoiceId);
