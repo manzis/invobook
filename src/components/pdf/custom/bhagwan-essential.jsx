@@ -98,7 +98,7 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                     .header-column:not(:last-child) { border-right: 1px solid #e5e7eb; }
                     .logo-column { flex: 1.5; align-items: flex-start; justify-content: center; padding:0px; }
                     .logo-image {
-                        max-height: 72px; /* Logo size INCREASED */
+                        max-height: 100px; /* Logo size INCREASED */
                         width: auto;
                         object-fit:cover;
                     }
