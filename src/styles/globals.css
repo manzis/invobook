@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../../Design/vercel/tokens.css";
+@import "../../design/vercel/tokens.css";
 
 :root {
   --ds-font-sans: var(--font-geist-sans), system-ui, -apple-system, Arial, sans-serif;
