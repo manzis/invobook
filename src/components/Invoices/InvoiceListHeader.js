@@ -22,7 +22,8 @@ const InvoiceListHeader = ({ showStats, onToggleStats }) => (
 
       <button type="button" className="ds-btn-dark gap-2">
         <Plus className="w-4 h-4" />
-        <span>New Invoice</span>
+        <span className="hidden sm:inline">New Invoice</span>
+        <span className="sm:hidden">New</span>
       </button>
     </div>
   </div>

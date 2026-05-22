@@ -62,7 +62,8 @@ const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, curre
         </div>
         <button type="button" onClick={onAddItem} className="ds-btn-dark gap-2">
           <Plus className="w-4 h-4" />
-          <span>Add Item</span>
+          <span className="hidden sm:inline">Add Item</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 

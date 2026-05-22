@@ -68,7 +68,12 @@ const InvoiceFilters = ({
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           onAddNewClick={onAddNewClick}
-          addNewLabel="New Invoice"
+          addNewLabel={
+            <>
+              <span className="hidden sm:inline">New Invoice</span>
+              <span className="sm:hidden">New</span>
+            </>
+          }
         />
 
         {/* Filter Popover Dropdown */}
