@@ -80,6 +80,9 @@ export default async function handler(req, res) {
         const paymentAmount = parseFloat(payment.amount);
         const newBalance = Math.max(0, currentBalance - paymentAmount);
         const newStatus = newBalance <= 0 ? 'PAID' : 'PARTIALLY_PAID';
+        
+        const currentAmountPaid = parseFloat(payment.invoice.amountPaid || 0);
+        const newAmountPaid = currentAmountPaid + paymentAmount;
 
         // Update payment and invoice inside a transaction
         const [updatedPayment, updatedInvoice] = await prisma.$transaction([
@@ -91,6 +94,7 @@ export default async function handler(req, res) {
             where: { id: payment.invoiceId },
             data: {
               balanceDue: newBalance,
+              amountPaid: newAmountPaid,
               status: newStatus,
             },
           }),
