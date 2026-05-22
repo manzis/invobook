@@ -17,8 +17,8 @@ import {
   UserPlus,
   X
 } from 'lucide-react';
-import { useInventory } from '../../context/InventoryContext';
-import { useAuth } from '../../context/AuthContext';
+import { useInventory } from '../context/InventoryContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function MobileBottomNav() {
   const router = useRouter();
