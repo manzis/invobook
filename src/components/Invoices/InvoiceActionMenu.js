@@ -53,13 +53,23 @@ const InvoiceActionMenu = ({
 
   const handleDownloadPDF = () => {
     setIsDownloadingPdf(true);
-    window.open(`/api/downloadInvoice/${invoice.id}`);
+    const link = document.createElement('a');
+    link.href = `/api/downloadInvoice/${invoice.id}`;
+    link.target = '_blank'; // Try to open in new tab
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     setTimeout(() => setIsDownloadingPdf(false), 1500);
   };
 
   const handleDownloadImage = () => {
     setIsDownloadingImage(true);
-    window.open(`/api/downloadInvoice/${invoice.id}?format=image`);
+    const link = document.createElement('a');
+    link.href = `/api/downloadInvoice/${invoice.id}?format=image`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     setTimeout(() => setIsDownloadingImage(false), 1500);
   };
 
@@ -69,34 +79,21 @@ const InvoiceActionMenu = ({
     const url = isImage
       ? `/api/downloadInvoice/${invoice.id}?format=image`
       : `/api/downloadInvoice/${invoice.id}`;
-    const fileName = isImage
-      ? `invoice-${invoice.invoiceNumber}.png`
-      : `invoice-${invoice.invoiceNumber}.pdf`;
-    const fileType = isImage ? 'image/png' : 'application/pdf';
+    const fullUrl = `${window.location.origin}${url}`;
 
     if (navigator.share) {
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Network response was not ok, status: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const file = new File([blob], fileName, { type: fileType });
-
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: `Invoice ${invoice.invoiceNumber}`,
-            text: `Here is the invoice: ${invoice.invoiceNumber}`,
-          });
-        } else {
-          toast('Sharing this file type is not supported on your device.');
-        }
+        await navigator.share({
+          title: `Invoice ${invoice.invoiceNumber}`,
+          text: `Here is the ${isImage ? 'image' : 'PDF'} for invoice ${invoice.invoiceNumber}`,
+          url: fullUrl,
+        });
       } catch (error) {
         console.error('Error sharing: Cancelled by the user', error);
       }
     } else {
-      toast('Web Share is not supported by your browser. Please use the download option instead.');
+      // FALLBACK TO DOWNLOAD IF NATIVE SHARE NOT AVAILABLE
+      isImage ? handleDownloadImage() : handleDownloadPDF();
     }
     setIsSharing(false);
   };
@@ -268,6 +265,20 @@ const InvoiceActionMenu = ({
 
                 <DropdownMenu.Group>
                   <DropdownMenu.Item
+                    onSelect={() => handleDownloadPDF()}
+                    className="ds-dropdown-item"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    onSelect={() => handleDownloadImage()}
+                    className="ds-dropdown-item"
+                  >
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Download Image
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
                     onSelect={() => handleSendInvoice('email')}
                     className="ds-dropdown-item"
                   >
@@ -289,7 +300,7 @@ const InvoiceActionMenu = ({
                     className="ds-dropdown-item"
                   >
                     <Share className="w-4 h-4 mr-2" />
-                    Share
+                    Share Options...
                   </DropdownMenu.Item>
                 </DropdownMenu.Group>
                 <DropdownMenu.Separator
