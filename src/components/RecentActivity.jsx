@@ -6,7 +6,7 @@ import {
   FileText,
   AlertCircle,
   User,
-  DollarSign
+  DollarSign,
 } from 'lucide-react';
 
 const RecentActivity = () => {
@@ -18,8 +18,7 @@ const RecentActivity = () => {
       amount: '$2,400.00',
       time: '2 hours ago',
       icon: CheckCircle,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
+      iconClass: 'text-[#059669]',
     },
     {
       id: 2,
@@ -27,8 +26,7 @@ const RecentActivity = () => {
       message: 'Invoice INV-002 sent to TechStart Inc.',
       time: '4 hours ago',
       icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
+      iconClass: 'text-[var(--ds-gray-600)]',
     },
     {
       id: 3,
@@ -36,8 +34,7 @@ const RecentActivity = () => {
       message: 'Invoice INV-003 is now overdue',
       time: '1 day ago',
       icon: AlertCircle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100',
+      iconClass: 'text-[var(--ds-ship-red)]',
     },
     {
       id: 4,
@@ -45,8 +42,7 @@ const RecentActivity = () => {
       message: 'New client "Design Studio" added',
       time: '2 days ago',
       icon: User,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100',
+      iconClass: 'text-[var(--ds-gray-600)]',
     },
     {
       id: 5,
@@ -55,34 +51,31 @@ const RecentActivity = () => {
       amount: '$2,100.00',
       time: '3 days ago',
       icon: DollarSign,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
+      iconClass: 'text-[#059669]',
     },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+    <div className="ds-card-static p-0 overflow-hidden">
+      <div className="px-6 py-4 ds-shadow-ring">
+        <h3 className="ds-card-title text-lg">Recent Activity</h3>
       </div>
 
       <div className="p-6">
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {activities.map((activity) => {
             const Icon = activity.icon;
             return (
-              <div key={activity.id} className="flex items-start space-x-3 group">
-                <div className={`${activity.bgColor} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
-                  <Icon className={`w-4 h-4 ${activity.color}`} />
+              <div key={activity.id} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-[var(--ds-radius-button)] bg-[var(--ds-gray-50)] flex items-center justify-center shrink-0">
+                  <Icon className={`w-4 h-4 ${activity.iconClass}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 group-hover:text-gray-700 transition-colors">
-                    {activity.message}
-                  </p>
+                  <p className="text-sm text-[var(--ds-black)]">{activity.message}</p>
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-gray-500">{activity.time}</p>
+                    <p className="text-xs text-[var(--ds-gray-500)]">{activity.time}</p>
                     {activity.amount && (
-                      <span className="text-sm font-medium text-emerald-600">
+                      <span className="text-sm font-medium text-[#059669]">
                         {activity.amount}
                       </span>
                     )}
@@ -93,7 +86,10 @@ const RecentActivity = () => {
           })}
         </div>
 
-        <button className="w-full mt-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+        <button
+          type="button"
+          className="ds-link w-full mt-4 text-center border-0 bg-transparent cursor-pointer"
+        >
           View all activity
         </button>
       </div>

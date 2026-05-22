@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import UserMenu from '../ui/UserMenu';
-import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   FileText,
@@ -13,38 +12,23 @@ import {
   FilePlus,
   BarChart3,
   CreditCard,
-  ChevronLeft, // For toggle button
-  ChevronRight, // For toggle button
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function Sidebar() {
   const router = useRouter();
   const { pathname } = router;
-  
   const { user, logout, loading } = useAuth();
-  
-  // State for sidebar collapse/expand
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  // State for mobile view
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      // Set isMobile to true if window width is less than a certain breakpoint (e.g., 768px for md)
-      setIsMobile(window.innerWidth < 768);
-      // If it's a mobile device, collapse the sidebar automatically
-      if (window.innerWidth < 768) {
-        setIsSidebarCollapsed(true);
-      } else {
-        // Optionally expand it again if not mobile, or keep user preference
-        setIsSidebarCollapsed(false); 
-      }
+      if (window.innerWidth < 768) setIsSidebarCollapsed(true);
+      else setIsSidebarCollapsed(false);
     };
-
-    // Set initial state
     handleResize();
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -63,65 +47,67 @@ export default function Sidebar() {
     return href === '/' ? pathname === href : pathname.startsWith(href);
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
-
   return (
-    <aside 
-      className={`bg-white border-r border-slate-200 min-h-screen flex flex-col
-                 ${isSidebarCollapsed ? 'w-20' : 'w-64'} 
-                 transition-all duration-300 ease-in-out`}
+    <aside
+      className={`ds-sidebar ${isSidebarCollapsed ? 'w-[72px]' : 'w-64'}`}
     >
-      {/* Header */}
-      <div className={`p-6 border-b border-slate-200 flex items-center 
-                       ${isSidebarCollapsed ? 'justify-center' : 'space-x-2'}`}>
-        <Link href="/dashboard" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
+      <div
+        className={`p-6 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}
+        style={{ boxShadow: 'var(--ds-shadow-ring)' }}
+      >
+        <Link href="/dashboard" className="flex items-center gap-3 no-underline">
+          <div
+            className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+            style={{
+              background: 'var(--ds-black)',
+              borderRadius: 'var(--ds-radius-button)',
+            }}
+          >
+            <FileText className="w-4 h-4" style={{ color: 'var(--ds-white)' }} />
           </div>
           {!isSidebarCollapsed && (
             <div>
-              <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">InvoGenerator</h1>
-              <p className="text-sm text-gray-500 whitespace-nowrap">Pro Dashboard</p>
+              <p
+                className="text-sm font-semibold m-0 whitespace-nowrap"
+                style={{ color: 'var(--ds-black)', letterSpacing: '-0.28px' }}
+              >
+                Invobook
+              </p>
+              <p className="ds-mono-label m-0 mt-1" style={{ fontSize: '10px' }}>
+                Invoices
+              </p>
             </div>
           )}
         </Link>
       </div>
 
-      {/* Toggle Button */}
       <div className="p-2 flex justify-center">
-        <button 
-          onClick={toggleSidebar} 
-          className="p-2 rounded-full hover:bg-slate-100 transition-colors duration-200"
-          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        <button
+          type="button"
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="ds-icon-btn"
+          aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isSidebarCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-slate-500" />
+            <ChevronRight className="w-5 h-5" />
           ) : (
-            <ChevronLeft className="w-5 h-5 text-slate-500" />
+            <ChevronLeft className="w-5 h-5" />
           )}
         </button>
       </div>
 
-      {/* New Invoice Button */}
       <div className={`p-4 ${isSidebarCollapsed ? 'px-2' : ''}`}>
-        <Link 
-          href="/new-invoice" 
-          className={`w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 
-                     transition-colors duration-200 shadow-sm
-                     ${isSidebarCollapsed ? 'p-3 w-auto' : ''}`}
+        <Link
+          href="/new-invoice"
+          className={`ds-btn-dark w-full justify-center no-underline ${isSidebarCollapsed ? 'px-3' : ''}`}
         >
-           <FilePlus className={`w-5 h-5 ${isMobile ? 'w-4 h-4' : ''}`} />
-          {!isSidebarCollapsed && (
-            <span className="font-large text-m whitespace-nowrap">New Invoice</span>
-          )}
+          <FilePlus className="w-4 h-4" />
+          {!isSidebarCollapsed && <span>New Invoice</span>}
         </Link>
       </div>
 
-      {/* --- REDESIGNED Main Navigation --- */}
-      <nav className="flex-1 px-4 pb-4 mt-2">
-        <ul className="space-y-1">
+      <nav className="flex-1 px-3 pb-4 mt-2">
+        <ul className="space-y-1 list-none m-0 p-0">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -129,31 +115,13 @@ export default function Sidebar() {
               <li key={item.id}>
                 <Link
                   href={item.href}
-                  className={`
-                    w-full block rounded-lg transition-colors duration-200
-                    ${active
-                      ? 'text-blue-600 font-semibold'
-                      : 'text-slate-500 hover:text-slate-900'
-                    }
-                  `}
+                  className={`ds-sidebar-nav-item ${active ? 'ds-sidebar-nav-item-active' : ''} ${
+                    isSidebarCollapsed ? 'justify-center px-2' : ''
+                  }`}
+                  title={isSidebarCollapsed ? item.label : undefined}
                 >
-                  <div className={`relative rounded-lg overflow-hidden ${active ? 'bg-blue-50' : 'hover:bg-blue-50'}`}>
-                    {active && (
-                      <motion.div
-                        layoutId="active-indicator"
-                        className="absolute left-0 top-0 h-full w-1 bg-blue-600"
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    
-                    <div className={`relative flex items-center space-x-3 px-4 py-2.5 
-                                     ${isSidebarCollapsed ? 'justify-center space-x-0' : ''}`}>
-                      <Icon className={`w-5 h-5 ${isMobile ? 'w-4 h-4' : ''}`} />
-                      {!isSidebarCollapsed && (
-                        <span className="text-m font-large whitespace-nowrap">{item.label}</span>
-                      )}
-                    </div>
-                  </div>
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!isSidebarCollapsed && <span>{item.label}</span>}
                 </Link>
               </li>
             );
@@ -161,16 +129,17 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-      {/* User Profile */}
-      <div className={`p-4 border-t border-slate-200 ${isSidebarCollapsed ? 'flex justify-center' : ''}`}>
+      <div
+        className={`p-4 ${isSidebarCollapsed ? 'flex justify-center' : ''}`}
+        style={{ boxShadow: 'var(--ds-shadow-ring)' }}
+      >
         {loading ? (
-          <div className={`animate-pulse flex items-center space-x-3 px-3 py-2
-                           ${isSidebarCollapsed ? 'flex-col space-x-0 space-y-2' : ''}`}>
-            <div className="w-8 h-8 bg-slate-200 rounded-full"></div>
+          <div className="animate-pulse flex items-center gap-3 px-3 py-2">
+            <div className="w-8 h-8 rounded-full" style={{ background: 'var(--ds-gray-100)' }} />
             {!isSidebarCollapsed && (
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-slate-200 rounded w-3/4"></div>
-                <div className="h-2 bg-slate-200 rounded w-1/2"></div>
+                <div className="h-3 rounded w-3/4" style={{ background: 'var(--ds-gray-100)' }} />
+                <div className="h-2 rounded w-1/2" style={{ background: 'var(--ds-gray-100)' }} />
               </div>
             )}
           </div>

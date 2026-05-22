@@ -280,15 +280,14 @@ const handleInvoiceDataChange = (field, value) => {
   // 5. Render a loading state until the data is fetched
   if (isLoading || !invoiceData) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div>Loading New Invoice...</div>
+      <div className="ds-page-inner flex items-center justify-center min-h-[40vh]">
+        <div className="ds-spinner" role="status" aria-label="Loading" />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-4 md:p-8">
+    <div className="ds-page-inner">
         <InvoiceHeader 
         onCreateInvoice={handleCreateInvoice} 
           isSaving={isSaving} />
@@ -351,7 +350,6 @@ const handleInvoiceDataChange = (field, value) => {
             onFieldChange={handleInvoiceDataChange}
           />
         </div>
-      </div>
     </div>
   );
 };

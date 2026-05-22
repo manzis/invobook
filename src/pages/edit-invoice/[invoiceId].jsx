@@ -181,16 +181,14 @@ const EditInvoicePage = () => {
 
   if (isLoading || !invoiceData) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div>Loading Invoice...</div>
+      <div className="ds-page-inner flex items-center justify-center min-h-[40vh]">
+        <div className="ds-spinner" role="status" aria-label="Loading" />
       </div>
     );
   }
 
-  // The JSX is identical to NewInvoicePage, but passes different props to the Header
   return (
-    <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-4 mb:p-8">
+    <div className="ds-page-inner">
         <EditInvoiceHeader
           isEditing={true} // <-- Tell the header we are in "edit" mode
           onSaveInvoice={handleUpdateInvoice} // <-- Pass the update function
@@ -208,7 +206,6 @@ const EditInvoicePage = () => {
           </div>
           <InvoiceSummary {...invoiceData} onFieldChange={handleInvoiceDataChange} />
         </div>
-      </div>
     </div>
   );
 };

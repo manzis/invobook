@@ -1,12 +1,39 @@
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { createPortal } from 'react-dom'; // Import createPortal
+import { createPortal } from 'react-dom';
 import {
-  DollarSign, Calendar, Edit, Download, Trash2, CheckCircle, MoreVertical,
-  Mail, FileText, Image as ImageIcon, MessageSquare, XCircle, Share, ArrowLeft,Loader2
+  DollarSign,
+  Calendar,
+  Edit,
+  Download,
+  Trash2,
+  CheckCircle,
+  MoreVertical,
+  Mail,
+  FileText,
+  Image as ImageIcon,
+  MessageSquare,
+  XCircle,
+  Share,
+  ArrowLeft,
+  Loader2,
 } from 'lucide-react';
 
-import { getStatusIcon, getStatusColor } from '../../utils/InvoicesUtils';
+import { getStatusIcon, getStatusBadgeClass } from '../../utils/InvoicesUtils';
+
+const LoaderOverlay = () => (
+  <div
+    className="fixed inset-0 flex items-center justify-center transition-opacity duration-300"
+    style={{ zIndex: 1000, background: 'rgba(23, 23, 23, 0.4)' }}
+  >
+    <div className="flex flex-col items-center space-y-3">
+      <Loader2 className="w-10 h-10 animate-spin" style={{ color: 'var(--ds-white)' }} />
+      <span className="text-lg font-medium" style={{ color: 'var(--ds-white)' }}>
+        Preparing to share...
+      </span>
+    </div>
+  </div>
+);
 
 const InvoiceTableRow = ({
   invoice,
@@ -21,19 +48,8 @@ const InvoiceTableRow = ({
   const [isEnteringPartial, setIsEnteringPartial] = useState(false);
   const [partialAmount, setPartialAmount] = useState('');
   const [isSharing, setIsSharing] = useState(false);
-  const [menuView, setMenuView] = useState('main'); // 'main' or 'share'
+  const [menuView, setMenuView] = useState('main');
 
-  // A new component for the full-screen loader overlay
-const LoaderOverlay = () => (
-  <div className="fixed inset-0 z-1000 flex items-center justify-center bg-black/40 transition-opacity duration-300">
-    <div className="flex flex-col items-center space-y-3">
-      <Loader2 className="w-10 h-10 animate-spin text-white" />
-      <span className="text-lg font-medium text-white">Preparing to share...</span>
-    </div>
-  </div>
-);
-
-  // --- STABLE HANDLERS ---
   const handleDownloadPDF = () => {
     setIsDownloadingPdf(true);
     window.open(`/api/downloadInvoice/${invoice.id}`);
@@ -49,15 +65,19 @@ const LoaderOverlay = () => (
   const handleShare = async (format) => {
     setIsSharing(true);
     const isImage = format === 'image';
-    const url = isImage ? `/api/downloadInvoice/${invoice.id}?format=image` : `/api/downloadInvoice/${invoice.id}`;
-    const fileName = isImage ? `invoice-${invoice.invoiceNumber}.png` : `invoice-${invoice.invoiceNumber}.pdf`;
+    const url = isImage
+      ? `/api/downloadInvoice/${invoice.id}?format=image`
+      : `/api/downloadInvoice/${invoice.id}`;
+    const fileName = isImage
+      ? `invoice-${invoice.invoiceNumber}.png`
+      : `invoice-${invoice.invoiceNumber}.pdf`;
     const fileType = isImage ? 'image/png' : 'application/pdf';
 
     if (navigator.share) {
       try {
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`Network response was not ok, status: ${response.status}`);
+          throw new Error(`Network response was not ok, status: ${response.status}`);
         }
         const blob = await response.blob();
         const file = new File([blob], fileName, { type: fileType });
@@ -69,11 +89,10 @@ const LoaderOverlay = () => (
             text: `Here is the invoice: ${invoice.invoiceNumber}`,
           });
         } else {
-          alert("Sharing this file type is not supported on your device.");
+          alert('Sharing this file type is not supported on your device.');
         }
       } catch (error) {
         console.error('Error sharing: Cancelled by the user', error);
-        
       }
     } else {
       alert('Web Share is not supported by your browser. Please use the download option instead.');
@@ -91,11 +110,17 @@ const LoaderOverlay = () => (
       amountToPay = parseFloat(invoice.balanceDue);
     } else if (type === 'partial') {
       amountToPay = parseFloat(partialAmount);
-      if (isNaN(amountToPay) || amountToPay <= 0 || amountToPay >= parseFloat(invoice.balanceDue)) {
+      if (
+        isNaN(amountToPay) ||
+        amountToPay <= 0 ||
+        amountToPay >= parseFloat(invoice.balanceDue)
+      ) {
         alert('Please enter a valid amount greater than 0 and less than the balance due.');
         return;
       }
-    } else { return; }
+    } else {
+      return;
+    }
 
     try {
       const res = await fetch(`/api/invoices/${invoice.id}`, {
@@ -114,140 +139,282 @@ const LoaderOverlay = () => (
     }
   };
 
-  // --- DATA FORMATTING ---
   const clientName = invoice.client?.name || 'N/A';
   const itemCount = invoice.items?.length || 0;
-  const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  const formattedDueDate = new Date(invoice.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  const formattedTotal = parseFloat(invoice.total).toLocaleString('en-US', { style: 'currency', currency: 'NPR' });
+  const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+  const formattedTotal = parseFloat(invoice.total).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'NPR',
+  });
   const status = invoice.status.toLowerCase().replace('_', ' ');
-  const formattedDue = parseFloat(invoice.balanceDue).toLocaleString('en-US', { style: 'currency', currency: 'NPR' });
+  const formattedDue = parseFloat(invoice.balanceDue).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'NPR',
+  });
 
-  // --- STYLES ---
-  const contentClasses = "z-50 min-w-[220px] origin-top-right bg-white rounded-md shadow-lg border border-gray-200 focus:outline-none p-1 data-[side=top]:animate-slide-down data-[side=bottom]:animate-slide-up";
-  const itemClasses = "group flex rounded-md items-center w-full px-2 py-2 text-sm text-gray-900 focus:outline-none select-none";
-  const itemColorClasses = {
-    indigo: "focus:bg-indigo-500 focus:text-white",
-    emerald: "focus:bg-emerald-500 focus:text-white",
-    yellow: "focus:bg-yellow-500 focus:text-white",
-    blue: "focus:bg-blue-500 focus:text-white",
-    red: "focus:bg-red-500 focus:text-white",
-    gray: "focus:bg-gray-200 focus:text-gray-800",
-  };
-  const actionButtonClasses = "p-1.5 text-gray-400 rounded-md transition-colors";
-  const actionButtonHoverClasses = {
-    edit: "hover:bg-emerald-50 hover:text-emerald-600",
-    download: "hover:bg-indigo-50 hover:text-indigo-600",
-    share: "hover:bg-blue-50 hover:text-blue-600",
-    more: "hover:bg-gray-100 hover:text-gray-600",
-  };
+  const dropdownContentClass =
+    'ds-dropdown-content origin-top-right data-[side=top]:animate-slide-down data-[side=bottom]:animate-slide-up';
 
   return (
-     <>
-      {isSharing && createPortal(
-        <LoaderOverlay />,
-        document.body
-      )}
+    <>
+      {isSharing && createPortal(<LoaderOverlay />, document.body)}
 
-    <tr className="hover:bg-gray-50 transition-colors">
-      <td className="px-6 py-4 whitespace-nowrap"><input type="checkbox" checked={isSelected} onChange={() => onSelectInvoice(invoice.id)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"/></td>
-      <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-3"><div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center"><DollarSign className="w-4 h-4 text-blue-600"/></div><div><p className="text-sm font-medium text-gray-900">{invoice.invoiceNumber}</p><p className="text-xs text-gray-500">{itemCount} items</p></div></div></td>
-      <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-900">{clientName}</p></td>
-      <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm font-medium text-gray-900">{formattedTotal}</p></td>
-      <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2 text-sm text-gray-500"><Calendar className="w-4 h-4"/><span>{formattedDate}</span></div></td>
-      <td className="px-6 py-4 whitespace-nowrap"><p className="text-sm text-gray-500">{formattedDue}</p></td>
-      <td className="px-6 py-4 whitespace-nowrap"><div className="flex items-center space-x-2">{getStatusIcon(status)}<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${getStatusColor(status)}`}>{status}</span></div></td>
+      <tr>
+        <td className="whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelectInvoice(invoice.id)}
+            className="rounded"
+            style={{ accentColor: 'var(--ds-black)' }}
+          />
+        </td>
+        <td className="whitespace-nowrap">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center ds-surface-muted">
+              <DollarSign className="w-4 h-4" style={{ color: 'var(--ds-black)' }} />
+            </div>
+            <div>
+              <p className="text-sm font-medium m-0" style={{ color: 'var(--ds-black)' }}>
+                {invoice.invoiceNumber}
+              </p>
+              <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--ds-gray-500)' }}>
+                {itemCount} items
+              </p>
+            </div>
+          </div>
+        </td>
+        <td className="whitespace-nowrap">
+          <p className="text-sm m-0" style={{ color: 'var(--ds-black)' }}>
+            {clientName}
+          </p>
+        </td>
+        <td className="whitespace-nowrap">
+          <p className="text-sm font-medium m-0" style={{ color: 'var(--ds-black)' }}>
+            {formattedTotal}
+          </p>
+        </td>
+        <td className="whitespace-nowrap">
+          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--ds-gray-600)' }}>
+            <Calendar className="w-4 h-4" />
+            <span>{formattedDate}</span>
+          </div>
+        </td>
+        <td className="whitespace-nowrap">
+          <p className="text-sm m-0" style={{ color: 'var(--ds-gray-600)' }}>
+            {formattedDue}
+          </p>
+        </td>
+        <td className="whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            {getStatusIcon(status)}
+            <span className={getStatusBadgeClass(status)}>{status}</span>
+          </div>
+        </td>
 
-      <td className="px-6 py-4 whitespace-nowrap text-right">
-        <div className="flex items-center justify-end space-x-1">
-          <button onClick={() => onEditInvoice(invoice.id)} className={`${actionButtonClasses} ${actionButtonHoverClasses.edit}`}>
-            <Edit className="w-4 h-4"/>
-          </button>
+        <td className="whitespace-nowrap text-right">
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => onEditInvoice(invoice.id)}
+              className="ds-icon-btn"
+              aria-label="Edit invoice"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
 
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button disabled={isDownloadingPdf || isDownloadingImage} className={`${actionButtonClasses} ${actionButtonHoverClasses.download} disabled:opacity-50`}>
-                {(isDownloadingPdf || isDownloadingImage) ? (<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>) : (<Download className="w-4 h-4"/>)}
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content className={`${contentClasses} w-48`} sideOffset={5} collisionPadding={30}>
-                <DropdownMenu.Item onSelect={handleDownloadPDF} className={`${itemClasses} ${itemColorClasses.indigo}`}>
-                  <FileText className="w-4 h-4 mr-2"/> Download PDF
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onSelect={handleDownloadImage} className={`${itemClasses} ${itemColorClasses.indigo}`}>
-                  <ImageIcon className="w-4 h-4 mr-2"/> Download Image
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  disabled={isDownloadingPdf || isDownloadingImage}
+                  className="ds-icon-btn disabled:opacity-50"
+                  aria-label="Download invoice"
+                >
+                  {isDownloadingPdf || isDownloadingImage ? (
+                    <div
+                      className="animate-spin rounded-full h-4 w-4 border-b-2"
+                      style={{ borderColor: 'var(--ds-black)' }}
+                    />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className={`${dropdownContentClass} w-48`}
+                  sideOffset={5}
+                  collisionPadding={30}
+                >
+                  <DropdownMenu.Item onSelect={handleDownloadPDF} className="ds-dropdown-item">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onSelect={handleDownloadImage} className="ds-dropdown-item">
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Download Image
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
 
-          <DropdownMenu.Root onOpenChange={(open) => {
-            if (!open) {
-                setIsEnteringPartial(false);
-                setMenuView('main'); // Reset menu view on close
-            }
-          }}>
-            <DropdownMenu.Trigger asChild>
-              <button className={`${actionButtonClasses} ${actionButtonHoverClasses.more}`}>
-                <MoreVertical className="w-4 h-4" aria-hidden="true"/>
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content className={contentClasses} sideOffset={5} collisionPadding={30} >
+            <DropdownMenu.Root
+              onOpenChange={(open) => {
+                if (!open) {
+                  setIsEnteringPartial(false);
+                  setMenuView('main');
+                }
+              }}
+            >
+              <DropdownMenu.Trigger asChild>
+                <button type="button" className="ds-icon-btn" aria-label="More actions">
+                  <MoreVertical className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className={dropdownContentClass}
+                  sideOffset={5}
+                  collisionPadding={30}
+                >
                   {isEnteringPartial ? (
                     <div onSelect={(e) => e.preventDefault()} className="p-2 space-y-2">
-                                      <label className="text-xs font-medium text-gray-700 block">Enter Amount</label>
-                                      <div className="flex items-center bg-gray-50 rounded-md">
-                                        <span className="text-gray-500 text-sm px-2">{invoice.currencySymbol || '$'}</span>
-                                        <input type="number" value={partialAmount} onChange={(e) => setPartialAmount(e.target.value)} placeholder={`Balance: ${invoice.balanceDue}`} className="w-full pl-1 pr-2 py-1 border-l border-gray-300 bg-transparent text-sm focus:ring-0 focus:outline-none" autoFocus/>
-                                      </div>
-                                      <div className="flex items-center justify-end space-x-1">
-                                        <button onClick={() => setIsEnteringPartial(false)} className="p-2 text-gray-400 hover:text-red-600"><XCircle className="w-5 h-5"/></button>
-                                        <button onClick={() => handlePaymentAction('partial')} className="p-2 text-emerald-500 hover:text-emerald-700"><CheckCircle className="w-5 h-5"/></button>
-                                      </div>
-                                    </div>
-                ) : menuView === 'main' ? (
-                  <>
-                    {invoice.status !== 'PAID' && (
-                      <DropdownMenu.Group>
-                        <DropdownMenu.Item onSelect={() => handlePaymentAction('full')} className={`${itemClasses} ${itemColorClasses.emerald}`}><CheckCircle className="w-4 h-4 mr-2"/> Mark as Fully Paid</DropdownMenu.Item>
-                        <DropdownMenu.Item onSelect={(e) => { e.preventDefault(); setIsEnteringPartial(true); }} className={`${itemClasses} ${itemColorClasses.yellow}`}><CheckCircle className="w-4 h-4 mr-2"/> Record Partial Payment</DropdownMenu.Item>
-                      </DropdownMenu.Group>
-                    )}
+                      <label className="ds-form-label text-xs">Enter Amount</label>
+                      <div className="flex items-center ds-surface-muted rounded-md ds-shadow-ring">
+                        <span className="text-sm px-2" style={{ color: 'var(--ds-gray-500)' }}>
+                          {invoice.currencySymbol || '$'}
+                        </span>
+                        <input
+                          type="number"
+                          value={partialAmount}
+                          onChange={(e) => setPartialAmount(e.target.value)}
+                          placeholder={`Balance: ${invoice.balanceDue}`}
+                          className="ds-input flex-1 border-0 shadow-none rounded-none py-2 text-sm"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsEnteringPartial(false)}
+                          className="ds-icon-btn"
+                          aria-label="Cancel partial payment"
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePaymentAction('partial')}
+                          className="ds-icon-btn"
+                          aria-label="Confirm partial payment"
+                        >
+                          <CheckCircle className="w-5 h-5" style={{ color: '#059669' }} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : menuView === 'main' ? (
+                    <>
+                      {invoice.status !== 'PAID' && (
+                        <DropdownMenu.Group>
+                          <DropdownMenu.Item
+                            onSelect={() => handlePaymentAction('full')}
+                            className="ds-dropdown-item"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Mark as Fully Paid
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              setIsEnteringPartial(true);
+                            }}
+                            className="ds-dropdown-item"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Record Partial Payment
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Group>
+                      )}
 
+                      <DropdownMenu.Group>
+                        <DropdownMenu.Item
+                          onSelect={() => handleSendInvoice('email')}
+                          className="ds-dropdown-item"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send via Email
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                          onSelect={() => handleSendInvoice('whatsapp')}
+                          className="ds-dropdown-item"
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Send via WhatsApp
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setMenuView('share');
+                          }}
+                          className="ds-dropdown-item"
+                        >
+                          <Share className="w-4 h-4 mr-2" />
+                          Share
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Group>
+                      <DropdownMenu.Separator
+                        className="h-px my-1"
+                        style={{ background: 'var(--ds-gray-100)' }}
+                      />
+                      <DropdownMenu.Group>
+                        <DropdownMenu.Item
+                          onSelect={() => onDeleteInvoice(invoice.id)}
+                          className="ds-dropdown-item ds-dropdown-item-danger"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Group>
+                    </>
+                  ) : (
                     <DropdownMenu.Group>
-                      <DropdownMenu.Item onSelect={() => handleSendInvoice('email')} className={`${itemClasses} ${itemColorClasses.blue}`}><Mail className="w-4 h-4 mr-2"/> Send via Email</DropdownMenu.Item>
-                      <DropdownMenu.Item onSelect={() => handleSendInvoice('whatsapp')} className={`${itemClasses} ${itemColorClasses.blue}`}><MessageSquare className="w-4 h-4 mr-2"/> Send via WhatsApp</DropdownMenu.Item>
-                      <DropdownMenu.Item onSelect={(e) => { e.preventDefault(); setMenuView('share'); }} className={`${itemClasses} ${itemColorClasses.blue}`}>
-                        <Share className="w-4 h-4 mr-2"/> Share
+                      <DropdownMenu.Item
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setMenuView('main');
+                        }}
+                        className="ds-dropdown-item"
+                      >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onSelect={() => handleShare('image')}
+                        className="ds-dropdown-item"
+                      >
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Image
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        onSelect={() => handleShare('pdf')}
+                        className="ds-dropdown-item"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        PDF
                       </DropdownMenu.Item>
                     </DropdownMenu.Group>
-                    <DropdownMenu.Separator className="h-px bg-gray-100 my-1" />
-                    <DropdownMenu.Group>
-                      <DropdownMenu.Item onSelect={() => onDeleteInvoice(invoice.id)} className={`${itemClasses} ${itemColorClasses.red}`}><Trash2 className="w-4 h-4 mr-2"/> Delete</DropdownMenu.Item>
-                    </DropdownMenu.Group>
-                  </>
-                ) : (
-                  // Share Submenu View
-                  <DropdownMenu.Group>
-                     <DropdownMenu.Item onSelect={(e) => { e.preventDefault(); setMenuView('main'); }} className={`${itemClasses} ${itemColorClasses.gray}`}>
-                        <ArrowLeft className="w-4 h-4 mr-2"/> Back
-                      </DropdownMenu.Item>
-                    <DropdownMenu.Item onSelect={() => handleShare('image')} className={`${itemClasses} ${itemColorClasses.indigo}`}>
-                      <ImageIcon className="w-4 h-4 mr-2"/> Image
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item onSelect={() => handleShare('pdf')} className={`${itemClasses} ${itemColorClasses.indigo}`}>
-                      <FileText className="w-4 h-4 mr-2"/> PDF
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Group>
-                )}
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </div>
-      </td>
-    </tr>
+                  )}
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
+        </td>
+      </tr>
     </>
   );
 };

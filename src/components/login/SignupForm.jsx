@@ -9,7 +9,7 @@ const SignupForm = ({ onSignup, onSocialLogin, onSwitchToLogin, isLoading, error
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,150 +41,203 @@ const SignupForm = ({ onSignup, onSocialLogin, onSwitchToLogin, isLoading, error
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // If the form is not valid, stop the submission
+
     if (!validateForm()) {
       return;
     }
-    
-    // The form is valid, so pass the core data up to the parent component.
-    // The parent (AuthContainer) will handle switching to the next step.
+
     onSignup({
       name: formData.name,
       email: formData.email,
-      password: formData.password
+      password: formData.password,
     });
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear the specific error when the user starts typing again
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+      setValidationErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
+  const inputClass = (field) =>
+    validationErrors[field] ? 'ds-input ds-input-error' : 'ds-input';
+
   return (
     <div className="p-8">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Name Field */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="name" className="ds-form-label">
             Full Name
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User className="h-5 w-5 text-gray-400" /></div>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <User className="h-4 w-4 text-[var(--ds-gray-400)]" />
+            </div>
             <input
               id="name"
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className={`block w-full pl-10 pr-3 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.name ? 'border-red-300' : 'border-gray-200'}`}
+              className={`${inputClass('name')} pl-10`}
               placeholder="Enter your full name"
               required
             />
           </div>
-          {validationErrors.name && <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>}
+          {validationErrors.name && (
+            <p className="mt-1 text-sm text-[var(--ds-ship-red)]">{validationErrors.name}</p>
+          )}
         </div>
 
-        {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="ds-form-label">
             Email Address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail className="h-5 w-5 text-gray-400" /></div>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-4 w-4 text-[var(--ds-gray-400)]" />
+            </div>
             <input
               id="email"
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`block w-full pl-10 pr-3 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.email ? 'border-red-300' : 'border-gray-200'}`}
+              className={`${inputClass('email')} pl-10`}
               placeholder="Enter your email"
               required
             />
           </div>
-          {validationErrors.email && <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>}
+          {validationErrors.email && (
+            <p className="mt-1 text-sm text-[var(--ds-ship-red)]">{validationErrors.email}</p>
+          )}
         </div>
 
-        {/* Password Field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="password" className="ds-form-label">
             Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-4 w-4 text-[var(--ds-gray-400)]" />
+            </div>
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
-              className={`block w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.password ? 'border-red-300' : 'border-gray-200'}`}
+              className={`${inputClass('password')} pl-10 pr-12`}
               placeholder="Create a password (min. 8 characters)"
               required
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="ds-icon-btn absolute inset-y-0 right-1 my-auto"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
-          {validationErrors.password && <p className="mt-1 text-sm text-red-600">{validationErrors.password}</p>}
+          {validationErrors.password && (
+            <p className="mt-1 text-sm text-[var(--ds-ship-red)]">{validationErrors.password}</p>
+          )}
         </div>
 
-        {/* Confirm Password Field */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="confirmPassword" className="ds-form-label">
             Confirm Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-4 w-4 text-[var(--ds-gray-400)]" />
+            </div>
             <input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-              className={`block w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${validationErrors.confirmPassword ? 'border-red-300' : 'border-gray-200'}`}
+              className={`${inputClass('confirmPassword')} pl-10 pr-12`}
               placeholder="Confirm your password"
               required
             />
-            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              {showConfirmPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="ds-icon-btn absolute inset-y-0 right-1 my-auto"
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
-          {validationErrors.confirmPassword && <p className="mt-1 text-sm text-red-600">{validationErrors.confirmPassword}</p>}
+          {validationErrors.confirmPassword && (
+            <p className="mt-1 text-sm text-[var(--ds-ship-red)]">
+              {validationErrors.confirmPassword}
+            </p>
+          )}
         </div>
 
-        {/* Terms */}
-        <div className="flex items-start">
-          <input id="terms" type="checkbox" required className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-          <label htmlFor="terms" className="ml-3 text-sm text-gray-600">
-            I agree to the <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Terms of Service</a> and <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Privacy Policy</a>
+        <div className="flex items-start gap-3">
+          <input
+            id="terms"
+            type="checkbox"
+            required
+            className="mt-1 h-4 w-4 rounded accent-[var(--ds-black)]"
+          />
+          <label htmlFor="terms" className="text-sm text-[var(--ds-gray-600)]">
+            I agree to the{' '}
+            <a href="#" className="ds-link">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="#" className="ds-link">
+              Privacy Policy
+            </a>
           </label>
         </div>
-        
-        {/* Display any API errors passed down from the parent (e.g., "Email already exists") */}
-        {error && <p className="text-center text-sm text-red-600">{error}</p>}
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50"
-        >
+        {error && (
+          <p className="text-center text-sm text-[var(--ds-ship-red)]">{error}</p>
+        )}
+
+        <button type="submit" disabled={isLoading} className="ds-btn-dark w-full">
           {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            <span className="inline-flex items-center gap-2">
+              <span className="ds-spinner w-4 h-4 border-white/30 border-t-white" />
               Creating account...
-            </div>
+            </span>
           ) : (
             'Create Account'
           )}
         </button>
       </form>
 
-      {/* --- Rest of the component is the same --- */}
-      <div className="mt-8 mb-6"><div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div><div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-500">Or continue with</span></div></div></div>
+      <div className="mt-8 mb-6">
+        <hr className="ds-divider" />
+        <p className="text-center text-sm text-[var(--ds-gray-500)] -mt-3">
+          <span className="bg-[var(--ds-white)] px-4">Or continue with</span>
+        </p>
+      </div>
       <SocialLoginButtons onSocialLogin={onSocialLogin} />
-      <div className="mt-8 text-center"><p className="text-sm text-gray-600">Already have an account?{' '}<button onClick={onSwitchToLogin} className="text-blue-600 hover:text-blue-700 font-medium">Sign in</button></p></div>
+      <div className="mt-8 text-center">
+        <p className="text-sm text-[var(--ds-gray-600)]">
+          Already have an account?{' '}
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="ds-link border-0 bg-transparent cursor-pointer p-0 inline"
+          >
+            Sign in
+          </button>
+        </p>
+      </div>
     </div>
   );
 };

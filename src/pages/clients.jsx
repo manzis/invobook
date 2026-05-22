@@ -152,11 +152,14 @@ useEffect(() => {
   };
 
   if (isLoading) {
-    return <div>Loading clients...</div>; // Or a proper skeleton loader
+    return (
+      <div className="ds-page-inner flex items-center justify-center min-h-[40vh]">
+        <div className="ds-spinner" role="status" aria-label="Loading clients" />
+      </div>
+    );
   }
 return (
-    <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-4 md:p-8">
+    <div className="ds-page-inner">
         <ClientListHeader onAddClientClick={handleOpenAddModal} />
         <ClientStats clients={clients} />
         <ClientSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -170,9 +173,8 @@ return (
             onDeleteClient={handleDeleteClient}
           />
         ) : (
-          <div>No clients match your search.</div>
+          <p className="text-[var(--ds-gray-600)]">No clients match your search.</p>
         )}
-      </div>
 
       <AddClientModal 
         isOpen={isModalOpen}

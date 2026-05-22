@@ -162,16 +162,15 @@ const InvoicesPage = () => {
 
   // --- Render logic (Unchanged, but removed inner function for clarity) ---
   return (
-    <div className="flex-1 overflow-auto bg-gray-50">
-      <div className="p-4 md:p-8">
+    <div className="ds-page-inner">
         <InvoiceListHeader 
            showStats={showStats}
           onToggleStats={() => setShowStats(prev => !prev)}
         />
         
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center p-16">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="flex items-center justify-center p-16">
+            <div className="ds-spinner" role="status" aria-label="Loading" />
           </div>
         ) : invoices.length === 0 ? (
           <EmptyState onNewInvoiceClick={() => router.push('/new-invoice')} />
@@ -204,7 +203,6 @@ const InvoicesPage = () => {
             />
           </>
         )}
-      </div>
     </div>
   );
 };

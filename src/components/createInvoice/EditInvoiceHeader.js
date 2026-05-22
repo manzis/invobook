@@ -1,19 +1,24 @@
 import React from 'react';
-import { Eye, Save, Send } from 'lucide-react';
+import { Eye, Send } from 'lucide-react';
 
 const EditInvoiceHeader = ({ onSaveInvoice, isSaving }) => {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="ds-page-header">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Invoice</h1>
-        <p className="text-gray-600">Fill in the details to edit your invoice</p>
+        <h1 className="ds-section-title">Edit Invoice</h1>
+        <p className="ds-page-subtitle">Fill in the details to edit your invoice</p>
       </div>
-      <div className="flex items-center space-x-3">
-        <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+      <div className="flex flex-wrap gap-3 items-center">
+        <button type="button" className="ds-btn-ghost gap-2">
           <Eye className="w-4 h-4" />
           <span>Preview</span>
         </button>
-        <button onClick={() => onSaveInvoice('PENDING')} disabled={isSaving}  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          type="button"
+          onClick={() => onSaveInvoice('PENDING')}
+          disabled={isSaving}
+          className="ds-btn-dark gap-2"
+        >
           <Send className="w-4 h-4" />
           <span>{isSaving ? 'Editing...' : 'Save Invoice'}</span>
         </button>

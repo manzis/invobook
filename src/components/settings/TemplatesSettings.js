@@ -29,8 +29,7 @@ const TemplatesSettings = () => {
       try {
         await Promise.all([
           (async () => {
-            // *** CRITICAL FIX: The API path is /api/settings/template ***
-            const res = await fetch('/api/templates'); 
+            const res = await fetch('/api/templates');
             if (!res.ok) throw new Error('Could not fetch current template setting');
             const data = await res.json();
             setActiveTemplate(data.templateName);
@@ -50,8 +49,7 @@ const TemplatesSettings = () => {
     const originalTemplate = activeTemplate;
     setActiveTemplate(templateId);
     try {
-        // *** CRITICAL FIX: The API path is /api/settings/template ***
-      const res = await fetch('/api/templates', { 
+      const res = await fetch('/api/templates', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templateName: templateId }),
@@ -76,21 +74,18 @@ const TemplatesSettings = () => {
       const res = await fetch('/api/templates/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // --- KEY CHANGE HERE ---
-        // The property name now matches what the API expects: `templateKey`
-        body: JSON.stringify({ templateKey: templateKey }), 
+        body: JSON.stringify({ templateKey: templateKey }),
       });
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || 'An unknown error occurred.');
       }
-      
+
       setFeedback({ message: 'Success! Template added to your collection.', type: 'success' });
       setTemplateKey('');
-      
-      await fetchAvailableTemplates();
 
+      await fetchAvailableTemplates();
     } catch (err) {
       setFeedback({ message: err.message, type: 'error' });
     } finally {
@@ -98,18 +93,18 @@ const TemplatesSettings = () => {
     }
   };
 
-  // --- NEW: HANDLE REMOVING A CUSTOM TEMPLATE ---
   const handleRemoveTemplate = async (templateId) => {
-    // Prevent user from removing the active template
     if (templateId === activeTemplate) {
-      alert("You cannot remove a template while it is active. Please select another template first.");
+      alert(
+        'You cannot remove a template while it is active. Please select another template first.'
+      );
       return;
     }
 
     if (!window.confirm(`Are you sure you want to remove the "${templateId}" template?`)) {
       return;
     }
-    
+
     try {
       const res = await fetch('/api/templates/unassign', {
         method: 'DELETE',
@@ -120,55 +115,57 @@ const TemplatesSettings = () => {
       if (!res.ok) {
         throw new Error(data.message || 'Failed to remove template');
       }
-      // Refresh the list to remove it from the UI
       await fetchAvailableTemplates();
     } catch (err) {
       alert(`Error: ${err.message}`);
     }
   };
 
-
-  if (isLoading) return <div>Loading template settings...</div>;
-  if (error) return <div className="text-red-500">Error: {error}</div>;
+  if (isLoading) return <div className="text-[var(--ds-gray-600)]">Loading template settings...</div>;
+  if (error) return <div className="text-[var(--ds-ship-red)]">Error: {error}</div>;
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoice Templates</h3>
-        <p className="text-gray-600 mb-6">Choose a default template design for all your invoices.</p>
-        
+      <div className="ds-card-static">
+        <h3 className="ds-card-title text-lg mb-2">Invoice Templates</h3>
+        <p className="text-[var(--ds-gray-600)] mb-6">
+          Choose a default template design for all your invoices.
+        </p>
+
         <TemplateSelection
           templates={availableTemplates}
           activeTemplateId={activeTemplate}
           onSelectTemplate={handleSelectTemplate}
-          onRemoveTemplate={handleRemoveTemplate} // <-- Pass the new handler down
+          onRemoveTemplate={handleRemoveTemplate}
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mt-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-2">Add Custom Template</h4>
-        <p className="text-gray-600 mb-4">Have a key for a premium or branded template? Add it here.</p>
-        <form onSubmit={handleAddTemplate} className="flex items-start space-x-3">
-          <div className="flex-grow">
+      <div className="ds-card-static mt-6">
+        <h4 className="ds-card-title text-lg mb-2">Add Custom Template</h4>
+        <p className="text-[var(--ds-gray-600)] mb-4">
+          Have a key for a premium or branded template? Add it here.
+        </p>
+        <form onSubmit={handleAddTemplate} className="flex flex-col sm:flex-row items-start gap-3">
+          <div className="flex-grow w-full min-w-0">
             <input
               type="text"
               value={templateKey}
               onChange={(e) => setTemplateKey(e.target.value)}
               placeholder="Enter your template key..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="ds-input"
               disabled={isSubmitting}
             />
           </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={isSubmitting} className="ds-btn-dark shrink-0">
             {isSubmitting ? 'Adding...' : 'Add Template'}
           </button>
         </form>
         {feedback.message && (
-          <p className={`mt-3 text-sm ${feedback.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+          <p
+            className={`mt-3 text-sm ${
+              feedback.type === 'error' ? 'text-[var(--ds-ship-red)]' : 'text-[#059669]'
+            }`}
+          >
             {feedback.message}
           </p>
         )}

@@ -5,29 +5,30 @@ const InvoiceTable = ({ invoices, selectedInvoices, onSelectAll, ...props }) => 
   const isAllSelected = selectedInvoices.length === invoices.length && invoices.length > 0;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="ds-table-wrap">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
+        <table className="ds-table">
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left">
+              <th>
                 <input
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={onSelectAll}
-                  className="rounded border-gray-300"
+                  className="rounded"
+                  style={{ accentColor: 'var(--ds-black)' }}
                 />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance Due</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th>Invoice</th>
+              <th>Client</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Balance Due</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {invoices.map((invoice) => (
               <InvoiceTableRow
                 key={invoice.id}

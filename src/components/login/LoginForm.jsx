@@ -11,47 +11,105 @@ const LoginForm = ({ onLogin, onSocialLogin, onSwitchToSignup, isLoading, error 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onLogin(email, password); // Pass data up to the parent
+    onLogin(email, password);
   };
 
   return (
     <div className="p-8">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Email Field */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+          <label htmlFor="email" className="ds-form-label">
+            Email Address
+          </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail className="h-5 w-5 text-gray-400" /></div>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email" required />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-4 w-4 text-[var(--ds-gray-400)]" />
+            </div>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="ds-input pl-10"
+              placeholder="Enter your email"
+              required
+            />
           </div>
         </div>
 
-        {/* Password Field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <label htmlFor="password" className="ds-form-label">
+            Password
+          </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div>
-            <input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="block w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password" required />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-4 w-4 text-[var(--ds-gray-400)]" />
+            </div>
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="ds-input pl-10 pr-12"
+              placeholder="Enter your password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="ds-icon-btn absolute inset-y-0 right-1 my-auto"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
         </div>
 
-        {/* Forgot Password and Error */}
-        <div className="flex justify-end"><button type="button" className="text-sm text-blue-600 hover:text-blue-700 font-medium">Forgot password?</button></div>
-        {error && <div className="text-center text-red-500 text-sm">{error}</div>}
+        <div className="flex justify-end">
+          <button type="button" className="ds-link border-0 bg-transparent cursor-pointer p-0">
+            Forgot password?
+          </button>
+        </div>
 
-        {/* Submit Button */}
-        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50">
-          {isLoading ? (<div className="flex items-center justify-center"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Signing in...</div>) : ('Sign In')}
+        {error && (
+          <p className="text-center text-sm text-[var(--ds-ship-red)]">{error}</p>
+        )}
+
+        <button type="submit" disabled={isLoading} className="ds-btn-dark w-full">
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="ds-spinner w-4 h-4 border-white/30 border-t-white" />
+              Signing in...
+            </span>
+          ) : (
+            'Sign In'
+          )}
         </button>
       </form>
 
-      {/* Divider, Social, and Switch to Signup */}
-      <div className="mt-8 mb-6"><div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div><div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-500">Or continue with</span></div></div></div>
+      <div className="mt-8 mb-6">
+        <hr className="ds-divider" />
+        <p className="text-center text-sm text-[var(--ds-gray-500)] -mt-3">
+          <span className="bg-[var(--ds-white)] px-4">Or continue with</span>
+        </p>
+      </div>
       <SocialLoginButtons onSocialLogin={onSocialLogin} />
-      <div className="mt-8 text-center"><p className="text-sm text-gray-600">Don't have an account?{' '}<button onClick={onSwitchToSignup} className="text-blue-600 hover:text-blue-700 font-medium">Sign up</button></p></div>
+      <div className="mt-8 text-center">
+        <p className="text-sm text-[var(--ds-gray-600)]">
+          Don&apos;t have an account?{' '}
+          <button
+            type="button"
+            onClick={onSwitchToSignup}
+            className="ds-link border-0 bg-transparent cursor-pointer p-0 inline"
+          >
+            Sign up
+          </button>
+        </p>
+      </div>
     </div>
   );
 };
