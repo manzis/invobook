@@ -39,9 +39,29 @@ export default function TopNav() {
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [cacheStatus, setCacheStatus] = useState('Idle');
   const [isLocalhost, setIsLocalhost] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
   
   const dropdownRef = useRef(null);
   useOutsideAlerter(dropdownRef, () => setIsOpen(false));
+
+  // Fetch invoice number for breadcrumbs if editing an invoice
+  useEffect(() => {
+    if (router.query.invoiceId) {
+      fetch(`/api/updateInvoice/${router.query.invoiceId}`)
+        .then(res => {
+          if (res.ok) return res.json();
+          throw new Error('Not found');
+        })
+        .then(data => {
+          if (data && data.invoiceNumber) {
+            setInvoiceNumber(data.invoiceNumber);
+          }
+        })
+        .catch(err => console.error("Breadcrumb fetch error:", err));
+    } else {
+      setInvoiceNumber('');
+    }
+  }, [router.query.invoiceId]);
 
   // Determine if running locally or production
   useEffect(() => {
@@ -60,6 +80,12 @@ export default function TopNav() {
     
     const parts = path.split('/').filter(Boolean);
     return parts.map((part, index) => {
+      // If it's the dynamic invoiceId path, show the actual invoice number if we fetched it, or fallback
+      if (part === '[invoiceId]') {
+        const href = '/' + parts.slice(0, index + 1).join('/').replace('[invoiceId]', router.query.invoiceId);
+        return { label: invoiceNumber || 'Loading...', href };
+      }
+
       // Clean up string (replace dashes, capitalize)
       const label = part
         .replace(/-/g, ' ')
