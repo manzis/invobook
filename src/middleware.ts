@@ -14,6 +14,10 @@ export function middleware(request: NextRequest) {
 
   const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/share');
 
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL(token ? '/dashboard' : '/login', request.url));
+  }
+
   if (!token && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
