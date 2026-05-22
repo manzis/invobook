@@ -29,6 +29,10 @@ export async function getServerSideProps(context) {
           },
         },
         items: true,
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
@@ -60,6 +64,7 @@ export async function getServerSideProps(context) {
           businessLogo: invoice.user?.business?.logoUrl || null,
           paymentInfo: invoice.user?.business?.invoiceSettings?.paymentInfo || null,
           paymentImageUrl: invoice.user?.business?.invoiceSettings?.paymentImageUrl || null,
+          latestPaymentStatus: invoice.payments?.[0]?.status || null,
         },
       },
     };
@@ -375,15 +380,43 @@ export default function ShareInvoicePage({ invoice }) {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-3 mt-8">
-                  {invoice.status !== 'PAID' && (
-                    <button
-                      onClick={() => setShowPayForm(true)}
-                      className="ds-btn-dark w-full flex items-center justify-center gap-2"
-                      style={{ height: '40px' }}
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      Pay Now
-                    </button>
+                  {invoice.status === 'PAID' || invoice.latestPaymentStatus === 'verified' ? (
+                    <div className="flex items-center justify-center gap-2 p-3 bg-[rgba(5,150,105,0.1)] text-[#059669] rounded-[var(--ds-radius-button)] text-sm font-semibold">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Payment Received
+                    </div>
+                  ) : invoice.latestPaymentStatus === 'pending' ? (
+                    <div className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[rgba(245,158,11,0.1)] text-[#d97706] rounded-[var(--ds-radius-button)] text-sm font-semibold border border-[rgba(245,158,11,0.2)]">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Payment Verification Pending
+                      </div>
+                      <span className="text-xs font-normal text-center mt-1">
+                        We are currently reviewing your submitted payment proof.
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      {invoice.latestPaymentStatus === 'rejected' && (
+                        <div className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[rgba(255,91,79,0.06)] text-[var(--ds-ship-red)] rounded-[var(--ds-radius-button)] text-sm font-semibold border border-[rgba(255,91,79,0.1)] mb-1">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" />
+                            Payment Rejected
+                          </div>
+                          <span className="text-xs font-normal text-center mt-1">
+                            Your previous payment proof was not accepted. Please try again.
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setShowPayForm(true)}
+                        className="ds-btn-dark w-full flex items-center justify-center gap-2"
+                        style={{ height: '40px' }}
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        Pay Now
+                      </button>
+                    </>
                   )}
 
                   <a
