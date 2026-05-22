@@ -57,6 +57,13 @@ const ClientsPage = () => {
   
   const router = useRouter(); 
   
+  // Initialize stats visibility based on screen size
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setShowStats(false);
+    }
+  }, []);
+
   // Fetch clients when the page loads
   useEffect(() => {
     const fetchData = async () => {
@@ -190,23 +197,24 @@ const ClientsPage = () => {
   };
 
   return (
-    <div className="ds-page-inner">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="ds-section-title m-0">Clients</h1>
-          <p className="ds-page-subtitle m-0">Manage your client list and details</p>
-        </div>
-        <button 
-          onClick={() => setShowStats(prev => !prev)} 
-          className="ds-btn-ghost gap-2 h-9 px-3 text-sm text-[var(--ds-gray-600)] hover:text-[var(--ds-black)] transition-colors"
-        >
-          {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          <span>{showStats ? 'Hide Stats' : 'Show Stats'}</span>
-        </button>
-      </div>
-      {isLoading ? (
-        <>
-          {showStats && <ClientStatsSkeleton />}
+    <div className="flex flex-col h-full w-full">
+      <div className="sticky top-0 z-[40] bg-white w-full pt-6 pb-2">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="ds-section-title m-0">Clients</h1>
+              <p className="ds-page-subtitle m-0">Manage your client list and details</p>
+            </div>
+            <button 
+              onClick={() => setShowStats(prev => !prev)} 
+              className="ds-btn-ghost gap-2 h-9 px-3 text-sm text-[var(--ds-gray-600)] hover:text-[var(--ds-black)] transition-colors"
+            >
+              {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span className="hidden sm:inline">{showStats ? 'Hide Stats' : 'Show Stats'}</span>
+              <span className="sm:hidden">{showStats ? 'Hide' : 'Show'}</span>
+            </button>
+          </div>
+
           <SubNav 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -214,36 +222,30 @@ const ClientsPage = () => {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             onAddNewClick={handleOpenAddModal}
-            addNewLabel="New Client"
+            addNewLabel={
+              <>
+                <span className="hidden sm:inline">New Client</span>
+                <span className="sm:hidden">New</span>
+              </>
+            }
           />
+        </div>
+      </div>
+
+      <div className="ds-page-inner relative pb-20 md:pb-0 pt-6">
+      {isLoading ? (
+        <>
+          {showStats && <ClientStatsSkeleton />}
           <ClientGridSkeleton />
         </>
       ) : clients.length === 0 ? (
         <>
           {showStats && <ClientStats clients={clients} currency={currency} />}
-          <SubNav 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            searchPlaceholder="Search clients by name, email, or company..."
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onAddNewClick={handleOpenAddModal}
-            addNewLabel="New Client"
-          />
           <EmptyClientsState onAddClientClick={handleOpenAddModal} />
         </>
       ) : (
         <>
           {showStats && <ClientStats clients={clients} currency={currency} />}
-          <SubNav 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            searchPlaceholder="Search clients by name, email, or company..."
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onAddNewClick={handleOpenAddModal}
-            addNewLabel="New Client"
-          />
           {filteredClients.length > 0 ? (
             <>
               {viewMode === 'grid' ? (
@@ -315,6 +317,7 @@ const ClientsPage = () => {
           )}
         </>
       )}
+      </div>
 
       <AddClientModal 
         isOpen={isModalOpen}

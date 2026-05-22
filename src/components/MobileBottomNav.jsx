@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import useSWR from 'swr';
 import {
   LayoutDashboard,
   FileText,
@@ -15,7 +14,9 @@ import {
   CreditCard,
   FilePlus,
   UserPlus,
-  X
+  X,
+  Palette,
+  Bell
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { useAuth } from '../context/AuthContext';
@@ -83,6 +84,8 @@ export default function MobileBottomNav() {
   const shortcutTabs = [
     { id: 'new-invoice', label: 'New Invoice', href: '/new-invoice', icon: FilePlus },
     { id: 'add-client', label: 'Add Client', href: '/clients?action=add', icon: UserPlus },
+    { id: 'templates', label: 'Templates', href: '/settings?tab=templates', icon: Palette },
+    { id: 'notifications', label: 'Notifications', href: '/settings?tab=notifications', icon: Bell },
   ];
 
   return (
@@ -129,9 +132,10 @@ export default function MobileBottomNav() {
                       href={tab.href}
                       className={`flex items-center p-3 rounded-xl border ${
                         active 
-                          ? 'border-[var(--ds-gray-200)] bg-[var(--ds-gray-50)]' 
+                          ? 'bg-[var(--ds-gray-50)]' 
                           : 'border-transparent bg-[var(--ds-gray-50)] hover:bg-[var(--ds-gray-100)]'
                       } transition-colors`}
+                      style={active ? { borderColor: 'var(--ds-gray-100)' } : undefined}
                     >
                       <div className="relative">
                         <Icon className={`w-5 h-5 mr-3 ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-500)]'}`} />
@@ -155,14 +159,20 @@ export default function MobileBottomNav() {
               <div className="grid grid-cols-2 gap-2">
                 {shortcutTabs.map(tab => {
                   const Icon = tab.icon;
+                  const active = isActive(tab.href);
                   return (
                     <Link 
                       key={tab.id} 
                       href={tab.href}
-                      className="flex flex-col items-center justify-center p-4 rounded-xl border border-[var(--ds-gray-200)] bg-white active:bg-[var(--ds-gray-50)] transition-colors"
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border ${
+                        active
+                          ? 'bg-[var(--ds-gray-50)]'
+                          : 'border-transparent bg-[var(--ds-gray-50)] hover:bg-[var(--ds-gray-100)]'
+                      } active:bg-[var(--ds-gray-100)] transition-colors`}
+                      style={active ? { borderColor: 'var(--ds-gray-100)' } : undefined}
                     >
-                      <Icon className="w-6 h-6 mb-2 text-[var(--ds-black)]" />
-                      <span className="text-xs font-semibold text-[var(--ds-black)] tracking-tight">
+                      <Icon className={`w-6 h-6 mb-2 ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`} />
+                      <span className={`text-xs font-semibold tracking-tight ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`}>
                         {tab.label}
                       </span>
                     </Link>

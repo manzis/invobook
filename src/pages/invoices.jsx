@@ -81,9 +81,11 @@ const InvoicesPage = () => {
   const itemsPerPage = 10;
 
   // Initialize view mode based on screen size on client-side
+  // Initialize view mode and stats visibility based on screen size on client-side
   useEffect(() => {
     if (window.innerWidth < 768) {
       setViewMode('grid');
+      setShowStats(false);
     }
   }, []);
 
@@ -273,54 +275,24 @@ const InvoicesPage = () => {
   }, [selectedInvoices]);
 
   return (
-    <div className="ds-page-inner">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="ds-section-title m-0">All Invoices</h1>
-          <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>
-        </div>
-        <button 
-          onClick={() => setShowStats(prev => !prev)} 
-          className="ds-btn-ghost gap-2 h-9 px-3 text-sm text-[var(--ds-gray-600)] hover:text-[var(--ds-black)] transition-colors"
-        >
-          {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          <span>{showStats ? 'Hide Stats' : 'Show Stats'}</span>
-        </button>
-      </div>
+    <div className="flex flex-col h-full w-full">
+      <div className="sticky top-0 z-[40] bg-white w-full pt-6 pb-2">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="ds-section-title m-0">All Invoices</h1>
+              <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>
+            </div>
+            <button 
+              onClick={() => setShowStats(prev => !prev)} 
+              className="ds-btn-ghost gap-2 h-9 px-3 text-sm text-[var(--ds-gray-600)] hover:text-[var(--ds-black)] transition-colors"
+            >
+              {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span className="hidden sm:inline">{showStats ? 'Hide Stats' : 'Show Stats'}</span>
+              <span className="sm:hidden">{showStats ? 'Hide' : 'Show'}</span>
+            </button>
+          </div>
 
-      {isLoading ? (
-        <>
-          {showStats && <InvoicesStatsSkeleton />}
-          <InvoiceFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            selectedInvoicesCount={0}
-            onBulkDelete={() => { }}
-            onBulkMarkPaid={() => { }}
-            onBulkExport={() => { }}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            minAmount={minAmount}
-            setMinAmount={setMinAmount}
-            maxAmount={maxAmount}
-            setMaxAmount={setMaxAmount}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onAddNewClick={() => router.push('/new-invoice')}
-          />
-          <InvoicesTableSkeleton />
-        </>
-      ) : invoices.length === 0 ? (
-        <EmptyState onNewInvoiceClick={() => router.push('/new-invoice')} />
-      ) : (
-        <>
-          {showStats && <StatsCards invoices={invoices} currency={currency} />}
           <InvoiceFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -344,6 +316,20 @@ const InvoicesPage = () => {
             setViewMode={setViewMode}
             onAddNewClick={() => router.push('/new-invoice')}
           />
+        </div>
+      </div>
+
+      <div className="ds-page-inner relative pb-20 md:pb-0 pt-6">
+      {isLoading ? (
+        <>
+          {showStats && <InvoicesStatsSkeleton />}
+          <InvoicesTableSkeleton />
+        </>
+      ) : invoices.length === 0 ? (
+        <EmptyState onNewInvoiceClick={() => router.push('/new-invoice')} />
+      ) : (
+        <>
+          {showStats && <StatsCards invoices={invoices} currency={currency} />}
           {viewMode === 'list' ? (
             <InvoiceTable
               invoices={paginatedInvoices}
@@ -419,6 +405,7 @@ const InvoicesPage = () => {
           )}
         </>
       )}
+      </div>
     </div>
   );
 };

@@ -342,14 +342,15 @@ const handleInvoiceDataChange = (field, value) => {
   }
 
   return (
-    <div className="ds-page-inner">
+    <div className="flex flex-col h-full w-full">
         <InvoiceHeader 
           onCreateInvoice={handleCreateInvoice} 
           onPreview={() => setIsPreviewOpen(true)}
           isSaving={isSaving} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="ds-page-inner">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
             <InvoiceDetails
               invoiceNumber={invoiceData.invoiceNumber}
               date={invoiceData.date}
@@ -407,6 +408,7 @@ const handleInvoiceDataChange = (field, value) => {
             onFieldChange={handleInvoiceDataChange}
           />
         </div>
+      </div>
 
       <InvoicePreviewModal
         isOpen={isPreviewOpen}

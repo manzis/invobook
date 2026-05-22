@@ -34,11 +34,18 @@ body {
   }
 
   .ds-section-title {
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 600;
     line-height: 1.25;
-    letter-spacing: -1.28px;
+    letter-spacing: -0.96px;
     color: var(--ds-black);
+  }
+
+  @media (min-width: 768px) {
+    .ds-section-title {
+      font-size: 32px;
+      letter-spacing: -1.28px;
+    }
   }
 
   .ds-card-title {
@@ -293,11 +300,18 @@ body {
   }
 
   .ds-page-subtitle {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 400;
     line-height: 1.5;
     color: var(--ds-gray-600);
-    margin-top: 8px;
+    margin-top: 4px;
+  }
+
+  @media (min-width: 768px) {
+    .ds-page-subtitle {
+      font-size: 16px;
+      margin-top: 8px;
+    }
   }
 
   .ds-stat-value {
@@ -404,6 +418,11 @@ body {
 
   .ds-icon-btn:hover {
     background: var(--ds-gray-50);
+    color: var(--ds-black);
+  }
+
+  .ds-icon-btn[data-state="open"] {
+    background: var(--ds-gray-100);
     color: var(--ds-black);
   }
 

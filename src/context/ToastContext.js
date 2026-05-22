@@ -25,7 +25,7 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed top-10 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] sm:w-auto sm:max-w-none sm:top-auto sm:left-auto sm:transform-none sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-center sm:items-end gap-3 pointer-events-none">
         {toasts.map((t) => (
           <ToastItem key={t.id} {...t} onRemove={() => removeToast(t.id)} />
         ))}
@@ -46,11 +46,12 @@ function ToastItem({ message, duration, onRemove }) {
 
   return (
     <div className="pointer-events-auto bg-black text-white border border-neutral-800 px-4 py-3 rounded-md shadow-2xl flex items-center justify-between min-w-[280px] max-w-sm transition-all duration-300 transform translate-y-0 opacity-100 origin-bottom"
-         style={{ animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-      <style dangerouslySetInnerHTML={{ __html: `
+      style={{ animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes slideIn {
           from {
-            transform: translateY(100%);
+            transform: translateY(-100%);
             opacity: 0;
           }
           to {
@@ -58,9 +59,21 @@ function ToastItem({ message, duration, onRemove }) {
             opacity: 1;
           }
         }
+        @media (min-width: 640px) {
+          @keyframes slideIn {
+            from {
+              transform: translateY(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+        }
       `}} />
       <span className="text-sm font-medium tracking-tight whitespace-pre-wrap">{message}</span>
-      <button 
+      <button
         onClick={onRemove}
         className="ml-4 text-neutral-400 hover:text-white transition-colors focus:outline-none flex-shrink-0"
         aria-label="Close toast"

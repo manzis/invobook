@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, SlidersHorizontal, LayoutGrid, List, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, LayoutGrid, List, ChevronDown, X } from 'lucide-react';
 
 const SubNav = ({
   searchTerm,
@@ -16,7 +16,7 @@ const SubNav = ({
   addNewLabel = "Add New..."
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
       {/* Search Input */}
       <div className="relative w-full sm:flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ds-gray-400)] pointer-events-none" />
@@ -25,8 +25,17 @@ const SubNav = ({
           placeholder={searchPlaceholder}
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="ds-input pl-9 w-full h-[36px] bg-white border-[var(--ds-gray-100)]"
+          className="ds-input pl-9 pr-[80px] w-full h-[36px] bg-white border-[var(--ds-gray-100)]"
         />
+        {searchTerm && (
+          <button
+            onClick={() => onSearchChange('')}
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-[28px] px-2 flex items-center gap-1 text-[var(--ds-gray-500)] hover:text-[var(--ds-black)] hover:bg-[var(--ds-gray-50)] rounded transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline text-xs font-medium">Clear</span>
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-2 w-full sm:w-auto justify-end">

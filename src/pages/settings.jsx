@@ -10,6 +10,7 @@ import InventorySettings from '../components/settings/InventorySettings';
 import PlaceholderTab from '../components/settings/PlaceholderTab';
 import { useInventory } from '../context/InventoryContext';
 import { useToast } from '../context/ToastContext';
+import { useRouter } from 'next/router';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -23,6 +24,14 @@ const SettingsPage = () => {
   
   const { setInventoryEnabled: setGlobalInventoryEnabled } = useInventory();
   const { toast } = useToast();
+  const router = useRouter();
+
+  // Handle direct tab navigation via URL query params
+  useEffect(() => {
+    if (router.isReady && router.query.tab) {
+      setActiveTab(router.query.tab);
+    }
+  }, [router.isReady, router.query.tab]);
 
   useEffect(() => {
     const fetchAllSettings = async () => {

@@ -57,7 +57,7 @@ const InvoiceFilters = ({
   };
 
   return (
-    <div className="mb-6">
+    <div className="w-full">
       <div className="relative" ref={dropdownRef}>
         <SubNav 
           searchTerm={searchTerm}
@@ -207,20 +207,6 @@ const InvoiceFilters = ({
               </div>
             )}
       </div>
-
-      {/* Clear Search Indicator if search has text */}
-      {searchTerm && (
-        <div className="mb-3">
-          <button
-            type="button"
-            onClick={() => setSearchTerm('')}
-            className="ds-btn-ghost !h-8 !px-2.5 flex items-center justify-center gap-1 inline-flex"
-          >
-            <X className="w-3.5 h-3.5" />
-            <span>Clear Search</span>
-          </button>
-        </div>
-      )}
 
       {/* Bulk actions display */}
       {selectedInvoicesCount > 0 && (

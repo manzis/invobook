@@ -271,15 +271,16 @@ const EditInvoicePage = () => {
   }
 
   return (
-    <div className="ds-page-inner">
+    <div className="flex flex-col h-full w-full">
         <EditInvoiceHeader
           isEditing={true}
           onSaveInvoice={handleUpdateInvoice}
           onPreview={() => setIsPreviewOpen(true)}
           isSaving={isSaving} 
         />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="ds-page-inner">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
             <InvoiceDetails {...invoiceData} onFieldChange={handleInvoiceDataChange} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <BusinessDetails {...invoiceData} onFieldChange={handleInvoiceDataChange} onLogoUpload={(e) => setInvoiceData(prev => ({...prev, logoFile: e.target.files[0]}))} />
@@ -290,7 +291,7 @@ const EditInvoicePage = () => {
           </div>
           <InvoiceSummary {...invoiceData} onFieldChange={handleInvoiceDataChange} />
         </div>
-
+      </div>
       <InvoicePreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
