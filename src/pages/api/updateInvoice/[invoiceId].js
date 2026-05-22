@@ -107,29 +107,23 @@ export default async function handler(req, res) {
               })),
             },
           },
+          include: {
+            items: true,
+            client: true,
+          },
         });
       });
       
-      // --- 4. REGENERATE THE PDF ---
-      const newPdfUrl = await generateAndUploadInvoicePDF(updatedInvoice.id);
-
-      // --- 5. SAVE THE NEW PDF URL ---
-      const finalInvoiceWithPdf = await prisma.invoice.update({
-        where: { id: updatedInvoice.id },
-        data: { pdfUrl: newPdfUrl },
-        include: { items: true, client: true },
-      });
-
       await createNotification({
         userId,
         title: 'Invoice Updated',
-        message: `Invoice ${finalInvoiceWithPdf.invoiceNumber} was updated.`,
+        message: `Invoice ${updatedInvoice.invoiceNumber} was updated.`,
         type: 'INVOICE_EDIT',
-        invoiceId: finalInvoiceWithPdf.id,
+        invoiceId: updatedInvoice.id,
       });
 
-      // --- 6. RETURN THE FULLY UPDATED INVOICE ---
-      return res.status(200).json(finalInvoiceWithPdf);
+      // --- 4. RETURN THE FULLY UPDATED INVOICE ---
+      return res.status(200).json(updatedInvoice);
     }
     
     // --- HANDLE DELETE REQUEST ---
