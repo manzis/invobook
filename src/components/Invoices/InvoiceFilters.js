@@ -79,133 +79,136 @@ const InvoiceFilters = ({
         {/* Filter Popover Dropdown */}
         {isOpen && (
           <div
-            className="absolute right-0 top-[48px] w-80 ds-dropdown-content animate-page-in"
+            className="absolute right-0 top-[48px] w-80 ds-dropdown-content animate-page-in flex flex-col"
             style={{
               boxShadow: 'var(--ds-shadow-card-full)',
               zIndex: 50,
+              maxHeight: 'calc(100dvh - 160px)'
             }}
           >
-                {/* Header */}
-                <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--ds-gray-100)] bg-[var(--ds-gray-50)] rounded-t-lg">
-                  <span className="text-xs font-semibold text-[var(--ds-black)]">Filters</span>
-                  {hasActiveFilters && (
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--ds-gray-100)] bg-[var(--ds-gray-50)] rounded-t-lg shrink-0">
+              <span className="text-xs font-semibold text-[var(--ds-black)]">Filters</span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            <div className="overflow-y-auto">
+              {/* Status Options */}
+              <div className="p-1 border-b border-[var(--ds-gray-100)]">
+                <div className="px-2 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none">
+                  Status
+                </div>
+                <div className="space-y-0.5">
+                  {[
+                    { value: 'all', label: 'All Statuses' },
+                    { value: 'PAID', label: 'Paid' },
+                    { value: 'PENDING', label: 'Pending' },
+                    { value: 'PARTIALLY_PAID', label: 'Partially Paid' },
+                    { value: 'OVERDUE', label: 'Overdue' },
+                    { value: 'DRAFT', label: 'Draft' },
+                  ].map((item) => (
                     <button
+                      key={item.value}
                       type="button"
-                      onClick={handleClearFilters}
-                      className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+                      onClick={() => setStatusFilter(item.value)}
+                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
+                        statusFilter === item.value
+                          ? 'bg-[var(--ds-gray-50)] text-[var(--ds-black)] font-semibold'
+                          : 'text-[var(--ds-gray-600)] hover:bg-[var(--ds-gray-50)]'
+                      }`}
                     >
-                      Clear All
+                      <span>{item.label}</span>
+                      {statusFilter === item.value && (
+                        <Check className="w-3.5 h-3.5 text-blue-600" />
+                      )}
                     </button>
-                  )}
+                  ))}
                 </div>
+              </div>
 
-                {/* Status Options */}
-                <div className="p-1 border-b border-[var(--ds-gray-100)]">
-                  <div className="px-2 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none">
-                    Status
-                  </div>
-                  <div className="space-y-0.5">
-                    {[
-                      { value: 'all', label: 'All Statuses' },
-                      { value: 'PAID', label: 'Paid' },
-                      { value: 'PENDING', label: 'Pending' },
-                      { value: 'PARTIALLY_PAID', label: 'Partially Paid' },
-                      { value: 'OVERDUE', label: 'Overdue' },
-                      { value: 'DRAFT', label: 'Draft' },
-                    ].map((item) => (
-                      <button
-                        key={item.value}
-                        type="button"
-                        onClick={() => setStatusFilter(item.value)}
-                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
-                          statusFilter === item.value
-                            ? 'bg-[var(--ds-gray-50)] text-[var(--ds-black)] font-semibold'
-                            : 'text-[var(--ds-gray-600)] hover:bg-[var(--ds-gray-50)]'
-                        }`}
-                      >
-                        <span>{item.label}</span>
-                        {statusFilter === item.value && (
-                          <Check className="w-3.5 h-3.5 text-blue-600" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+              {/* Date Filters */}
+              <div className="p-2 border-b border-[var(--ds-gray-100)]">
+                <div className="px-1 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none mb-1">
+                  Date Range
                 </div>
-
-                {/* Date Filters */}
-                <div className="p-2 border-b border-[var(--ds-gray-100)]">
-                  <div className="px-1 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none mb-1">
-                    Date Range
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">From</label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="ds-input text-xs w-full py-1 px-2 h-7"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">To</label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="ds-input text-xs w-full py-1 px-2 h-7"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Advanced Options */}
-                <div className="p-2">
-                  <div className="px-1 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none mb-1">
-                    Advanced Options
-                  </div>
-                  
-                  {/* Min & Max Amount */}
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div>
-                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Min Amount ($)</label>
-                      <input
-                        type="number"
-                        placeholder="Min"
-                        value={minAmount}
-                        onChange={(e) => setMinAmount(e.target.value)}
-                        className="ds-input text-xs w-full py-1 px-2 h-7"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Max Amount ($)</label>
-                      <input
-                        type="number"
-                        placeholder="Max"
-                        value={maxAmount}
-                        onChange={(e) => setMaxAmount(e.target.value)}
-                        className="ds-input text-xs w-full py-1 px-2 h-7"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Sort By Order */}
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Sort By</label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="ds-select text-xs w-full py-1 px-2 h-7 !h-7"
-                    >
-                      <option value="newest">Newest First</option>
-                      <option value="oldest">Oldest First</option>
-                      <option value="amount_desc">Amount: High to Low</option>
-                      <option value="amount_asc">Amount: Low to High</option>
-                    </select>
+                    <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">From</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="ds-input text-xs w-full py-1 px-2 h-7"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">To</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="ds-input text-xs w-full py-1 px-2 h-7"
+                    />
                   </div>
                 </div>
               </div>
-            )}
+
+              {/* Advanced Options */}
+              <div className="p-2">
+                <div className="px-1 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none mb-1">
+                  Advanced Options
+                </div>
+                
+                {/* Min & Max Amount */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div>
+                    <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Min Amount ($)</label>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minAmount}
+                      onChange={(e) => setMinAmount(e.target.value)}
+                      className="ds-input text-xs w-full py-1 px-2 h-7"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Max Amount ($)</label>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxAmount}
+                      onChange={(e) => setMaxAmount(e.target.value)}
+                      className="ds-input text-xs w-full py-1 px-2 h-7"
+                    />
+                  </div>
+                </div>
+
+                {/* Sort By Order */}
+                <div>
+                  <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Sort By</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="ds-select text-xs w-full py-1 px-2 h-7 !h-7"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="amount_desc">Amount: High to Low</option>
+                    <option value="amount_asc">Amount: Low to High</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bulk actions display */}

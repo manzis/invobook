@@ -76,24 +76,43 @@ const InvoiceActionMenu = ({
   const handleShare = async (format) => {
     setIsSharing(true);
     const isImage = format === 'image';
-    const url = isImage
+    const endpoint = isImage
       ? `/api/downloadInvoice/${invoice.id}?format=image`
       : `/api/downloadInvoice/${invoice.id}`;
-    const fullUrl = `${window.location.origin}${url}`;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Invoice ${invoice.invoiceNumber}`,
-          text: `Here is the ${isImage ? 'image' : 'PDF'} for invoice ${invoice.invoiceNumber}`,
-          url: fullUrl,
-        });
-      } catch (error) {
-        console.error('Error sharing: Cancelled by the user', error);
+    try {
+      if (navigator.share && navigator.canShare) {
+        // Fetch the actual file
+        const response = await fetch(endpoint);
+        const blob = await response.blob();
+        const fileExt = isImage ? 'png' : 'pdf';
+        const mimeType = isImage ? 'image/png' : 'application/pdf';
+        const file = new File([blob], `Invoice_${invoice.invoiceNumber}.${fileExt}`, { type: mimeType });
+
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `Invoice ${invoice.invoiceNumber}`,
+            text: `Here is the ${isImage ? 'image' : 'PDF'} for invoice ${invoice.invoiceNumber}`,
+          });
+        } else {
+          // Fallback to link if file share is unsupported
+          const fullUrl = `${window.location.origin}${endpoint}`;
+          await navigator.share({
+            title: `Invoice ${invoice.invoiceNumber}`,
+            text: `Here is the ${isImage ? 'image' : 'PDF'} for invoice ${invoice.invoiceNumber}`,
+            url: fullUrl,
+          });
+        }
+      } else {
+        // FALLBACK TO DOWNLOAD IF NATIVE SHARE NOT AVAILABLE
+        isImage ? handleDownloadImage() : handleDownloadPDF();
       }
-    } else {
-      // FALLBACK TO DOWNLOAD IF NATIVE SHARE NOT AVAILABLE
-      isImage ? handleDownloadImage() : handleDownloadPDF();
+    } catch (error) {
+      // Ignore AbortError when user cancels the share dialog
+      if (error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+      }
     }
     setIsSharing(false);
   };
@@ -265,18 +284,14 @@ const InvoiceActionMenu = ({
 
                 <DropdownMenu.Group>
                   <DropdownMenu.Item
-                    onSelect={() => handleDownloadPDF()}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setMenuView('download');
+                    }}
                     className="ds-dropdown-item"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => handleDownloadImage()}
-                    className="ds-dropdown-item"
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Download Image
+                    Download...
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
                     onSelect={() => handleSendInvoice('email')}
@@ -335,6 +350,33 @@ const InvoiceActionMenu = ({
                   </DropdownMenu.Item>
                 </DropdownMenu.Group>
               </>
+            ) : menuView === 'download' ? (
+              <DropdownMenu.Group>
+                <DropdownMenu.Item
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setMenuView('main');
+                  }}
+                  className="ds-dropdown-item"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  onSelect={() => handleDownloadImage()}
+                  className="ds-dropdown-item"
+                >
+                  <ImageIcon className="w-4 h-4 mr-2" />
+                  Image
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  onSelect={() => handleDownloadPDF()}
+                  className="ds-dropdown-item"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  PDF
+                </DropdownMenu.Item>
+              </DropdownMenu.Group>
             ) : (
               <DropdownMenu.Group>
                 <DropdownMenu.Item
