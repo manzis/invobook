@@ -287,17 +287,6 @@ export default function ShareInvoicePage({ invoice }) {
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="ds-form-label">Transaction Reference ID</label>
-                  <input
-                    type="text"
-                    value={referenceNo}
-                    onChange={(e) => setReferenceNo(e.target.value)}
-                    placeholder="e.g. TXN-839201"
-                    className="ds-input"
-                    style={{ height: '38px' }}
-                  />
-                </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="ds-form-label">Payment Proof (Screenshot)</label>
