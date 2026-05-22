@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import useSWR from 'swr';
 import { useAuth } from '../../context/AuthContext';
 import UserMenu from '../ui/UserMenu';
 import {
@@ -59,6 +60,11 @@ export default function Sidebar() {
   }, [isSidebarCollapsed]);
 
 
+  // Fetch payments to count pending ones
+  const fetcher = (url) => fetch(url).then(res => res.json());
+  const { data: payments } = useSWR(user && !loading ? '/api/payments' : null, fetcher, { refreshInterval: 10000 });
+  const pendingCount = Array.isArray(payments) ? payments.filter(p => p.status === 'pending').length : 0;
+
   // Menu items grouped logically
   const primarySection = [
     { id: 'dashboard', label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -69,7 +75,7 @@ export default function Sidebar() {
 
   const insightSection = [
     { id: 'analytics', label: 'Analytics', href: '/analytics', icon: BarChart3, hasChevron: true },
-    { id: 'payments', label: 'Payments', href: '/payments', icon: CreditCard },
+    { id: 'payments', label: 'Payments', href: '/payments', icon: CreditCard, badge: pendingCount > 0 ? pendingCount : null },
   ];
 
   const accountSection = [
@@ -119,7 +125,12 @@ export default function Sidebar() {
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                 </div>
-                {!isSidebarCollapsed && item.hasChevron && (
+                {!isSidebarCollapsed && item.badge && (
+                  <span className="flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-[var(--ds-ship-red)] text-white text-[10px] font-bold">
+                    {item.badge}
+                  </span>
+                )}
+                {!isSidebarCollapsed && item.hasChevron && !item.badge && (
                   <ChevronRight className="w-3.5 h-3.5 text-[var(--ds-gray-400)] flex-shrink-0" />
                 )}
               </Link>
