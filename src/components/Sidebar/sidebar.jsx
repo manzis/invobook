@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import useSWR from 'swr';
 import { useAuth } from '../../context/AuthContext';
 import UserMenu from '../ui/UserMenu';
 import {
@@ -28,6 +27,7 @@ export default function Sidebar() {
   const { inventoryEnabled } = useInventory();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
   const searchInputRef = useRef(null);
 
   useEffect(() => {
@@ -61,9 +61,28 @@ export default function Sidebar() {
 
 
   // Fetch payments to count pending ones
-  const fetcher = (url) => fetch(url).then(res => res.json());
-  const { data: payments } = useSWR(user && !loading ? '/api/payments' : null, fetcher, { refreshInterval: 10000 });
-  const pendingCount = Array.isArray(payments) ? payments.filter(p => p.status === 'pending').length : 0;
+  useEffect(() => {
+    if (!user || loading) return;
+    
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch('/api/payments');
+        if (res.ok) {
+          const payments = await res.json();
+          if (Array.isArray(payments)) {
+            const count = payments.filter(p => p.status === 'pending').length;
+            setPendingCount(count);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending payments count:', err);
+      }
+    };
+
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 10000);
+    return () => clearInterval(interval);
+  }, [user, loading]);
 
   // Menu items grouped logically
   const primarySection = [
