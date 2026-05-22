@@ -380,10 +380,10 @@ export default function ShareInvoicePage({ invoice }) {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-3 mt-8">
-                  {invoice.status === 'PAID' || invoice.latestPaymentStatus === 'verified' ? (
+                  {invoice.status === 'PAID' ? (
                     <div className="flex items-center justify-center gap-2 p-3 bg-[rgba(5,150,105,0.1)] text-[#059669] rounded-[var(--ds-radius-button)] text-sm font-semibold">
                       <CheckCircle2 className="w-4 h-4" />
-                      Payment Received
+                      Payment Received in Full
                     </div>
                   ) : invoice.latestPaymentStatus === 'pending' ? (
                     <div className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[rgba(245,158,11,0.1)] text-[#d97706] rounded-[var(--ds-radius-button)] text-sm font-semibold border border-[rgba(245,158,11,0.2)]">
@@ -408,13 +408,24 @@ export default function ShareInvoicePage({ invoice }) {
                           </span>
                         </div>
                       )}
+                      {invoice.latestPaymentStatus === 'verified' && invoice.status === 'PARTIALLY_PAID' && (
+                        <div className="flex flex-col items-center justify-center gap-1.5 p-3 bg-[rgba(5,150,105,0.1)] text-[#059669] rounded-[var(--ds-radius-button)] text-sm font-semibold border border-[rgba(5,150,105,0.2)] mb-1">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Partial Payment Verified
+                          </div>
+                          <span className="text-xs font-normal text-center mt-1">
+                            Your recent payment was accepted. You can pay the remaining balance below.
+                          </span>
+                        </div>
+                      )}
                       <button
                         onClick={() => setShowPayForm(true)}
                         className="ds-btn-dark w-full flex items-center justify-center gap-2"
                         style={{ height: '40px' }}
                       >
                         <CreditCard className="w-4 h-4" />
-                        Pay Now
+                        {invoice.status === 'PARTIALLY_PAID' ? 'Pay Remaining Balance' : 'Pay Now'}
                       </button>
                     </>
                   )}
