@@ -80,6 +80,13 @@ const InvoicesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Initialize view mode based on screen size on client-side
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setViewMode('grid');
+    }
+  }, []);
+
   // --- useEffect for fetching data ---
   useEffect(() => {
     const fetchData = async () => {
