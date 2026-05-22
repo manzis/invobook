@@ -258,7 +258,7 @@ const InvoiceTableRow = ({
               <Edit className="w-4 h-4" />
             </button>
 
-            <DropdownMenu.Root>
+            <DropdownMenu.Root modal={false}>
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
@@ -295,6 +295,7 @@ const InvoiceTableRow = ({
             </DropdownMenu.Root>
 
             <DropdownMenu.Root
+              modal={false}
               onOpenChange={(open) => {
                 if (!open) {
                   setIsEnteringPartial(false);

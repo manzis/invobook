@@ -192,6 +192,7 @@ const InvoiceActionMenu = ({
       {isSharing && createPortal(<LoaderOverlay />, document.body)}
 
       <DropdownMenu.Root
+        modal={false}
         onOpenChange={(open) => {
           if (!open) {
             setIsEnteringPartial(false);

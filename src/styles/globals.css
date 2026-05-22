@@ -364,8 +364,10 @@ body {
     border-top: 1px solid var(--ds-gray-100);
   }
 
-  .ds-table tbody tr:hover {
-    background: var(--ds-gray-50);
+  @media (hover: hover) and (pointer: fine) {
+    .ds-table tbody tr:hover {
+      background: var(--ds-gray-50);
+    }
   }
 
   .ds-status {
@@ -416,9 +418,11 @@ body {
     transition: background 0.15s, color 0.15s;
   }
 
-  .ds-icon-btn:hover {
-    background: var(--ds-gray-50);
-    color: var(--ds-black);
+  @media (hover: hover) and (pointer: fine) {
+    .ds-icon-btn:hover {
+      background: var(--ds-gray-50);
+      color: var(--ds-black);
+    }
   }
 
   .ds-icon-btn[data-state="open"] {
@@ -456,13 +460,15 @@ body {
     text-align: left;
   }
 
-  .ds-dropdown-item:hover {
-    background: var(--ds-gray-50);
-  }
-
-  .ds-dropdown-item-danger:hover {
-    background: rgba(255, 91, 79, 0.1);
-    color: var(--ds-ship-red);
+  @media (hover: hover) and (pointer: fine) {
+    .ds-dropdown-item:hover {
+      background: var(--ds-gray-50);
+    }
+    
+    .ds-dropdown-item-danger:hover {
+      background: rgba(255, 91, 79, 0.1);
+      color: var(--ds-ship-red);
+    }
   }
 
   .ds-select {
