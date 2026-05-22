@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Send } from 'lucide-react';
 
-const EditInvoiceHeader = ({ onSaveInvoice, isSaving }) => {
+const EditInvoiceHeader = ({ onSaveInvoice, onPreview, isSaving }) => {
   return (
     <div className="ds-page-header">
       <div>
@@ -9,7 +9,7 @@ const EditInvoiceHeader = ({ onSaveInvoice, isSaving }) => {
         <p className="ds-page-subtitle">Fill in the details to edit your invoice</p>
       </div>
       <div className="flex flex-wrap gap-3 items-center">
-        <button type="button" className="ds-btn-ghost gap-2">
+        <button type="button" onClick={onPreview} className="ds-btn-ghost gap-2">
           <Eye className="w-4 h-4" />
           <span>Preview</span>
         </button>

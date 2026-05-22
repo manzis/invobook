@@ -49,6 +49,11 @@ export default async function handler(req, res) {
         include: {
           client: { select: { name: true } },
           items: { select: { id: true } },
+          _count: {
+            select: {
+              payments: { where: { status: 'pending' } },
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
       });

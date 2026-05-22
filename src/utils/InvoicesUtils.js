@@ -39,3 +39,25 @@ export const getStatusBadgeClass = (status) => {
 
 /** @deprecated use getStatusBadgeClass */
 export const getStatusColor = getStatusBadgeClass;
+
+export const CURRENCY_SYMBOLS = {
+  USD: '$', EUR: '€', JPY: '¥', GBP: '£',
+  AUD: '$', CAD: '$', CHF: 'CHF', CNY: '¥',
+  INR: '₹', BRL: 'R$', RUB: '₽', ZAR: 'R',
+  SGD: '$', NZD: '$', NPR: 'Rs. ',
+};
+
+export const formatCurrency = (amount, currencyCode = 'USD') => {
+  const numericAmount = parseFloat(amount || 0);
+  const symbol = CURRENCY_SYMBOLS[currencyCode] || '$';
+  const locale = (currencyCode === 'INR' || currencyCode === 'NPR') ? 'en-IN' : 'en-US';
+  const formattedValue = numericAmount.toLocaleString(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+  if (currencyCode === 'NPR') {
+    return 'Rs. ' + formattedValue;
+  }
+  const needsSpace = symbol.length > 1;
+  return symbol + (needsSpace ? ' ' : '') + formattedValue;
+};

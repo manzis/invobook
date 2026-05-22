@@ -3,7 +3,7 @@
 import { verify } from 'jsonwebtoken';
 import prisma from '../../../lib/prisma';
 import { generateAndUploadInvoicePDF } from '../../../lib/pdfGenerator'; // Assuming this helper exists
-
+import { createNotification } from '../../../lib/notifications';
 const SECRET_KEY = process.env.JWT_SECRET;
 
 export default async function handler(req, res) {
@@ -118,6 +118,14 @@ export default async function handler(req, res) {
         where: { id: updatedInvoice.id },
         data: { pdfUrl: newPdfUrl },
         include: { items: true, client: true },
+      });
+
+      await createNotification({
+        userId,
+        title: 'Invoice Updated',
+        message: `Invoice ${finalInvoiceWithPdf.invoiceNumber} was updated.`,
+        type: 'INVOICE_EDIT',
+        invoiceId: finalInvoiceWithPdf.id,
       });
 
       // --- 6. RETURN THE FULLY UPDATED INVOICE ---

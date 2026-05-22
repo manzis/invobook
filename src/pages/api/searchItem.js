@@ -1,9 +1,7 @@
-// /src/pages/api/searchItem.js (Corrected for SQLite)
-
-import { PrismaClient } from '@prisma/client';
+// /src/pages/api/searchItem.js
 import { verify } from 'jsonwebtoken';
+import prisma from '../../lib/prisma';
 
-const prisma = new PrismaClient();
 const SECRET_KEY = process.env.JWT_SECRET;
 
 export default async function handler(req, res) {
@@ -24,13 +22,56 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Query parameter is required' });
       }
 
-      // --- 1. MODIFIED PRISMA QUERY ---
-      // Fetch items that contain the query string. This will be CASE-SENSITIVE
-      // because SQLite doesn't support the 'insensitive' mode flag.
+      // Check if user has inventory enabled
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { inventoryEnabled: true },
+      });
+
+      // --- INVENTORY MODE: Search from InventoryItem table ---
+      if (user?.inventoryEnabled) {
+        const items = await prisma.inventoryItem.findMany({
+          where: {
+            userId,
+            isActive: true,
+            OR: [
+              { name: { contains: query, mode: 'insensitive' } },
+              { sku: { contains: query, mode: 'insensitive' } },
+              { description: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            sku: true,
+            rate: true,
+            quantity: true,
+            unit: true,
+          },
+          take: 10,
+          orderBy: { name: 'asc' },
+        });
+
+        // Map to consistent shape with extra inventory fields
+        const results = items.map(item => ({
+          inventoryItemId: item.id,
+          description: item.name + (item.description ? ` - ${item.description}` : ''),
+          rate: item.rate,
+          quantity: item.quantity,
+          unit: item.unit,
+          sku: item.sku,
+          isInventory: true,
+        }));
+
+        return res.status(200).json(JSON.parse(JSON.stringify(results)));
+      }
+
+      // --- LEGACY MODE: Search from past InvoiceItem records ---
       const items = await prisma.invoiceItem.findMany({
         where: {
           description: {
-            contains: query, // <-- The 'mode: "insensitive"' property has been removed.
+            contains: query,
           },
           invoice: {
             userId: userId,
@@ -40,27 +81,26 @@ export default async function handler(req, res) {
           description: true,
           rate: true,
         },
-        take: 50, // Fetch a broad set of potential matches
+        take: 50,
       });
 
-      // --- 2. IN-MEMORY FILTERING FOR CASE-INSENSITIVITY & UNIQUENESS ---
-      // Now, we will filter this larger list in our code to get the exact results we want.
       const lowercasedQuery = query.toLowerCase();
       const seenDescriptions = new Set();
-      
+
       const uniqueFilteredItems = items
         .filter(item => {
           const lowercasedDesc = item.description.toLowerCase();
-          
-          // Condition 1: Check for a case-insensitive match
-          // Condition 2: Check if we haven't already added this unique description
           if (lowercasedDesc.includes(lowercasedQuery) && !seenDescriptions.has(lowercasedDesc)) {
             seenDescriptions.add(lowercasedDesc);
-            return true; // Keep this item
+            return true;
           }
-          return false; // Discard this item
+          return false;
         })
-        .slice(0, 10); // Finally, take the first 10 unique results
+        .slice(0, 10)
+        .map(item => ({
+          ...item,
+          isInventory: false,
+        }));
 
       return res.status(200).json(uniqueFilteredItems);
 

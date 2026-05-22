@@ -9,12 +9,61 @@ import { useAuth } from '../context/AuthContext';
 import { DollarSign, FileText, Clock, TrendingUp, Search, Filter } from 'lucide-react';
 import { PlusCircle, Users, Download } from 'lucide-react';
 import TemplatesSidebar from '../components/templatesSidebar';
+import { useToast } from '../context/ToastContext';
+
+const StatCardSkeleton = () => (
+  <div className="ds-card-static p-6 flex flex-col gap-3 animate-pulse">
+    <div className="flex justify-between items-center">
+      <div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-24"></div>
+      <div className="w-8 h-8 bg-[var(--ds-gray-100)] rounded-[var(--ds-radius-button)]"></div>
+    </div>
+    <div className="h-8 bg-[var(--ds-gray-100)] rounded-md w-32"></div>
+    <div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-20"></div>
+  </div>
+);
+
+const InvoiceTableSkeleton = () => (
+  <div className="ds-table-wrap animate-pulse">
+    <div className="overflow-x-auto">
+      <table className="ds-table">
+        <thead>
+          <tr>
+            <th><div className="w-4 h-4 bg-[var(--ds-gray-100)] rounded"></div></th>
+            <th>Invoice</th>
+            <th>Client</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[1, 2, 3, 4, 5].map((idx) => (
+            <tr key={idx}>
+              <td><div className="w-4 h-4 bg-[var(--ds-gray-100)] rounded"></div></td>
+              <td><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-16"></div></td>
+              <td><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-24"></div></td>
+              <td><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-20"></div></td>
+              <td><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-24"></div></td>
+              <td><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-24"></div></td>
+              <td><div className="h-5 bg-[var(--ds-gray-100)] rounded-full w-16"></div></td>
+              <td><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-12"></div></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
 
 const Dashboard = () => {
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { toast } = useToast();
 
   const [invoices, setInvoices] = useState([]);
+  const [currency, setCurrency] = useState('USD');
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -28,9 +77,10 @@ const Dashboard = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const [invoicesRes, statsRes] = await Promise.all([
+        const [invoicesRes, statsRes, settingsRes] = await Promise.all([
           fetch('/api/invoices'),
           fetch('/api/dashboard-stats'),
+          fetch('/api/invoice-settings'),
         ]);
 
         if (!invoicesRes.ok) throw new Error('Failed to load invoices.');
@@ -41,6 +91,11 @@ const Dashboard = () => {
 
         setInvoices(invoicesData);
         setStats(statsData);
+
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          setCurrency(settings.currency || 'USD');
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -92,7 +147,7 @@ const Dashboard = () => {
       title: 'Export Data',
       description: 'Download reports',
       icon: Download,
-      onClick: () => alert('Exporting coming soon!'),
+      onClick: () => toast('Exporting coming soon!'),
     },
   ];
 
@@ -119,7 +174,7 @@ const Dashboard = () => {
       if (!res.ok) throw new Error('Failed to delete the invoice on the server.');
     } catch (error) {
       console.error(error);
-      alert('Error: Could not delete the invoice.');
+      toast('Error: Could not delete the invoice.');
       setInvoices(originalInvoices);
     }
   };
@@ -140,7 +195,7 @@ const Dashboard = () => {
       setInvoices((prev) => prev.map((inv) => (inv.id === invoiceId ? updatedInvoice : inv)));
     } catch (error) {
       console.error(error);
-      alert('Error: Could not mark as paid.');
+      toast('Error: Could not mark as paid.');
       setInvoices(originalInvoices);
     }
   };
@@ -159,14 +214,6 @@ const Dashboard = () => {
     }
     return user.name.split(' ')[0];
   };
-
-  if (isLoading) {
-    return (
-      <div className="ds-page-inner flex items-center justify-center min-h-[40vh]">
-        <div className="ds-spinner" role="status" aria-label="Loading" />
-      </div>
-    );
-  }
 
   return (
     <>
@@ -197,7 +244,14 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {error ? (
+          {isLoading ? (
+            <>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </>
+          ) : error ? (
             <p className="text-[var(--ds-ship-red)] col-span-4">
               Could not load dashboard stats: {error}
             </p>
@@ -248,16 +302,21 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <InvoiceTable
-              invoices={filteredInvoices}
-              selectedInvoices={selectedInvoices}
-              onSelectAll={handleSelectAll}
-              onSelectInvoice={handleSelectInvoice}
-              onMarkAsPaid={handleMarkAsPaid}
-              onDeleteInvoice={handleDeleteInvoice}
-              onDownloadPDF={handleDownloadPDF}
-              onEditInvoice={handleInvoiceEdit}
-            />
+            {isLoading ? (
+              <InvoiceTableSkeleton />
+            ) : (
+              <InvoiceTable
+                invoices={filteredInvoices}
+                selectedInvoices={selectedInvoices}
+                onSelectAll={handleSelectAll}
+                onSelectInvoice={handleSelectInvoice}
+                onMarkAsPaid={handleMarkAsPaid}
+                onDeleteInvoice={handleDeleteInvoice}
+                onDownloadPDF={handleDownloadPDF}
+                onEditInvoice={handleInvoiceEdit}
+                currency={currency}
+              />
+            )}
           </div>
           <div>
             <RecentActivity />

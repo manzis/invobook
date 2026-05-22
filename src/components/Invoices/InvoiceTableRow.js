@@ -17,9 +17,12 @@ import {
   Share,
   ArrowLeft,
   Loader2,
+  CreditCard,
 } from 'lucide-react';
 
-import { getStatusIcon, getStatusBadgeClass } from '../../utils/InvoicesUtils';
+import { getStatusIcon, getStatusBadgeClass, formatCurrency, CURRENCY_SYMBOLS } from '../../utils/InvoicesUtils';
+import { useToast } from '../../context/ToastContext';
+
 
 const LoaderOverlay = () => (
   <div
@@ -42,7 +45,9 @@ const InvoiceTableRow = ({
   onDeleteInvoice,
   onEditInvoice,
   onUpdateInvoiceState,
+  currency = 'USD',
 }) => {
+  const { toast } = useToast();
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
   const [isEnteringPartial, setIsEnteringPartial] = useState(false);
@@ -89,19 +94,44 @@ const InvoiceTableRow = ({
             text: `Here is the invoice: ${invoice.invoiceNumber}`,
           });
         } else {
-          alert('Sharing this file type is not supported on your device.');
+          toast('Sharing this file type is not supported on your device.');
         }
       } catch (error) {
         console.error('Error sharing: Cancelled by the user', error);
       }
     } else {
-      alert('Web Share is not supported by your browser. Please use the download option instead.');
+      toast('Web Share is not supported by your browser. Please use the download option instead.');
     }
     setIsSharing(false);
   };
 
   const handleSendInvoice = (method) => {
-    alert(`Sending invoice to client via ${method}.`);
+    const clientEmail = invoice.client?.email || '';
+    const clientPhone = invoice.client?.phone || '';
+    const invNumber = invoice.invoiceNumber;
+    const amount = formatCurrency(invoice.total, currency);
+    const dueDate = new Date(invoice.dueDate).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric',
+    });
+    const pdfUrl = `${window.location.origin}/share/${invoice.id}`;
+
+    if (method === 'whatsapp') {
+      // Clean phone number — remove spaces, dashes, keep + prefix
+      const cleanPhone = clientPhone.replace(/[\s\-()]/g, '');
+      const message = encodeURIComponent(
+        `Hi,\n\nPlease find your invoice *${invNumber}* for *${amount}*.\n\n📅 Due Date: ${dueDate}\n📄 Download: ${pdfUrl}\n\nThank you!`
+      );
+      const whatsappUrl = cleanPhone
+        ? `https://wa.me/${cleanPhone}?text=${message}`
+        : `https://wa.me/?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+    } else if (method === 'email') {
+      const subject = encodeURIComponent(`Invoice ${invNumber} — ${amount}`);
+      const body = encodeURIComponent(
+        `Hi,\n\nPlease find your invoice ${invNumber} for ${amount}.\n\nDue Date: ${dueDate}\nDownload PDF: ${pdfUrl}\n\nThank you!`
+      );
+      window.open(`mailto:${clientEmail}?subject=${subject}&body=${body}`, '_self');
+    }
   };
 
   const handlePaymentAction = async (type) => {
@@ -115,7 +145,7 @@ const InvoiceTableRow = ({
         amountToPay <= 0 ||
         amountToPay >= parseFloat(invoice.balanceDue)
       ) {
-        alert('Please enter a valid amount greater than 0 and less than the balance due.');
+        toast('Please enter a valid amount greater than 0 and less than the balance due.');
         return;
       }
     } else {
@@ -135,26 +165,21 @@ const InvoiceTableRow = ({
       setPartialAmount('');
     } catch (error) {
       console.error(error);
-      alert(error.message);
+      toast(error.message);
     }
   };
 
   const clientName = invoice.client?.name || 'N/A';
   const itemCount = invoice.items?.length || 0;
+  const pendingPayments = invoice._count?.payments || 0;
   const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
-  const formattedTotal = parseFloat(invoice.total).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'NPR',
-  });
+  const formattedTotal = formatCurrency(invoice.total, currency);
   const status = invoice.status.toLowerCase().replace('_', ' ');
-  const formattedDue = parseFloat(invoice.balanceDue).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'NPR',
-  });
+  const formattedDue = formatCurrency(invoice.balanceDue, currency);
 
   const dropdownContentClass =
     'ds-dropdown-content origin-top-right data-[side=top]:animate-slide-down data-[side=bottom]:animate-slide-up';
@@ -210,9 +235,15 @@ const InvoiceTableRow = ({
           </p>
         </td>
         <td className="whitespace-nowrap">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {getStatusIcon(status)}
             <span className={getStatusBadgeClass(status)}>{status}</span>
+            {pendingPayments > 0 && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold tracking-tight bg-amber-50 text-amber-700 border border-amber-200">
+                <CreditCard className="w-3 h-3" />
+                Payment Attempted
+              </span>
+            )}
           </div>
         </td>
 
@@ -287,7 +318,7 @@ const InvoiceTableRow = ({
                       <label className="ds-form-label text-xs">Enter Amount</label>
                       <div className="flex items-center ds-surface-muted rounded-md ds-shadow-ring">
                         <span className="text-sm px-2" style={{ color: 'var(--ds-gray-500)' }}>
-                          {invoice.currencySymbol || '$'}
+                          {CURRENCY_SYMBOLS[currency] || '$'}
                         </span>
                         <input
                           type="number"
@@ -365,6 +396,24 @@ const InvoiceTableRow = ({
                         >
                           <Share className="w-4 h-4 mr-2" />
                           Share
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Group>
+                      <DropdownMenu.Separator
+                        className="h-px my-1"
+                        style={{ background: 'var(--ds-gray-100)' }}
+                      />
+                      <DropdownMenu.Group>
+                        <DropdownMenu.Item
+                          onSelect={() => window.location.href = '/payments'}
+                          className="ds-dropdown-item"
+                        >
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          <span className="flex-1">Payment Logs</span>
+                          {pendingPayments > 0 && (
+                            <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white min-w-[18px] text-center">
+                              {pendingPayments}
+                            </span>
+                          )}
                         </DropdownMenu.Item>
                       </DropdownMenu.Group>
                       <DropdownMenu.Separator

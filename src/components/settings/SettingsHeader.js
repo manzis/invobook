@@ -1,4 +1,4 @@
-const SettingsHeader = ({ onSave, isLoading, statusMessage }) => (
+const SettingsHeader = ({ onSave, isLoading, statusMessage, hideSaveButton }) => (
   <div className="ds-page-header">
     <div>
       <h1 className="ds-section-title">Settings</h1>
@@ -8,9 +8,11 @@ const SettingsHeader = ({ onSave, isLoading, statusMessage }) => (
       {statusMessage && (
         <span className="text-sm text-[var(--ds-gray-600)]">{statusMessage}</span>
       )}
-      <button type="button" onClick={onSave} disabled={isLoading} className="ds-btn-dark">
-        {isLoading ? 'Saving...' : 'Save Changes'}
-      </button>
+      {!hideSaveButton && (
+        <button type="button" onClick={onSave} disabled={isLoading} className="ds-btn-dark">
+          {isLoading ? 'Saving...' : 'Save Changes'}
+        </button>
+      )}
     </div>
   </div>
 );

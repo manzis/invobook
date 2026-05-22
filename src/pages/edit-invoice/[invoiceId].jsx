@@ -11,6 +11,8 @@ import ClientDetails from '../../components/createInvoice/ClientDetails';
 import InvoiceItems from '../../components/createInvoice/InvoiceItems';
 import AdditionalInfo from '../../components/createInvoice/AdditionalInfo';
 import InvoiceSummary from '../../components/createInvoice/InvoiceSummary';
+import InvoicePreviewModal from '../../components/createInvoice/InvoicePreviewModal';
+import { useToast } from '../../context/ToastContext';
 
 const CURRENCY_SYMBOLS = {
   USD: '$', EUR: '€', JPY: '¥', GBP: '£',
@@ -19,14 +21,74 @@ const CURRENCY_SYMBOLS = {
   SGD: '$', NZD: '$', NPR: 'Rs ',
 };
 
+const EditInvoiceSkeleton = () => (
+  <div className="ds-page-inner animate-pulse">
+    <div className="ds-page-header flex justify-between items-center mb-6">
+      <div className="h-8 bg-[var(--ds-gray-100)] rounded-md w-48"></div>
+      <div className="flex gap-3">
+        <div className="w-24 h-[32px] bg-[var(--ds-gray-100)] rounded-md"></div>
+        <div className="w-24 h-[32px] bg-[var(--ds-gray-100)] rounded-md"></div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="ds-card-static p-6 space-y-4">
+          <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-32 mb-2"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="ds-card-static p-6 space-y-4">
+            <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-40"></div>
+            <div className="h-16 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          </div>
+          <div className="ds-card-static p-6 space-y-4">
+            <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-40"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          </div>
+        </div>
+        
+        <div className="ds-card-static p-6 space-y-4">
+          <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-24"></div>
+          <div className="h-12 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          <div className="h-[32px] bg-[var(--ds-gray-100)] rounded-md w-28"></div>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div className="ds-card-static p-6 space-y-4">
+          <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-32"></div>
+          <div className="space-y-3 pt-2">
+            <div className="flex justify-between"><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-16"></div><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-12"></div></div>
+            <div className="flex justify-between"><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-16"></div><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-12"></div></div>
+            <div className="flex justify-between border-t pt-2"><div className="h-5 bg-[var(--ds-gray-100)] rounded-md w-20"></div><div className="h-5 bg-[var(--ds-gray-100)] rounded-md w-16"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const EditInvoicePage = () => {
   const router = useRouter();
   const { invoiceId } = router.query; // Get the ID from the URL
+  const { toast } = useToast();
   
   const [invoiceData, setInvoiceData] = useState(null);
   const [allClients, setAllClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); 
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [activeTemplateName, setActiveTemplateName] = useState('modern-blue'); 
 
   // --- Reusable calculation logic (Copied from NewInvoicePage) ---
   const calculateTotals = useCallback((data) => {
@@ -59,9 +121,12 @@ const EditInvoicePage = () => {
     const fetchInvoiceData = async () => {
       setIsLoading(true);
       try {
-        const [invoiceRes, clientsRes] = await Promise.all([
+        const [invoiceRes, clientsRes, settingsRes, templateRes, profileRes] = await Promise.all([
           fetch(`/api/updateInvoice/${invoiceId}`),
-          fetch('/api/clients')
+          fetch('/api/clients'),
+          fetch('/api/invoice-settings'),
+          fetch('/api/templates'),
+          fetch('/api/profile'),
         ]);
 
         if (!invoiceRes.ok) {
@@ -73,11 +138,27 @@ const EditInvoicePage = () => {
           setAllClients(await clientsRes.json());
         }
 
-        // Format the fetched data to match the form state structure
-        const currencySymbol = 'Rs';
+        let currencySymbol = 'Rs';
+        if (settingsRes.ok) {
+          const settings = await settingsRes.json();
+          currencySymbol = CURRENCY_SYMBOLS[settings.currency] || '$';
+        }
+
+        let profileData = {};
+        if (profileRes.ok) {
+          profileData = await profileRes.json();
+        }
+
         setInvoiceData({
           ...fetchedInvoice,
           currencySymbol,
+          // Business Profile Details
+          logoUrl: profileData?.business?.logoUrl || null,
+          businessName: profileData?.business?.businessName || '',
+          businessAddress: profileData?.business?.address || '',
+          businessCity: profileData?.business?.city || '',
+          businessEmail: profileData?.email || '',
+          businessPhone: profileData?.business?.phone || '',
           // Format dates correctly for the <input type="date"> fields
           date: new Date(fetchedInvoice.date).toISOString().split('T')[0],
           dueDate: new Date(fetchedInvoice.dueDate).toISOString().split('T')[0],
@@ -91,9 +172,15 @@ const EditInvoicePage = () => {
           clientPhone: fetchedInvoice.client?.phone || '',
         });
 
+        // Fetch active template
+        if (templateRes.ok) {
+          const templateData = await templateRes.json();
+          setActiveTemplateName(templateData.templateName || 'modern-blue');
+        }
+
       } catch (error) {
         console.error("Error fetching invoice data:", error);
-        alert(error.message);
+        toast(error.message);
         router.push('/invoices'); // Redirect if invoice can't be found
       } finally {
         setIsLoading(false);
@@ -107,7 +194,7 @@ const EditInvoicePage = () => {
   const handleUpdateInvoice = async (status = 'PENDING') => {
     setIsSaving(true);
     if (!invoiceData.items.length || !invoiceData.clientName && !invoiceData.clientCompany) {
-      alert("Please ensure the invoice has items and client details.");
+      toast("Please ensure the invoice has items and client details.");
       setIsSaving(false);
       return;
     }
@@ -125,12 +212,12 @@ const EditInvoicePage = () => {
         }
 
         const updatedInvoice = await res.json();
-        alert(`Invoice ${updatedInvoice.invoiceNumber} updated successfully!`);
+        toast(`Invoice ${updatedInvoice.invoiceNumber} updated successfully!`);
         router.push('/invoices');
 
     } catch (error) {
         console.error(error);
-        alert(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`);
     } finally {
         setIsSaving(false);
     }
@@ -180,18 +267,15 @@ const EditInvoicePage = () => {
   };
 
   if (isLoading || !invoiceData) {
-    return (
-      <div className="ds-page-inner flex items-center justify-center min-h-[40vh]">
-        <div className="ds-spinner" role="status" aria-label="Loading" />
-      </div>
-    );
+    return <EditInvoiceSkeleton />;
   }
 
   return (
     <div className="ds-page-inner">
         <EditInvoiceHeader
-          isEditing={true} // <-- Tell the header we are in "edit" mode
-          onSaveInvoice={handleUpdateInvoice} // <-- Pass the update function
+          isEditing={true}
+          onSaveInvoice={handleUpdateInvoice}
+          onPreview={() => setIsPreviewOpen(true)}
           isSaving={isSaving} 
         />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -206,6 +290,13 @@ const EditInvoicePage = () => {
           </div>
           <InvoiceSummary {...invoiceData} onFieldChange={handleInvoiceDataChange} />
         </div>
+
+      <InvoicePreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        invoiceData={invoiceData}
+        templateName={activeTemplateName}
+      />
     </div>
   );
 };

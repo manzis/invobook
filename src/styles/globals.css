@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "../../Design/vercel/tokens.css";
 
+:root {
+  --ds-font-sans: var(--font-geist-sans), system-ui, -apple-system, Arial, sans-serif;
+  --ds-font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, monospace;
+}
+
 @theme inline {
   --color-background: var(--ds-white);
   --color-foreground: var(--ds-black);
@@ -130,13 +135,14 @@ body {
     justify-content: center;
     background: var(--ds-black);
     color: var(--ds-white);
-    padding: 10px 20px;
+    padding: 0 12px !important;
+    height: 32px !important;
     border-radius: var(--ds-radius-button);
     border: none;
     font-family: var(--ds-font-sans);
-    font-size: 14px;
+    font-size: 13px !important;
     font-weight: 500;
-    line-height: 1.43;
+    line-height: 32px !important;
     text-decoration: none;
     cursor: pointer;
     transition: opacity 0.15s;
@@ -157,13 +163,14 @@ body {
     justify-content: center;
     background: var(--ds-white);
     color: var(--ds-black);
-    padding: 10px 20px;
+    padding: 0 12px !important;
+    height: 32px !important;
     border-radius: var(--ds-radius-button);
     border: none;
     font-family: var(--ds-font-sans);
-    font-size: 14px;
+    font-size: 13px !important;
     font-weight: 500;
-    line-height: 1.43;
+    line-height: 32px !important;
     text-decoration: none;
     cursor: pointer;
     box-shadow: var(--ds-shadow-ring-light);
@@ -227,6 +234,14 @@ body {
     transition: box-shadow 0.15s;
   }
 
+  input.ds-input {
+    height: 32px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-size: 13px !important;
+    line-height: 32px !important;
+  }
+
   .ds-input:focus {
     box-shadow: 0 0 0 2px var(--ds-focus-blue);
   }
@@ -286,10 +301,10 @@ body {
   }
 
   .ds-stat-value {
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 600;
     line-height: 1.25;
-    letter-spacing: -1.28px;
+    letter-spacing: -0.6px;
     color: var(--ds-black);
   }
 
@@ -382,6 +397,7 @@ body {
     color: var(--ds-gray-500);
     background: transparent;
     border: none;
+    outline: none;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
@@ -389,6 +405,11 @@ body {
   .ds-icon-btn:hover {
     background: var(--ds-gray-50);
     color: var(--ds-black);
+  }
+
+  .ds-icon-btn:focus-visible {
+    outline: 2px solid var(--ds-gray-200);
+    outline-offset: 1px;
   }
 
   .ds-dropdown-content {
@@ -430,10 +451,15 @@ body {
     background: var(--ds-white);
     color: var(--ds-black);
     border: none;
-    padding: 10px 12px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 12px;
+    padding-right: 12px;
+    height: 32px !important;
     border-radius: var(--ds-radius-button);
     font-family: var(--ds-font-sans);
-    font-size: 14px;
+    font-size: 13px !important;
+    line-height: 32px !important;
     box-shadow: var(--ds-shadow-ring);
     outline: none;
   }
@@ -452,28 +478,49 @@ body {
   }
 
   .ds-sidebar-nav-item {
+    position: relative;
+    overflow: hidden;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    border-radius: var(--ds-radius-button);
+    gap: 10px;
+    padding: 7px 12px;
+    padding-left: 12px;
+    border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
-    color: var(--ds-gray-600);
+    color: #666666;
     text-decoration: none;
-    transition: background 0.15s, color 0.15s;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
 
   .ds-sidebar-nav-item:hover {
-    background: var(--ds-gray-50);
+    background: rgba(0, 0, 0, 0.035);
     color: var(--ds-black);
   }
 
   .ds-sidebar-nav-item-active {
-    background: var(--ds-gray-50);
-    color: var(--ds-black);
-    font-weight: 600;
-    box-shadow: var(--ds-shadow-ring-light);
+    background: var(--ds-gray-50) !important;
+    border-color: var(--ds-gray-100) !important;
+    color: var(--ds-black) !important;
+    font-weight: 500;
+  }
+
+  .ds-sidebar-nav-item-active:hover {
+    background: var(--ds-gray-100) !important;
+  }
+
+  .ds-sidebar-nav-item-buy {
+    color: #0070f3 !important;
+    font-weight: 500;
+  }
+
+  .ds-sidebar-nav-item-buy svg {
+    color: #0070f3 !important;
+  }
+
+  .ds-sidebar-nav-item-buy:hover {
+    background: rgba(0, 112, 243, 0.06) !important;
   }
 
   .ds-auth-shell {
@@ -507,6 +554,60 @@ body {
     to {
       transform: rotate(360deg);
     }
+  }
+
+  /* Restore premium original sizing for login/signup pages */
+  .ds-auth-shell input.ds-input {
+    height: 42px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    font-size: 14px !important;
+    line-height: 42px !important;
+  }
+
+  .ds-auth-shell .ds-btn-dark,
+  .ds-auth-shell .ds-btn-ghost {
+    height: 40px !important;
+    font-size: 14px !important;
+    line-height: 40px !important;
+    padding: 0 16px !important;
+  }
+
+  /* Quick Page entrance animation */
+  @keyframes page-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-page-in {
+    animation: page-fade-in 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Tactile active click animations for buttons & nav items */
+  .ds-btn-dark,
+  .ds-btn-ghost,
+  .ds-sidebar-nav-item,
+  .ds-icon-btn,
+  .ds-select,
+  input.ds-input {
+    transition: background 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .ds-btn-dark:active,
+  .ds-btn-ghost:active,
+  .ds-sidebar-nav-item:active,
+  .ds-icon-btn:active {
+    transform: scale(0.96) !important;
   }
 }
 

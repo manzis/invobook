@@ -6,7 +6,7 @@ import { Plus, Eye, EyeOff } from 'lucide-react';
 const InvoiceListHeader = ({ showStats, onToggleStats }) => (
   <div className="ds-page-header">
     <div>
-      <h1 className="ds-section-title m-0">Invoices</h1>
+      <h1 className="ds-section-title m-0">All Invoices</h1>
       <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>
     </div>
 

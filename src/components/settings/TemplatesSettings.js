@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { TemplateSelection } from '../templateSelection';
+import { useToast } from '../../context/ToastContext';
 
 const TemplatesSettings = () => {
+  const { toast } = useToast();
   const [activeTemplate, setActiveTemplate] = useState('');
   const [availableTemplates, setAvailableTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +58,7 @@ const TemplatesSettings = () => {
       });
       if (!res.ok) throw new Error('Failed to save selection');
     } catch (err) {
-      alert('Error: Could not save your preference.');
+      toast('Error: Could not save your preference.');
       setActiveTemplate(originalTemplate);
     }
   };
@@ -95,7 +97,7 @@ const TemplatesSettings = () => {
 
   const handleRemoveTemplate = async (templateId) => {
     if (templateId === activeTemplate) {
-      alert(
+      toast(
         'You cannot remove a template while it is active. Please select another template first.'
       );
       return;
@@ -117,7 +119,7 @@ const TemplatesSettings = () => {
       }
       await fetchAvailableTemplates();
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      toast(`Error: ${err.message}`);
     }
   };
 

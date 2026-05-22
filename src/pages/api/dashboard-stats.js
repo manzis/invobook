@@ -107,14 +107,41 @@ export default async function handle(req, res) {
       // --- Final Calculations ---
       const pendingChange = calculatePercentageChange(pendingLast30Days, pending30To60DaysAgo);
       const overdueChange = overdueLast30Days - overdue30To60DaysAgo;
-      // The change for the "Total Revenue" card is THIS month vs LAST month
       const revenueMonthVsMonthChange = calculatePercentageChange(revenueThisCalendarMonth, revenueLastCalendarMonth);
+      // Retrieve the business and invoice settings to format the values using the settings currency
+      const business = await prisma.business.findUnique({
+        where: { userId: userId },
+        include: { invoiceSettings: true },
+      });
+      const currency = business?.invoiceSettings?.currency || 'USD';
 
-      // --- Construct the Final JSON Response ---
+      const CURRENCY_SYMBOLS = {
+        USD: '$', EUR: '€', JPY: '¥', GBP: '£',
+        AUD: '$', CAD: '$', CHF: 'CHF', CNY: '¥',
+        INR: '₹', BRL: 'R$', RUB: '₽', ZAR: 'R',
+        SGD: '$', NZD: '$', NPR: 'Rs. ',
+      };
+      
+      const formatVal = (amount) => {
+        const numericAmount = parseFloat(amount || 0);
+        const symbol = CURRENCY_SYMBOLS[currency] || '$';
+        const locale = (currency === 'INR' || currency === 'NPR') ? 'en-IN' : 'en-US';
+        const formattedValue = numericAmount.toLocaleString(locale, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        if (currency === 'NPR') {
+          return 'Rs. ' + formattedValue;
+        }
+        const needsSpace = symbol.length > 1;
+        return symbol + (needsSpace ? ' ' : '') + formattedValue;
+      };
+
+      // Construct the Final JSON Response
       const stats = {
         totalRevenue: {
           // The VALUE is now the true lifetime total
-          value: parseFloat(lifetimeRevenue).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }),
+          value: formatVal(lifetimeRevenue),
           // The CHANGE compares this calendar month to the last calendar month
           change: formatPercentageChange(revenueMonthVsMonthChange),
           trend: getTrend(revenueMonthVsMonthChange),
@@ -131,7 +158,7 @@ export default async function handle(req, res) {
         },
         // We will repurpose the 4th card to show this month's revenue clearly
         revenueThisMonth: {
-          value: revenueThisCalendarMonth.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }),
+          value: formatVal(revenueThisCalendarMonth),
           // The change here also compares to last month, making it consistent
           change: formatPercentageChange(revenueMonthVsMonthChange),
           trend: getTrend(revenueMonthVsMonthChange),

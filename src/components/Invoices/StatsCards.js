@@ -3,6 +3,8 @@
 import React, { useMemo } from 'react';
 import { FileText, Receipt, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
+import { formatCurrency } from '../../utils/InvoicesUtils';
+
 const STAT_ICONS = {
   count: { icon: FileText, color: 'var(--ds-black)' },
   billed: { icon: Receipt, color: 'var(--ds-develop-blue)' },
@@ -27,14 +29,9 @@ const StatCard = ({ title, value, variant }) => {
   );
 };
 
-const StatsCards = ({ invoices = [] }) => {
+const StatsCards = ({ invoices = [], currency = 'USD' }) => {
   const stats = useMemo(() => {
-    const formatCurrency = (amount) => {
-      return parseFloat(amount || 0).toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'INR',
-      });
-    };
+    const format = (amount) => formatCurrency(amount, currency);
 
     const totalBilledAmount = invoices.reduce((sum, inv) => sum + parseFloat(inv.total || 0), 0);
     const totalAmountPaid = invoices.reduce((sum, inv) => sum + parseFloat(inv.amountPaid || 0), 0);
@@ -44,10 +41,10 @@ const StatsCards = ({ invoices = [] }) => {
       .reduce((sum, inv) => sum + parseFloat(inv.balanceDue || 0), 0);
 
     return {
-      totalBilledAmount: formatCurrency(totalBilledAmount),
-      totalAmountPaid: formatCurrency(totalAmountPaid),
-      totalBalanceDue: formatCurrency(totalBalanceDue),
-      overdueAmount: formatCurrency(overdueAmount),
+      totalBilledAmount: format(totalBilledAmount),
+      totalAmountPaid: format(totalAmountPaid),
+      totalBalanceDue: format(totalBalanceDue),
+      overdueAmount: format(overdueAmount),
     };
   }, [invoices]);
 

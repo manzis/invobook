@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 
 const ClientSearch = ({ searchTerm, setSearchTerm }) => {
   return (
-    <div className="ds-card-static mb-6">
+    <div className="bg-[var(--ds-gray-50)] p-3 rounded-xl mb-6">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ds-gray-400)] pointer-events-none" />
         <input

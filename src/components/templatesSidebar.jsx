@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { TemplateSelection } from './templateSelection';
+import { useToast } from '../context/ToastContext';
 
 const TemplatesSidebar = ({ isOpen, onClose }) => {
+  const { toast } = useToast();
   const [activeTemplate, setActiveTemplate] = useState('');
   const [availableTemplates, setAvailableTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,14 +57,14 @@ const TemplatesSidebar = ({ isOpen, onClose }) => {
         body: JSON.stringify({ templateName: templateId }),
       });
     } catch (err) {
-      alert('Error: Could not save your preference.');
+      toast('Error: Could not save your preference.');
       setActiveTemplate(originalTemplate);
     }
   };
 
   const handleRemoveTemplate = async (templateId) => {
     if (templateId === activeTemplate) {
-      alert('You cannot remove an active template. Please select another one first.');
+      toast('You cannot remove an active template. Please select another one first.');
       return;
     }
     if (window.confirm(`Are you sure you want to remove the "${templateId}" template?`)) {
@@ -74,7 +76,7 @@ const TemplatesSidebar = ({ isOpen, onClose }) => {
         });
         await fetchAvailableTemplates();
       } catch (err) {
-        alert('Error: Could not remove template.');
+        toast('Error: Could not remove template.');
       }
     }
   };

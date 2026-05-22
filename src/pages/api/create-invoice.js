@@ -2,7 +2,7 @@
 
 import { verify } from 'jsonwebtoken';
 import prisma from '../../lib/prisma';
-
+import { createNotification } from '../../lib/notifications';
 const SECRET_KEY = process.env.JWT_SECRET;
 
 export default async function handler(req, res) {
@@ -75,7 +75,56 @@ export default async function handler(req, res) {
       }
       
     }
+    // --- Check if inventory is enabled for stock validation ---
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { inventoryEnabled: true },
+    });
+    const shouldDeductStock = user?.inventoryEnabled && finalStatus !== 'DRAFT';
 
+    if (user?.inventoryEnabled) {
+      const invalidItems = invoiceData.items.filter(item => !item.inventoryItemId);
+      if (invalidItems.length > 0) {
+        return res.status(400).json({ message: 'Inventory tracking is enabled. All items must be selected from the product catalog.' });
+      }
+    }
+
+    // --- Validate stock levels before creating invoice ---
+    if (shouldDeductStock) {
+      const inventoryItemIds = invoiceData.items
+        .filter(item => item.inventoryItemId)
+        .map(item => item.inventoryItemId);
+
+      if (inventoryItemIds.length > 0) {
+        const inventoryItems = await prisma.inventoryItem.findMany({
+          where: { id: { in: inventoryItemIds }, userId },
+        });
+
+        const stockMap = {};
+        for (const inv of inventoryItems) {
+          stockMap[inv.id] = { quantity: inv.quantity, name: inv.name };
+        }
+
+        const outOfStock = [];
+        for (const item of invoiceData.items) {
+          if (item.inventoryItemId && stockMap[item.inventoryItemId]) {
+            const available = stockMap[item.inventoryItemId].quantity;
+            if (item.quantity > available) {
+              outOfStock.push({
+                name: stockMap[item.inventoryItemId].name,
+                requested: item.quantity,
+                available,
+              });
+            }
+          }
+        }
+
+        if (outOfStock.length > 0) {
+          const details = outOfStock.map(i => `${i.name}: requested ${i.requested}, available ${i.available}`).join('; ');
+          return res.status(400).json({ message: `Insufficient stock: ${details}` });
+        }
+      }
+    }
 
     // --- Create the Invoice and its Items ---
     const newInvoice = await prisma.invoice.create({
@@ -117,6 +166,56 @@ export default async function handler(req, res) {
         items: true,
         client: true,
       },
+    });
+
+    // --- Deduct stock after successful invoice creation ---
+    if (shouldDeductStock) {
+      const stockUpdates = invoiceData.items
+        .filter(item => item.inventoryItemId)
+        .map(item =>
+          prisma.inventoryItem.update({
+            where: { id: item.inventoryItemId },
+            data: { quantity: { decrement: item.quantity } },
+          })
+        );
+
+      if (stockUpdates.length > 0) {
+        await prisma.$transaction(stockUpdates);
+
+        // Check for low stock notifications
+        const updatedInventory = await prisma.inventoryItem.findMany({
+          where: {
+            id: { in: invoiceData.items.filter(i => i.inventoryItemId).map(i => i.inventoryItemId) },
+            userId,
+          },
+        });
+
+        for (const inv of updatedInventory) {
+          if (inv.quantity <= 0) {
+            await createNotification({
+              userId,
+              title: 'Out of Stock',
+              message: `"${inv.name}" is now out of stock (0 ${inv.unit}).`,
+              type: 'INVOICE_CREATE',
+            });
+          } else if (inv.quantity <= inv.lowStock) {
+            await createNotification({
+              userId,
+              title: 'Low Stock Alert',
+              message: `"${inv.name}" is running low — only ${inv.quantity} ${inv.unit} remaining.`,
+              type: 'INVOICE_CREATE',
+            });
+          }
+        }
+      }
+    }
+
+    await createNotification({
+      userId,
+      title: 'Invoice Created',
+      message: `Invoice ${newInvoice.invoiceNumber} was created for ${newInvoice.client?.name || 'Client'}.`,
+      type: 'INVOICE_CREATE',
+      invoiceId: newInvoice.id,
     });
 
     return res.status(201).json(newInvoice);

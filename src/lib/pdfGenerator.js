@@ -84,6 +84,8 @@ export async function generateInvoicePDFBuffer(invoiceId) {
     throw new Error('Missing critical data to generate PDF.');
   }
 
+  invoiceRecord.user.business.currency = invoiceRecord.user.business.invoiceSettings?.currency || 'USD';
+
   const templateData = {
     invoice: invoiceRecord,
     client: invoiceRecord.client,
@@ -136,6 +138,8 @@ export async function generateInvoiceImageBuffer(invoiceId) {
   if (!invoiceRecord || !invoiceRecord.user || !invoiceRecord.user.business) {
     throw new Error('Missing critical data to generate Image.');
   }
+
+  invoiceRecord.user.business.currency = invoiceRecord.user.business.invoiceSettings?.currency || 'USD';
 
   const templateData = {
     invoice: invoiceRecord,

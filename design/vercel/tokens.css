@@ -1,0 +1,60 @@
+/**
+ * Canonical design tokens — synced from preview.html / preview-dark.html
+ * Do not edit values here without updating the preview files and DESIGN.md
+ */
+
+:root {
+  --ds-black: #171717;
+  --ds-white: #ffffff;
+  --ds-gray-50: #fafafa;
+  --ds-gray-100: #ebebeb;
+  --ds-gray-400: #808080;
+  --ds-gray-500: #666666;
+  --ds-gray-600: #4d4d4d;
+  --ds-link-blue: #0072f5;
+  --ds-focus-blue: hsl(212, 100%, 48%);
+  --ds-ship-red: #ff5b4f;
+  --ds-preview-pink: #de1d8d;
+  --ds-develop-blue: #0a72ef;
+  --ds-console-blue: #0070f3;
+  --ds-console-purple: #7928ca;
+  --ds-console-pink: #eb367f;
+  --ds-badge-bg: #ebf5ff;
+  --ds-badge-text: #0068d6;
+  --ds-shadow-ring: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+  --ds-shadow-ring-light: rgb(235, 235, 235) 0px 0px 0px 1px;
+  --ds-shadow-subtle: rgba(0, 0, 0, 0.04) 0px 2px 2px 0px;
+  --ds-shadow-card: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.04) 0px 2px 2px 0px,
+    rgb(250, 250, 250) 0px 0px 0px 1px;
+  --ds-shadow-card-full: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.04) 0px 2px 2px 0px,
+    rgba(0, 0, 0, 0.04) 0px 8px 8px -8px,
+    rgb(250, 250, 250) 0px 0px 0px 1px;
+  --ds-font-sans: "Geist", system-ui, -apple-system, Arial, sans-serif;
+  --ds-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "Roboto Mono", Menlo,
+    monospace;
+  --ds-radius-button: 6px;
+  --ds-radius-card: 8px;
+  --ds-radius-image: 12px;
+  --ds-radius-pill: 9999px;
+}
+
+.dark {
+  --ds-black: #ededed;
+  --ds-white: #0a0a0a;
+  --ds-gray-50: #111111;
+  --ds-gray-100: #2a2a2a;
+  --ds-gray-400: #666666;
+  --ds-gray-500: #808080;
+  --ds-gray-600: #a0a0a0;
+  --ds-shadow-ring: rgba(255, 255, 255, 0.1) 0px 0px 0px 1px;
+  --ds-shadow-ring-light: rgba(255, 255, 255, 0.08) 0px 0px 0px 1px;
+  --ds-shadow-card: rgba(255, 255, 255, 0.1) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.2) 0px 2px 2px 0px,
+    rgba(255, 255, 255, 0.03) 0px 0px 0px 1px;
+  --ds-shadow-card-full: rgba(255, 255, 255, 0.12) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.3) 0px 2px 2px 0px,
+    rgba(0, 0, 0, 0.2) 0px 8px 8px -8px,
+    rgba(255, 255, 255, 0.04) 0px 0px 0px 1px;
+}

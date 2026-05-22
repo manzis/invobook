@@ -1,18 +1,6 @@
 import React, { useMemo } from 'react';
 import { User, FileText } from 'lucide-react';
-
-const formatCurrency = (amount, currency = 'INR') => {
-  const numericAmount = parseFloat(amount);
-
-  if (isNaN(numericAmount)) {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(0);
-  }
-
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: currency,
-  }).format(numericAmount);
-};
+import { formatCurrency } from '../../utils/InvoicesUtils';
 
 const StatCard = ({ title, value, icon, valueClassName = '' }) => (
   <div className="ds-card-static">
@@ -28,7 +16,7 @@ const StatCard = ({ title, value, icon, valueClassName = '' }) => (
   </div>
 );
 
-const ClientStats = ({ clients, currency = 'INR' }) => {
+const ClientStats = ({ clients, currency = 'USD' }) => {
   const stats = useMemo(() => {
     const totalRevenue = clients.reduce((sum, client) => sum + (client.totalAmount || 0), 0);
     const totalInvoices = clients.reduce((sum, client) => sum + (client.totalInvoices || 0), 0);

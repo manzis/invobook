@@ -1,7 +1,6 @@
-// /components/Invoices/InvoiceFilters.jsx (Updated Layout)
-
-import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle, Trash2, Filter, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CheckCircle, Trash2, X, Check, Download } from 'lucide-react';
+import SubNav from '../ui/SubNav';
 
 const InvoiceFilters = ({
   searchTerm,
@@ -12,137 +11,251 @@ const InvoiceFilters = ({
   setStartDate,
   endDate,
   setEndDate,
+  minAmount,
+  setMinAmount,
+  maxAmount,
+  setMaxAmount,
+  sortBy,
+  setSortBy,
   selectedInvoicesCount,
   onBulkDelete,
   onBulkMarkPaid,
+  onBulkExport,
+  viewMode,
+  setViewMode,
+  onAddNewClick
 }) => {
-  const [localStatusFilter, setLocalStatusFilter] = useState(statusFilter);
-  const [localStartDate, setLocalStartDate] = useState(startDate);
-  const [localEndDate, setLocalEndDate] = useState(endDate);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
+  // Click outside handler to close dropdown
   useEffect(() => {
-    setLocalStatusFilter(statusFilter);
-    setLocalStartDate(startDate);
-    setLocalEndDate(endDate);
-  }, [statusFilter, startDate, endDate]);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const handleApplyFilters = () => {
-    setStatusFilter(localStatusFilter);
-    setStartDate(localStartDate);
-    setEndDate(localEndDate);
-  };
+  const hasActiveFilters =
+    statusFilter !== 'all' ||
+    startDate ||
+    endDate ||
+    minAmount ||
+    maxAmount ||
+    sortBy !== 'newest';
 
   const handleClearFilters = () => {
-    setLocalStatusFilter('all');
-    setLocalStartDate('');
-    setLocalEndDate('');
-    setSearchTerm('');
     setStatusFilter('all');
     setStartDate('');
     setEndDate('');
+    setMinAmount('');
+    setMaxAmount('');
+    setSortBy('newest');
   };
 
-  const hasActiveFilters = statusFilter !== 'all' || startDate || endDate;
-
   return (
-    <div className="ds-card-static mb-6 space-y-5">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="relative grow">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-            style={{ color: 'var(--ds-gray-400)' }}
-          />
-          <input
-            type="text"
-            placeholder="Search invoices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="ds-input pl-10 w-full sm:max-w-xs"
-          />
-        </div>
+    <div className="mb-6">
+      <div className="relative" ref={dropdownRef}>
+        <SubNav 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search by invoice # or client..."
+          onFilterClick={() => setIsOpen(!isOpen)}
+          hasActiveFilters={hasActiveFilters}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onAddNewClick={onAddNewClick}
+          addNewLabel="New Invoice"
+        />
 
-        <div className="flex flex-wrap items-center justify-start md:justify-end gap-3">
-          <select
-            value={localStatusFilter}
-            onChange={(e) => setLocalStatusFilter(e.target.value)}
-            className="ds-select"
+        {/* Filter Popover Dropdown */}
+        {isOpen && (
+          <div
+            className="absolute right-0 top-[48px] w-80 ds-dropdown-content animate-page-in"
+            style={{
+              boxShadow: 'var(--ds-shadow-card-full)',
+              zIndex: 50,
+            }}
           >
-            <option value="all">All Statuses</option>
-            <option value="PAID">Paid</option>
-            <option value="PENDING">Pending</option>
-            <option value="PARTIALLY_PAID">Partially Paid</option>
-            <option value="OVERDUE">Overdue</option>
-            <option value="DRAFT">Draft</option>
-          </select>
+                {/* Header */}
+                <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--ds-gray-100)] bg-[var(--ds-gray-50)] rounded-t-lg">
+                  <span className="text-xs font-semibold text-[var(--ds-black)]">Filters</span>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={handleClearFilters}
+                      className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="start-date" className="ds-form-label sr-only md:not-sr-only m-0">
-              From:
-            </label>
-            <input
-              id="start-date"
-              type="date"
-              value={localStartDate}
-              onChange={(e) => setLocalStartDate(e.target.value)}
-              className="ds-input w-auto text-sm py-2"
-            />
-          </div>
+                {/* Status Options */}
+                <div className="p-1 border-b border-[var(--ds-gray-100)]">
+                  <div className="px-2 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none">
+                    Status
+                  </div>
+                  <div className="space-y-0.5">
+                    {[
+                      { value: 'all', label: 'All Statuses' },
+                      { value: 'PAID', label: 'Paid' },
+                      { value: 'PENDING', label: 'Pending' },
+                      { value: 'PARTIALLY_PAID', label: 'Partially Paid' },
+                      { value: 'OVERDUE', label: 'Overdue' },
+                      { value: 'DRAFT', label: 'Draft' },
+                    ].map((item) => (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => setStatusFilter(item.value)}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
+                          statusFilter === item.value
+                            ? 'bg-[var(--ds-gray-50)] text-[var(--ds-black)] font-semibold'
+                            : 'text-[var(--ds-gray-600)] hover:bg-[var(--ds-gray-50)]'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        {statusFilter === item.value && (
+                          <Check className="w-3.5 h-3.5 text-blue-600" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="end-date" className="ds-form-label sr-only md:not-sr-only m-0">
-              To:
-            </label>
-            <input
-              id="end-date"
-              type="date"
-              value={localEndDate}
-              onChange={(e) => setLocalEndDate(e.target.value)}
-              className="ds-input w-auto text-sm py-2"
-            />
-          </div>
+                {/* Date Filters */}
+                <div className="p-2 border-b border-[var(--ds-gray-100)]">
+                  <div className="px-1 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none mb-1">
+                    Date Range
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">From</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="ds-input text-xs w-full py-1 px-2 h-7"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">To</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="ds-input text-xs w-full py-1 px-2 h-7"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-          <button type="button" onClick={handleApplyFilters} className="ds-btn-dark gap-2">
-            <Filter className="w-4 h-4" />
-            <span>Apply</span>
+                {/* Advanced Options */}
+                <div className="p-2">
+                  <div className="px-1 py-1 text-[10px] font-semibold text-[var(--ds-gray-400)] tracking-wider uppercase select-none mb-1">
+                    Advanced Options
+                  </div>
+                  
+                  {/* Min & Max Amount */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Min Amount ($)</label>
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        value={minAmount}
+                        onChange={(e) => setMinAmount(e.target.value)}
+                        className="ds-input text-xs w-full py-1 px-2 h-7"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Max Amount ($)</label>
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        value={maxAmount}
+                        onChange={(e) => setMaxAmount(e.target.value)}
+                        className="ds-input text-xs w-full py-1 px-2 h-7"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sort By Order */}
+                  <div>
+                    <label className="text-[10px] text-[var(--ds-gray-500)] block mb-1">Sort By</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="ds-select text-xs w-full py-1 px-2 h-7 !h-7"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="amount_desc">Amount: High to Low</option>
+                      <option value="amount_asc">Amount: Low to High</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+      </div>
+
+      {/* Clear Search Indicator if search has text */}
+      {searchTerm && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => setSearchTerm('')}
+            className="ds-btn-ghost !h-8 !px-2.5 flex items-center justify-center gap-1 inline-flex"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>Clear Search</span>
           </button>
-
-          {(hasActiveFilters || searchTerm) && (
-            <button type="button" onClick={handleClearFilters} className="ds-btn-ghost gap-2">
-              <X className="w-4 h-4" />
-              <span>Clear</span>
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
-      <div
-        className={`transition-all duration-300 ease-in-out overflow-hidden ${
-          selectedInvoicesCount > 0 ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="ds-surface-muted rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4 ds-shadow-ring">
-          <span className="text-sm font-medium" style={{ color: 'var(--ds-black)' }}>
-            {selectedInvoicesCount} {selectedInvoicesCount === 1 ? 'invoice' : 'invoices'} selected
-          </span>
+      {/* Bulk actions display */}
+      {selectedInvoicesCount > 0 && (
+        <div className="transition-all duration-300 ease-in-out overflow-hidden mt-3">
+          <div className="ds-surface-muted rounded-lg p-3 flex flex-col sm:flex-row items-center justify-between gap-3 border border-[var(--ds-gray-200)]">
+            <span className="text-xs font-semibold text-[var(--ds-black)]">
+              {selectedInvoicesCount} {selectedInvoicesCount === 1 ? 'invoice' : 'invoices'} selected
+            </span>
 
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={onBulkMarkPaid} className="ds-btn-ghost gap-2 py-2 px-3 text-sm">
-              <CheckCircle className="w-4 h-4" style={{ color: '#059669' }} />
-              <span>Mark Paid</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onBulkExport}
+                className="ds-btn-ghost !h-8 gap-1.5 py-1 px-3 text-xs text-blue-600 hover:text-blue-700"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export PDF</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={onBulkDelete}
-              className="ds-btn-ghost gap-2 py-2 px-3 text-sm"
-              style={{ color: 'var(--ds-ship-red)' }}
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Delete</span>
-            </button>
+              <button
+                type="button"
+                onClick={onBulkMarkPaid}
+                className="ds-btn-ghost !h-8 gap-1.5 py-1 px-3 text-xs"
+              >
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Mark Paid</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onBulkDelete}
+                className="ds-btn-ghost !h-8 gap-1.5 py-1 px-3 text-xs text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -29,18 +29,19 @@ export default async function handler(req, res) {
       }
 
       const { hashedPassword, ...profileData } = userProfile;
-      return res.status(200).json(profileData);
+      return res.status(200).json({ ...profileData, inventoryEnabled: userProfile.inventoryEnabled });
     }
     
     // --- HANDLE PUT REQUEST: Update user and business profile ---
     else if (req.method === 'PUT') {
       // Destructure all expected fields, including the new ones
-      const { name, phone, company, address, city, state, zipCode, website, taxId, logoUrl } = req.body;
+      const { name, phone, company, address, city, state, zipCode, website, taxId, logoUrl, inventoryEnabled } = req.body;
 
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
           name,
+          ...(inventoryEnabled !== undefined && { inventoryEnabled }),
           business: {
             update: {
               businessName: company,

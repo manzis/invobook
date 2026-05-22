@@ -12,13 +12,77 @@ import ClientDetails from '../components/createInvoice/ClientDetails';
 import InvoiceItems from '../components/createInvoice/InvoiceItems';
 import AdditionalInfo from '../components/createInvoice/AdditionalInfo';
 import InvoiceSummary from '../components/createInvoice/InvoiceSummary';
+import InvoicePreviewModal from '../components/createInvoice/InvoicePreviewModal';
+import { useToast } from '../context/ToastContext';
+import { useInventory } from '../context/InventoryContext';
+
+const NewInvoiceSkeleton = () => (
+  <div className="ds-page-inner animate-pulse">
+    <div className="ds-page-header flex justify-between items-center mb-6">
+      <div className="h-8 bg-[var(--ds-gray-100)] rounded-md w-48"></div>
+      <div className="flex gap-3">
+        <div className="w-24 h-[32px] bg-[var(--ds-gray-100)] rounded-md"></div>
+        <div className="w-24 h-[32px] bg-[var(--ds-gray-100)] rounded-md"></div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="ds-card-static p-6 space-y-4">
+          <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-32 mb-2"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="ds-card-static p-6 space-y-4">
+            <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-40"></div>
+            <div className="h-16 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          </div>
+          <div className="ds-card-static p-6 space-y-4">
+            <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-40"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+            <div className="h-10 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          </div>
+        </div>
+        
+        <div className="ds-card-static p-6 space-y-4">
+          <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-24"></div>
+          <div className="h-12 bg-[var(--ds-gray-100)] rounded-md w-full"></div>
+          <div className="h-[32px] bg-[var(--ds-gray-100)] rounded-md w-28"></div>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <div className="ds-card-static p-6 space-y-4">
+          <div className="h-6 bg-[var(--ds-gray-100)] rounded-md w-32"></div>
+          <div className="space-y-3 pt-2">
+            <div className="flex justify-between"><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-16"></div><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-12"></div></div>
+            <div className="flex justify-between"><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-16"></div><div className="h-4 bg-[var(--ds-gray-100)] rounded-md w-12"></div></div>
+            <div className="flex justify-between border-t pt-2"><div className="h-5 bg-[var(--ds-gray-100)] rounded-md w-20"></div><div className="h-5 bg-[var(--ds-gray-100)] rounded-md w-16"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const NewInvoicePage = () => {
   const router = useRouter(); // Initialize router
+  const { toast } = useToast();
   const [invoiceData, setInvoiceData] = useState(null);
   const [allClients, setAllClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false); 
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [activeTemplateName, setActiveTemplateName] = useState('modern-blue'); 
+  const { inventoryEnabled } = useInventory(); 
 
   const CURRENCY_SYMBOLS = {
   USD: '$', EUR: '€', JPY: '¥', GBP: '£',
@@ -32,28 +96,24 @@ useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
       try {
-        // --- 1. FETCH ALL DATA IN PARALLEL ---
-        const [profileRes, settingsRes, clientsRes, lastInvoiceRes] = await Promise.all([
+        const [profileRes, settingsRes, clientsRes, lastInvoiceRes, templateRes] = await Promise.all([
           fetch('/api/profile'),
           fetch('/api/invoice-settings'),
           fetch('/api/clients'),
           fetch('/api/invoices/last'),
+          fetch('/api/templates'),
         ]);
 
-        // --- 2. PROCESS CRITICAL RESPONSES FIRST ---
         if (!profileRes.ok || !settingsRes.ok) {
           throw new Error('Failed to load essential business settings.');
         }
-        // FIX: Parse essential data immediately after checking it.
         const profile = await profileRes.json();
         const settings = await settingsRes.json();
 
-        // --- 3. PROCESS NON-CRITICAL RESPONSES ---
         const clients = clientsRes.ok ? await clientsRes.json() : [];
         setAllClients(clients);
         const lastInvoice = lastInvoiceRes.ok ? await lastInvoiceRes.json() : null;
 
-        // --- 4. CALCULATE THE NEXT INVOICE NUMBER (Now that 'settings' is defined) ---
         let nextInvoiceNumberValue;
         const incrementValue = settings.nextInvoiceNumber || 1;
 
@@ -71,7 +131,6 @@ useEffect(() => {
         
         const finalInvoiceNumber = `${settings.invoicePrefix || 'INV-'}${nextInvoiceNumberValue}`;
         
-        // --- 5. CONSTRUCT THE FINAL INITIAL STATE ---
         const currencySymbol = CURRENCY_SYMBOLS[settings.currency] || '$';
         const today = new Date();
         const dueDate = new Date(new Date().setDate(today.getDate() + (settings.defaultDueDays || 30)));
@@ -114,6 +173,12 @@ useEffect(() => {
         
         setInvoiceData(initialData);
 
+        // Fetch active template
+        if (templateRes.ok) {
+          const templateData = await templateRes.json();
+          setActiveTemplateName(templateData.templateName || 'modern-blue');
+        }
+
       } catch (error) {
         console.error("A critical error occurred while fetching initial invoice data:", error);
       } finally {
@@ -125,18 +190,25 @@ useEffect(() => {
   }, []);
 
   
-// --- NEW: Function to handle final invoice creation ---
   const handleCreateInvoice = async (status = 'PENDING') => {
     setIsSaving(true);
     
-    // Simple validation
     if (invoiceData.items.length === 0) {
-        alert("Please add at least one item to the invoice.");
+        toast("Please add at least one item to the invoice.");
         setIsSaving(false);
         return;
     }
+
+    if (inventoryEnabled) {
+        const invalidItems = invoiceData.items.filter(item => !item.inventoryItemId);
+        if (invalidItems.length > 0) {
+            toast("Inventory is enabled. All items must be selected from the product catalog.");
+            setIsSaving(false);
+            return;
+        }
+    }
     if (!invoiceData.clientName) {
-        alert("Client name  is required.");
+        toast("Client name is required.");
         setIsSaving(false);
         return;
     }
@@ -156,13 +228,12 @@ useEffect(() => {
         }
 
         const newInvoice = await res.json();
-        alert(`Invoice ${newInvoice.invoiceNumber} created successfully!`);
-        // Redirect to the main invoices page
+        toast(`Invoice ${newInvoice.invoiceNumber} created successfully!`);
         router.push('/invoices');
 
     } catch (error) {
         console.error(error);
-        alert(`Error: ${error.message}`);
+        toast(`Error: ${error.message}`);
     } finally {
         setIsSaving(false);
     }
@@ -202,17 +273,13 @@ useEffect(() => {
     if (file) setInvoiceData(prev => ({ ...prev, logo: file }));
   };
 const handleInvoiceDataChange = (field, value) => {
-  // We use a single, unified state update at the end.
   setInvoiceData(prev => {
-    // Start with the previous state
     let newState = { ...prev };
 
-    // Use a switch statement or chained if/else if for clarity
     if (field === 'selectClient') {
       const selectedClient = value;
       newState = {
         ...newState,
-        // When an existing client is selected, store their ID and all their details
         clientId: selectedClient.id, 
         clientName: selectedClient.name,
         clientEmail: selectedClient.email,
@@ -223,8 +290,6 @@ const handleInvoiceDataChange = (field, value) => {
         clientPhone: selectedClient.phone || '',
       };
     } else if (field === 'clientName') {
-      // Typing a new name implies creating a new client.
-      // We must reset the clientId AND all other client fields to prevent sending stale data.
       newState = {
         ...newState,
         clientId: null, 
@@ -237,19 +302,15 @@ const handleInvoiceDataChange = (field, value) => {
         clientPhone: '',
       };
     } else if (field === 'toggleDiscountType') {
-      // When toggling, reset the value to 0 to avoid confusion (e.g., 50% -> $50)
       newState = {
         ...newState,
         discountType: prev.discountType === 'PERCENTAGE' ? 'FIXED' : 'PERCENTAGE',
         discountValue: 0
       };
     } else {
-      // This is the default case for all other simple field updates
-      // (e.g., notes, terms, taxRate, shippingCost, etc.)
       newState = { ...newState, [field]: value };
     }
 
-    // Return the final, updated state object
     return newState;
   });
 };
@@ -264,7 +325,7 @@ const handleInvoiceDataChange = (field, value) => {
     let discountAmount = 0;
     if (discountType === 'PERCENTAGE') {
       discountAmount = subtotal * ((parseFloat(discountValue) || 0) / 100);
-    } else { // 'FIXED'
+    } else { 
       discountAmount = parseFloat(discountValue) || 0;
     }
 
@@ -274,22 +335,17 @@ const handleInvoiceDataChange = (field, value) => {
     
     setInvoiceData(prev => ({ ...prev, subtotal, discountAmount, taxAmount, total }));
   
-  // Update dependency array
   }, [invoiceData?.items, invoiceData?.taxRate, invoiceData?.shippingCost, invoiceData?.discountType, invoiceData?.discountValue]);
 
-  // 5. Render a loading state until the data is fetched
   if (isLoading || !invoiceData) {
-    return (
-      <div className="ds-page-inner flex items-center justify-center min-h-[40vh]">
-        <div className="ds-spinner" role="status" aria-label="Loading" />
-      </div>
-    );
+    return <NewInvoiceSkeleton />;
   }
 
   return (
     <div className="ds-page-inner">
         <InvoiceHeader 
-        onCreateInvoice={handleCreateInvoice} 
+          onCreateInvoice={handleCreateInvoice} 
+          onPreview={() => setIsPreviewOpen(true)}
           isSaving={isSaving} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -329,6 +385,7 @@ const handleInvoiceDataChange = (field, value) => {
               currencySymbol={invoiceData.currencySymbol}
               onUpdateItem={updateItem}
               onRemoveItem={removeItem}
+              inventoryEnabled={inventoryEnabled}
             />
             <AdditionalInfo
               notes={invoiceData.notes}
@@ -350,6 +407,13 @@ const handleInvoiceDataChange = (field, value) => {
             onFieldChange={handleInvoiceDataChange}
           />
         </div>
+
+      <InvoicePreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        invoiceData={invoiceData}
+        templateName={activeTemplateName}
+      />
     </div>
   );
 };

@@ -12,7 +12,9 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const publicPaths = ['/login', '/signup']; 
 
-  if (!token && !publicPaths.includes(pathname)) {
+  const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith('/share');
+
+  if (!token && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
   if (token && publicPaths.includes(pathname)) {
