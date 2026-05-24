@@ -57,6 +57,7 @@ export default async function handler(req, res) {
             balanceDue: newBalanceDue,
             status: newStatus,
           },
+          include: { client: true, items: true },
         });
         return res.status(200).json(updatedInvoice);
       }
