@@ -15,7 +15,7 @@ const LoginForm = ({ onLogin, onSocialLogin, onSwitchToSignup, isLoading, error 
   };
 
   return (
-    <div className="p-8">
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="email" className="ds-form-label">
@@ -98,7 +98,7 @@ const LoginForm = ({ onLogin, onSocialLogin, onSwitchToSignup, isLoading, error 
         </p>
       </div>
       <SocialLoginButtons onSocialLogin={onSocialLogin} />
-      <div className="mt-8 text-center">
+      <div className="mt-8 text-left">
         <p className="text-sm text-[var(--ds-gray-600)]">
           Don&apos;t have an account?{' '}
           <button

@@ -179,8 +179,8 @@ const AuthContainer = () => {
           <span className="font-bold text-lg tracking-tight text-[var(--ds-black)]">Invobook</span>
         </div>
 
-        <div className="w-full max-w-[400px] mx-auto mt-12 lg:mt-0">
-          <div className="mb-8 text-center lg:text-left">
+        <div className="w-full sm:max-w-[400px] mx-auto mt-16 lg:mt-0">
+          <div className="mb-8 text-left">
             <h1 className="text-2xl font-bold text-[var(--ds-black)] tracking-tight mb-2">
               {currentStep === 'login' ? 'Log In' : currentStep === 'signup' ? 'Create an Account' : 'Business Details'}
             </h1>
@@ -216,7 +216,7 @@ const AuthContainer = () => {
             )}
           </div>
 
-          <div className="mt-12 text-center lg:text-left">
+          <div className="mt-12 text-left">
             <p className="text-xs text-[var(--ds-gray-400)]">
               © {new Date().getFullYear()} Invobook. Secure and reliable invoicing.
             </p>

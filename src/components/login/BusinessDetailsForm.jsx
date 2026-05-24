@@ -37,7 +37,7 @@ const BusinessDetailsForm = ({ onComplete, onBack, isLoading, error }) => {
   };
 
   return (
-    <div className="p-8">
+    <div className="w-full">
       <div className="flex items-center gap-4 mb-6">
         <button
           type="button"

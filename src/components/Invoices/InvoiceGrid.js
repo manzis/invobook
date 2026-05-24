@@ -83,11 +83,11 @@ const InvoiceGrid = ({
             <div className="flex rounded-[8px] border border-[var(--ds-gray-100)] overflow-hidden mt-auto bg-white">
               <div className="p-2.5 sm:p-3 border-r border-[var(--ds-gray-100)] flex flex-col justify-center shrink-0">
                 <p className="text-[10px] text-[var(--ds-gray-400)] font-semibold uppercase tracking-wider mb-1">Items</p>
-                <p className="font-bold text-[13px] text-[var(--ds-black)]">{itemsCount}</p>
+                <p className="font-semibold text-[13px] text-[var(--ds-black)]">{itemsCount}</p>
               </div>
               <div className="p-2.5 sm:p-3 border-r border-[var(--ds-gray-100)] flex flex-col justify-center flex-1 min-w-0">
                 <p className="text-[10px] text-[var(--ds-gray-400)] font-semibold uppercase tracking-wider mb-1">Customer</p>
-                <p className="font-bold text-[13px] text-[var(--ds-black)] truncate">{clientName}</p>
+                <p className="font-semibold text-[13px] text-[var(--ds-black)] truncate">{clientName}</p>
                 {clientDetail && (
                   <p className="text-[11px] text-[var(--ds-gray-500)] truncate mt-0.5">{clientDetail}</p>
                 )}
@@ -96,7 +96,7 @@ const InvoiceGrid = ({
                 <p className="text-[10px] text-[var(--ds-gray-400)] font-semibold uppercase tracking-wider mb-1 whitespace-nowrap">
                   Balance Due
                 </p>
-                <p className="font-bold text-[13px] text-[var(--ds-black)] truncate">{currencySymbol} {dueAmount}</p>
+                <p className="font-semibold text-[13px] text-[var(--ds-black)] truncate">{currencySymbol} {dueAmount}</p>
               </div>
             </div>
           </div>

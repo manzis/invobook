@@ -64,7 +64,7 @@ const SignupForm = ({ onSignup, onSocialLogin, onSwitchToLogin, isLoading, error
     validationErrors[field] ? 'ds-input ds-input-error' : 'ds-input';
 
   return (
-    <div className="p-8">
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="name" className="ds-form-label">
@@ -226,7 +226,7 @@ const SignupForm = ({ onSignup, onSocialLogin, onSwitchToLogin, isLoading, error
         </p>
       </div>
       <SocialLoginButtons onSocialLogin={onSocialLogin} />
-      <div className="mt-8 text-center">
+      <div className="mt-8 text-left">
         <p className="text-sm text-[var(--ds-gray-600)]">
           Already have an account?{' '}
           <button
