@@ -16,14 +16,16 @@ import {
   UserPlus,
   X,
   Palette,
-  Bell
+  Bell,
+  LogOut,
+  Zap
 } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function MobileBottomNav() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { inventoryEnabled } = useInventory();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -79,6 +81,8 @@ export default function MobileBottomNav() {
     { id: 'clients', label: 'Clients', href: '/clients', icon: Users },
     ...(inventoryEnabled ? [{ id: 'inventory', label: 'Inventory', href: '/inventory', icon: Package }] : []),
     { id: 'payments', label: 'Payments', href: '/payments', icon: CreditCard, badge: pendingCount > 0 ? pendingCount : null },
+    { id: 'upgrade', label: 'Upgrade to Pro', href: '/upgrade', icon: Zap },
+    { id: 'logout', label: 'Log Out', action: logout, icon: LogOut },
   ];
 
   const shortcutTabs = [
@@ -121,10 +125,58 @@ export default function MobileBottomNav() {
 
           <div className="space-y-6">
             <div>
+              <h3 className="text-[10px] font-semibold text-[var(--ds-gray-400)] uppercase tracking-wider mb-3 px-1">Shortcuts</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {shortcutTabs.map(tab => {
+                  const Icon = tab.icon;
+                  const active = isActive(tab.href);
+                  return (
+                    <Link 
+                      key={tab.id} 
+                      href={tab.href}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border ${
+                        active
+                          ? 'bg-[var(--ds-gray-50)]'
+                          : 'border-transparent bg-[var(--ds-gray-50)] hover:bg-[var(--ds-gray-100)]'
+                      } active:bg-[var(--ds-gray-100)] transition-colors`}
+                      style={active ? { borderColor: 'var(--ds-gray-100)' } : undefined}
+                    >
+                      <Icon className={`w-6 h-6 mb-2 ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`} />
+                      <span className={`text-xs font-semibold tracking-tight ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`}>
+                        {tab.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
               <h3 className="text-[10px] font-semibold text-[var(--ds-gray-400)] uppercase tracking-wider mb-3 px-1">Navigation</h3>
               <div className="grid grid-cols-2 gap-2">
                 {secondaryTabs.map(tab => {
                   const Icon = tab.icon;
+                  
+                  if (tab.action) {
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setIsMoreOpen(false);
+                          tab.action();
+                        }}
+                        className="flex items-center p-3 rounded-xl border border-transparent bg-[var(--ds-gray-50)] hover:bg-[var(--ds-gray-100)] transition-colors w-full text-left"
+                      >
+                        <div className="relative">
+                          <Icon className="w-5 h-5 mr-3 text-[var(--ds-gray-500)]" />
+                        </div>
+                        <span className="text-sm font-medium text-[var(--ds-gray-600)]">
+                          {tab.label}
+                        </span>
+                      </button>
+                    );
+                  }
+
                   const active = isActive(tab.href);
                   return (
                     <Link 
@@ -146,33 +198,6 @@ export default function MobileBottomNav() {
                         )}
                       </div>
                       <span className={`text-sm font-medium ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`}>
-                        {tab.label}
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-[10px] font-semibold text-[var(--ds-gray-400)] uppercase tracking-wider mb-3 px-1">Shortcuts</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {shortcutTabs.map(tab => {
-                  const Icon = tab.icon;
-                  const active = isActive(tab.href);
-                  return (
-                    <Link 
-                      key={tab.id} 
-                      href={tab.href}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border ${
-                        active
-                          ? 'bg-[var(--ds-gray-50)]'
-                          : 'border-transparent bg-[var(--ds-gray-50)] hover:bg-[var(--ds-gray-100)]'
-                      } active:bg-[var(--ds-gray-100)] transition-colors`}
-                      style={active ? { borderColor: 'var(--ds-gray-100)' } : undefined}
-                    >
-                      <Icon className={`w-6 h-6 mb-2 ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`} />
-                      <span className={`text-xs font-semibold tracking-tight ${active ? 'text-[var(--ds-black)]' : 'text-[var(--ds-gray-600)]'}`}>
                         {tab.label}
                       </span>
                     </Link>
