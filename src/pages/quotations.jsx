@@ -58,7 +58,7 @@ const InvoicesTableSkeleton = () => (
   </div>
 );
 
-const InvoicesPage = () => {
+const QuotationsPage = () => {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -95,7 +95,7 @@ const InvoicesPage = () => {
       setIsLoading(true);
       try {
         const [invoicesRes, settingsRes] = await Promise.all([
-          fetch('/api/invoices?type=SALES'),
+          fetch('/api/invoices?type=QUOTATION'),
           fetch('/api/invoice-settings')
         ]);
         if (!invoicesRes.ok) {
@@ -264,10 +264,23 @@ const InvoicesPage = () => {
       }
     } catch (error) {
       console.error(error);
-      toast(`Error: Could not ${actionText} invoices.`);
+      toast(`Error: Could not ${actionText} quotations.`);
       setInvoices(originalInvoices);
     }
   }, [invoices, selectedInvoices]);
+
+  const handleConvertQuotation = useCallback(async (invoiceId) => {
+    if (!window.confirm("Are you sure you want to convert this quotation to a sales invoice?")) return;
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}/convert`, { method: 'POST' });
+      if (!res.ok) throw new Error("Failed to convert the quotation.");
+      toast("Quotation converted successfully!");
+      setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+    } catch (error) {
+      console.error(error);
+      toast("Error: Could not convert quotation.");
+    }
+  }, []);
 
   const handleBulkExport = useCallback(() => {
     if (selectedInvoices.length === 0) return;
@@ -280,8 +293,8 @@ const InvoicesPage = () => {
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="ds-section-title m-0">All Invoices</h1>
-              <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>
+              <h1 className="ds-section-title m-0">All Quotations</h1>
+              <p className="ds-page-subtitle m-0">Manage and track all your quotations</p>
             </div>
             <button 
               onClick={() => setShowStats(prev => !prev)} 
@@ -342,6 +355,8 @@ const InvoicesPage = () => {
               onEditInvoice={handleInvoiceEdit}
               onUpdateInvoiceState={handleUpdateInvoiceState}
               currency={currency}
+              isQuotation={true}
+              onConvert={handleConvertQuotation}
             />
           ) : (
             <InvoiceGrid
@@ -352,6 +367,8 @@ const InvoicesPage = () => {
               onMarkAsPaid={handleMarkAsPaid}
               onDownloadPDF={handleDownloadPDF}
               onUpdateInvoiceState={handleUpdateInvoiceState}
+              isQuotation={true}
+              onConvert={handleConvertQuotation}
             />
           )}
 
@@ -410,4 +427,4 @@ const InvoicesPage = () => {
   );
 };
 
-export default InvoicesPage;
+export default QuotationsPage;

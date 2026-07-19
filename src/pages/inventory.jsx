@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { Plus, Search, Filter, Box, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import InventoryModal from '../components/inventory/InventoryModal';
 import InventoryStatsCards from '../components/inventory/InventoryStatsCards';
+import PurchaseInvoicesList from '../components/inventory/PurchaseInvoicesList';
 import { useToast } from '../context/ToastContext';
 
 const InventoryPage = () => {
@@ -11,6 +12,7 @@ const InventoryPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all, in, low, out
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('products'); // products, invoices
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -83,16 +85,43 @@ const InventoryPage = () => {
             <h1 className="text-2xl font-semibold text-[var(--ds-black)] tracking-tight">Inventory</h1>
             <p className="text-sm text-[var(--ds-gray-500)] mt-1">Manage your product catalog and stock levels.</p>
           </div>
-          <button 
-            onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
-            className="ds-btn-dark gap-2 shrink-0 w-full md:w-auto justify-center"
+          {activeTab === 'products' && (
+            <button 
+              onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
+              className="ds-btn-dark gap-2 shrink-0 w-full md:w-auto justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Product</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex border-b border-[var(--ds-gray-200)] mb-6">
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'products'
+                ? 'border-[var(--ds-black)] text-[var(--ds-black)]'
+                : 'border-transparent text-[var(--ds-gray-500)] hover:text-[var(--ds-gray-800)]'
+            }`}
           >
-            <Plus className="w-4 h-4" />
-            <span>Add Product</span>
+            Products
+          </button>
+          <button
+            onClick={() => setActiveTab('invoices')}
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+              activeTab === 'invoices'
+                ? 'border-[var(--ds-black)] text-[var(--ds-black)]'
+                : 'border-transparent text-[var(--ds-gray-500)] hover:text-[var(--ds-gray-800)]'
+            }`}
+          >
+            Purchase Invoices
           </button>
         </div>
 
-        <InventoryStatsCards refreshTrigger={items} />
+        {activeTab === 'products' ? (
+          <>
+            <InventoryStatsCards refreshTrigger={items} />
 
         <div className="ds-card-static mt-8">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -211,6 +240,10 @@ const InventoryPage = () => {
           item={editingItem}
           onSuccess={fetchItems}
         />
+          </>
+        ) : (
+          <PurchaseInvoicesList />
+        )}
       </div>
     </>
   );

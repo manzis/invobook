@@ -57,7 +57,7 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
             <head>
                 <meta charSet="UTF-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>Invoice #{invoice.invoiceNumber}</title>
+                <title>{`${invoice.type === 'QUOTATION' ? 'Quotation' : 'Invoice'} #${invoice.invoiceNumber}`}</title>
 
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
@@ -168,24 +168,26 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                             )}
                         </div>
                         <div className="header-column title-column">
-                            <h1 className="invoice-title">INVOICE</h1>
+                            <h1 className="invoice-title">{invoice.type === 'QUOTATION' ? 'QUOTATION' : 'INVOICE'}</h1>
                             <p className="invoice-id">#{invoice.invoiceNumber}</p>
                         </div>
                         <div className="header-column meta-column">
                             <table className="meta-table">
                                 <tbody>
                                     <tr>
-                                        <td className="meta-label">Invoice #</td>
+                                        <td className="meta-label">{invoice.type === 'QUOTATION' ? 'Quotation' : 'Invoice'} #</td>
                                         <td className="meta-value">{invoice.invoiceNumber}</td>
                                     </tr>
                                     <tr>
                                         <td className="meta-label">Issue Date</td>
                                         <td className="meta-value">{formatDate(invoice.date)}</td>
                                     </tr>
-                                    <tr>
-                                        <td className="meta-label">Due Date</td>
-                                        <td className="meta-value">{formatDate(invoice.dueDate)}</td>
-                                    </tr>
+                                    {invoice.type !== 'QUOTATION' && (
+                                        <tr>
+                                            <td className="meta-label">Due Date</td>
+                                            <td className="meta-value">{formatDate(invoice.dueDate)}</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -208,7 +210,7 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                                     )}
 
                                     {/* MODIFICATION: Conditionally render the PAN/Tax ID with a 'tax-id' class */}
-                                    {client.taxId && <span className="tax-id">{`PAN: ${client.taxId}`}</span>}
+                                    {invoice.type !== 'QUOTATION' && client.taxId && <span className="tax-id">{`PAN: ${client.taxId}`}</span>}
                                 </div>
                             </div>
                             <div className="billing-address">
@@ -218,13 +220,15 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                                     {business.address}{business.address && <br />}
                                     {business.city}, {business.state} {business.zipCode}{business.city && <br />}
                                     {/* MODIFICATION: Conditionally render the Tax ID with a 'tax-id' class */}
-                                    {business.taxId && <span className="tax-id">{`Tax ID: ${business.taxId}`}</span>}
+                                    {invoice.type !== 'QUOTATION' && business.taxId && <span className="tax-id">{`Tax ID: ${business.taxId}`}</span>}
                                 </div>
                             </div>
-                            <div className="total-due">
-                                <div className="label-due">Total Due:</div>
-                                <div className="amount">{formatCurrency(invoice.balanceDue, currency)}</div>
-                            </div>
+                            {invoice.type !== 'QUOTATION' && (
+                                <div className="total-due">
+                                    <div className="label-due">Total Due:</div>
+                                    <div className="amount">{formatCurrency(invoice.balanceDue, currency)}</div>
+                                </div>
+                            )}
                         </section>
 
                         <section className="invoice-details">
@@ -306,10 +310,9 @@ export const BhagwanEssentialTemplate = ({ invoiceData }) => {
                                     </div>
                                 </div>
                             </div>
-                            {business.invoiceSettings.paymentImageUrl && (
+                            {invoice.type !== 'QUOTATION' && business.invoiceSettings.paymentImageUrl && (
                                 <div className="payment-info">
                                     <div className="pay-label">Scan to Pay</div>
-                                    {/* It's now safe to use invoiceSettings here */}
                                     <img src={business.invoiceSettings.paymentImageUrl} className='payment-image' alt="Payment QR Code" />
                                 </div>
                             )}

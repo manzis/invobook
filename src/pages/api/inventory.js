@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
     // --- POST: Create inventory item ---
     if (req.method === 'POST') {
-      const { name, description, sku, rate, quantity, unit, lowStock, category } = req.body;
+      const { name, description, sku, rate, purchasePrice, quantity, unit, lowStock, category } = req.body;
 
       if (!name || rate === undefined) {
         return res.status(400).json({ message: 'Name and rate are required.' });
@@ -71,6 +71,7 @@ export default async function handler(req, res) {
           description: description || null,
           sku: sku || null,
           rate: parseFloat(rate),
+          purchasePrice: parseFloat(purchasePrice) || 0,
           quantity: parseFloat(quantity) || 0,
           unit: unit || 'pcs',
           lowStock: parseFloat(lowStock) || 5,

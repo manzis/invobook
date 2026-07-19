@@ -40,7 +40,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{`Invoice #${invoice.invoiceNumber}`}</title>
+        <title>{`${invoice.type === 'QUOTATION' ? 'Quotation' : 'Invoice'} #${invoice.invoiceNumber}`}</title>
         <style>
           {`
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -107,7 +107,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
            
           
              <div>
-              <h1>INVOICE {invoice.invoiceNumber}</h1>
+              <h1>{invoice.type === 'QUOTATION' ? 'QUOTATION' : 'INVOICE'} {invoice.invoiceNumber}</h1>
               <div style={{
                 marginTop: '8px', padding: '4px 12px', borderRadius: '9999px', display: 'inline-block',
                 textTransform: 'uppercase', fontWeight: 600, fontSize: '10px',
@@ -124,7 +124,7 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
               <h2 style ={{margin: '0 0 4px 0'}} >{business.businessName}</h2>
               <p>{business.address}</p>
               <p>{business.city}, {business.state} - {business.zipCode}</p>
-              {business.taxId && <p style={{ marginTop: '4px' }}><strong>PAN:</strong> {business.taxId}</p>}
+              {invoice.type !== 'QUOTATION' && business.taxId && <p style={{ marginTop: '4px' }}><strong>PAN:</strong> {business.taxId}</p>}
               </div>
               {business.logoUrl && <img src={business.logoUrl} alt="Business Logo" style={{ maxWidth: '100px', marginBottom: '8px', borderRadius: '6px', objectFit: 'contain' }} />}
 
@@ -138,22 +138,24 @@ export const ModernBlueTemplate = ({ invoiceData }) => {
               <h3>{client.company || client.name}</h3>
               <p>{client.address}</p>
               <p>{client.city}</p>
-              {client.taxId && <p style={{ marginTop: '8px' }}><strong>GSTIN:</strong> {client.taxId}</p>}
+              {invoice.type !== 'QUOTATION' && client.taxId && <p style={{ marginTop: '8px' }}><strong>GSTIN:</strong> {client.taxId}</p>}
               <p><strong>{client.phone}</strong></p>
             </div>
             <div className="text-right" style={{ minWidth: '220px' }}>
               <div style={{ marginBottom: '12px' }}>
-                <p><strong>Invoice #:</strong> {invoice.invoiceNumber}</p>
-                <p><strong>Invoice Date:</strong> {formatDate(invoice.date)}</p>
-                <p><strong>Due Date:</strong> {formatDate(invoice.dueDate)}</p>
+                <p><strong>{invoice.type === 'QUOTATION' ? 'Quotation' : 'Invoice'} #:</strong> {invoice.invoiceNumber}</p>
+                <p><strong>{invoice.type === 'QUOTATION' ? 'Date' : 'Invoice Date'}:</strong> {formatDate(invoice.date)}</p>
+                {invoice.type !== 'QUOTATION' && <p><strong>Due Date:</strong> {formatDate(invoice.dueDate)}</p>}
               </div>
-              <div>
-                 <p style={{ color: '#64748b', fontWeight: 500 }}>Payment Details</p>
-                 <p style={{ paddingBottom: '4px'}}><strong>Paid:</strong> {formatCurrency(invoice.amountPaid, business.currency)}</p>
-                 <p style={{ fontSize: '14px',  fontWeight: 700, color: '#f2f4f7ff' , background:'#3960c9ff' , padding:'6px' }}>
-                    <strong>Balance Due:</strong> {formatCurrency(invoice.balanceDue, business.currency)}
-                 </p>
-              </div>
+              {invoice.type !== 'QUOTATION' && (
+                <div>
+                   <p style={{ color: '#64748b', fontWeight: 500 }}>Payment Details</p>
+                   <p style={{ paddingBottom: '4px'}}><strong>Paid:</strong> {formatCurrency(invoice.amountPaid, business.currency)}</p>
+                   <p style={{ fontSize: '14px',  fontWeight: 700, color: '#f2f4f7ff' , background:'#3960c9ff' , padding:'6px' }}>
+                      <strong>Balance Due:</strong> {formatCurrency(invoice.balanceDue, business.currency)}
+                   </p>
+                </div>
+              )}
             </div>
           </div>
           

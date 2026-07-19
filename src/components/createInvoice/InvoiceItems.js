@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Package } from 'lucide-react';
 import InventoryModal from '../inventory/InventoryModal';
 
-const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, currencySymbol, inventoryEnabled }) => {
+const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, currencySymbol, inventoryEnabled, invoiceType }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [modalRowId, setModalRowId] = useState(null);
 
   const handleDescriptionChange = async (itemId, value) => {
     onUpdateItem(itemId, 'description', value);
@@ -32,7 +33,13 @@ const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, curre
 
   const handleSuggestionClick = (itemId, suggestion) => {
     onUpdateItem(itemId, 'description', suggestion.description);
-    onUpdateItem(itemId, 'rate', parseFloat(suggestion.rate));
+    
+    // For purchase invoices, use the purchase price if available, otherwise fallback to rate
+    const applicableRate = (invoiceType === 'PURCHASE' && suggestion.purchasePrice !== undefined && suggestion.purchasePrice !== null)
+      ? parseFloat(suggestion.purchasePrice)
+      : parseFloat(suggestion.rate);
+      
+    onUpdateItem(itemId, 'rate', applicableRate);
     if (suggestion.isInventory) {
       onUpdateItem(itemId, 'inventoryItemId', suggestion.inventoryItemId);
       // Auto set quantity to 1, but cap at available stock if stock is 0
@@ -49,8 +56,23 @@ const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, curre
     onUpdateItem(itemId, 'quantity', qty);
   };
 
-  const handleCreateInventorySuccess = () => {
-    // Optionally auto-add the created item or just let the user search for it again
+  const handleCreateInventorySuccess = (createdItem) => {
+    if (createdItem && modalRowId) {
+      // Auto-assign the created item to the row
+      onUpdateItem(modalRowId, 'description', createdItem.description || createdItem.name);
+      
+      const applicableRate = (invoiceType === 'PURCHASE' && createdItem.purchasePrice !== undefined && createdItem.purchasePrice !== null)
+        ? parseFloat(createdItem.purchasePrice)
+        : parseFloat(createdItem.rate);
+        
+      onUpdateItem(modalRowId, 'rate', applicableRate);
+      onUpdateItem(modalRowId, 'inventoryItemId', createdItem.id);
+      onUpdateItem(modalRowId, 'quantity', createdItem.quantity > 0 ? 1 : 0);
+      
+      // Add a new row to let user continue
+      onAddItem();
+    }
+    setModalRowId(null);
   };
 
   return (
@@ -84,12 +106,13 @@ const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, curre
                     type="text"
                     placeholder="Item description"
                     value={item.description}
+                    readOnly={inventoryEnabled && !!item.inventoryItemId}
                     onChange={(e) => {
                       setActiveIndex(index);
                       handleDescriptionChange(item.id, e.target.value);
                     }}
                     onBlur={() => setTimeout(() => { setSuggestions([]); setActiveIndex(-1); }, 200)}
-                    className={`ds-input transition-shadow ${inventoryEnabled && item.description.length > 0 && !item.inventoryItemId && activeIndex !== index ? '!shadow-[0_0_0_1.5px_var(--ds-ship-red)]' : ''}`}
+                    className={`ds-input transition-shadow ${inventoryEnabled && !!item.inventoryItemId ? 'opacity-70 bg-[var(--ds-gray-50)] cursor-not-allowed' : ''} ${inventoryEnabled && item.description.length > 0 && !item.inventoryItemId && activeIndex !== index ? '!shadow-[0_0_0_1.5px_var(--ds-ship-red)]' : ''}`}
                   />
                   {inventoryEnabled && item.description.length > 0 && !item.inventoryItemId && activeIndex !== index && (
                     <p className="text-[11px] text-[var(--ds-ship-red)] mt-1.5 ml-1 font-medium">Select an item from the inventory suggestions</p>
@@ -122,7 +145,10 @@ const InvoiceItems = ({ items = [], onAddItem, onUpdateItem, onRemoveItem, curre
                         <>
                           {suggestions.length > 0 && <div className="h-[1px] bg-[var(--ds-gray-100)] mx-2 my-1" />}
                           <li
-                            onMouseDown={() => setIsInventoryModalOpen(true)}
+                            onMouseDown={() => {
+                              setModalRowId(item.id);
+                              setIsInventoryModalOpen(true);
+                            }}
                             className="px-3 py-2.5 cursor-pointer hover:bg-[var(--ds-gray-50)] rounded-md text-sm font-medium text-[var(--ds-develop-blue)] flex items-center gap-2 transition-colors"
                           >
                             <Plus className="w-4 h-4" /> Create new inventory item

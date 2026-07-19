@@ -25,8 +25,13 @@ export default async function handler(req, res) {
   // --- HANDLE GET REQUEST (This part is correct and unchanged) ---
   if (req.method === 'GET') {
     try {
+        const { type } = req.query;
+        
         const clients = await prisma.client.findMany({
-            where: { userId: userId },
+            where: { 
+                userId: userId,
+                ...(type ? { type } : {})
+            },
             include: {
                 invoices: { select: { total: true, date: true } },
             },
@@ -62,7 +67,7 @@ export default async function handler(req, res) {
   // --- **FIXED**: HANDLE POST REQUEST ---
   else if (req.method === 'POST') {
     try {
-        const { name, email, phone, company, address, city, taxId } = req.body;
+        const { name, email, phone, company, address, city, taxId, type } = req.body;
 
         // 1. Basic server-side validation
         if (!name || !phone) {
@@ -103,6 +108,7 @@ export default async function handler(req, res) {
                 address,
                 city,
                 taxId,
+                type: type || 'CLIENT',
                 user: { connect: { id: userId } },
             },
         });

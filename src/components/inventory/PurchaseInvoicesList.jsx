@@ -4,12 +4,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { Eye, EyeOff } from 'lucide-react';
-import InvoiceFilters from '../components/Invoices/InvoiceFilters';
-import InvoiceTable from '../components/Invoices/InvoiceTable';
-import InvoiceGrid from '../components/Invoices/InvoiceGrid';
-import StatsCards from '../components/Invoices/StatsCards';
-import EmptyState from '../components/Invoices/EmptyState';
-import { useToast } from '../context/ToastContext';
+import InvoiceFilters from '../Invoices/InvoiceFilters';
+import InvoiceTable from '../Invoices/InvoiceTable';
+import InvoiceGrid from '../Invoices/InvoiceGrid';
+import StatsCards from '../Invoices/StatsCards';
+import EmptyState from '../Invoices/EmptyState';
+import { useToast } from '../../context/ToastContext';
 
 const InvoicesStatsSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 animate-pulse">
@@ -58,7 +58,7 @@ const InvoicesTableSkeleton = () => (
   </div>
 );
 
-const InvoicesPage = () => {
+const PurchaseInvoicesList = () => {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -95,7 +95,7 @@ const InvoicesPage = () => {
       setIsLoading(true);
       try {
         const [invoicesRes, settingsRes] = await Promise.all([
-          fetch('/api/invoices?type=SALES'),
+          fetch('/api/invoices?type=PURCHASE'),
           fetch('/api/invoice-settings')
         ]);
         if (!invoicesRes.ok) {
@@ -264,7 +264,7 @@ const InvoicesPage = () => {
       }
     } catch (error) {
       console.error(error);
-      toast(`Error: Could not ${actionText} invoices.`);
+      toast(`Error: Could not ${actionText} quotations.`);
       setInvoices(originalInvoices);
     }
   }, [invoices, selectedInvoices]);
@@ -276,12 +276,12 @@ const InvoicesPage = () => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div className="sticky top-0 z-[40] bg-white w-full pt-6 pb-2">
-        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
+      <div className="bg-white w-full pt-6 pb-2">
+        <div className="w-full">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="ds-section-title m-0">All Invoices</h1>
-              <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>
+              <h2 className="text-xl font-semibold text-[var(--ds-black)]">Purchase Invoices</h2>
+              <p className="text-sm text-[var(--ds-gray-500)] mt-1">Manage and track your purchase invoices</p>
             </div>
             <button 
               onClick={() => setShowStats(prev => !prev)} 
@@ -342,6 +342,7 @@ const InvoicesPage = () => {
               onEditInvoice={handleInvoiceEdit}
               onUpdateInvoiceState={handleUpdateInvoiceState}
               currency={currency}
+              isPurchase={true}
             />
           ) : (
             <InvoiceGrid
@@ -352,13 +353,14 @@ const InvoicesPage = () => {
               onMarkAsPaid={handleMarkAsPaid}
               onDownloadPDF={handleDownloadPDF}
               onUpdateInvoiceState={handleUpdateInvoiceState}
+              isPurchase={true}
             />
           )}
 
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between border-t border-[var(--ds-gray-100)] pt-6 mt-6 gap-4">
               <div className="text-sm text-[var(--ds-gray-500)] font-medium">
-                Showing <span className="font-semibold text-[var(--ds-black)]">{Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}</span>–
+                Showing <span className="font-semibold text-[var(--ds-black)]">{Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}</span>â€“
                 <span className="font-semibold text-[var(--ds-black)]">{Math.min(currentPage * itemsPerPage, totalItems)}</span> of{' '}
                 <span className="font-semibold text-[var(--ds-black)]">{totalItems}</span>
               </div>
@@ -410,4 +412,4 @@ const InvoicesPage = () => {
   );
 };
 
-export default InvoicesPage;
+export default PurchaseInvoicesList;

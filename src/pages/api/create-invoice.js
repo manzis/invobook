@@ -35,6 +35,7 @@ export default async function handler(req, res) {
           city: invoiceData.clientCity,
           phone: invoiceData.clientPhone,
           taxId: invoiceData.clientTaxId,
+          type: invoiceData.type === 'PURCHASE' ? 'VENDOR' : 'CLIENT',
           userId: userId,
         },
       });
@@ -80,7 +81,8 @@ export default async function handler(req, res) {
       where: { id: userId },
       select: { inventoryEnabled: true },
     });
-    const shouldDeductStock = user?.inventoryEnabled && finalStatus !== 'DRAFT';
+    const shouldDeductStock = user?.inventoryEnabled && finalStatus !== 'DRAFT' && invoiceData.type !== 'QUOTATION' && invoiceData.type !== 'PURCHASE';
+    const shouldIncrementStock = user?.inventoryEnabled && finalStatus !== 'DRAFT' && invoiceData.type === 'PURCHASE';
 
     if (user?.inventoryEnabled) {
       const invalidItems = invoiceData.items.filter(item => !item.inventoryItemId);
@@ -133,6 +135,7 @@ export default async function handler(req, res) {
         date: new Date(invoiceData.date),
         dueDate: new Date(invoiceData.dueDate),
         status: finalStatus,
+        type: invoiceData.type || 'SALES',
         notes: invoiceData.notes,
         terms: invoiceData.terms,
         
@@ -159,6 +162,7 @@ export default async function handler(req, res) {
             quantity: item.quantity,
             rate: item.rate,
             amount: item.amount,
+            inventoryItemId: item.inventoryItemId || null,
           })),
         },
       },
@@ -207,6 +211,22 @@ export default async function handler(req, res) {
             });
           }
         }
+      }
+    }
+
+    // --- Increment stock for PURCHASE invoices ---
+    if (shouldIncrementStock) {
+      const stockIncrements = invoiceData.items
+        .filter(item => item.inventoryItemId)
+        .map(item =>
+          prisma.inventoryItem.update({
+            where: { id: item.inventoryItemId },
+            data: { quantity: { increment: item.quantity } },
+          })
+        );
+
+      if (stockIncrements.length > 0) {
+        await prisma.$transaction(stockIncrements);
       }
     }
 

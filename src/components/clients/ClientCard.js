@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Eye, Edit, Trash2 } from 'lucide-react';
 
-const ClientCard = ({ client, onDelete, onEdit }) => {
+const ClientCard = ({ client, onDelete, onEdit, isVendor }) => {
   const initials = client.name
     .split(' ')
     .map((n) => n[0])
@@ -54,31 +54,31 @@ const ClientCard = ({ client, onDelete, onEdit }) => {
         <div className="grid grid-cols-2 gap-4 text-center mb-4">
           <div>
             <p className="text-lg font-semibold text-[var(--ds-black)]">{client.totalInvoices}</p>
-            <p className="ds-mono-label mt-1">Invoices</p>
+            <p className="ds-mono-label mt-1">{isVendor ? "Purchases" : "Invoices"}</p>
           </div>
           <div>
             <p className="text-lg font-semibold text-[var(--ds-black)]">{formattedTotalAmount}</p>
-            <p className="ds-mono-label mt-1">Total Value</p>
+            <p className="ds-mono-label mt-1">{isVendor ? "Total Spend" : "Total Value"}</p>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-[var(--ds-gray-500)]">
-            Last invoice:{' '}
+            {isVendor ? 'Last purchase:' : 'Last invoice:'}{' '}
             {client.lastInvoice ? new Date(client.lastInvoice).toLocaleDateString() : 'N/A'}
           </span>
           <div className="flex items-center gap-1">
-            <button type="button" className="ds-icon-btn" aria-label="View client">
+            <button type="button" className="ds-icon-btn" aria-label={isVendor ? "View vendor" : "View client"}>
               <Eye className="w-4 h-4" />
             </button>
-            <button type="button" onClick={onEdit} className="ds-icon-btn" aria-label="Edit client">
+            <button type="button" onClick={onEdit} className="ds-icon-btn" aria-label={isVendor ? "Edit vendor" : "Edit client"}>
               <Edit className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={() => onDelete()}
               className="ds-icon-btn hover:!text-[var(--ds-ship-red)] hover:!bg-[rgba(255,91,79,0.1)]"
-              aria-label="Delete client"
+              aria-label={isVendor ? "Delete vendor" : "Delete client"}
             >
               <Trash2 className="w-4 h-4" />
             </button>

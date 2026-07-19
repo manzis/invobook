@@ -35,6 +35,7 @@ export default async function handler(req, res) {
       where: {
         userId: userId,
         createdAt: { gte: startDate },
+        type: 'SALES',
       },
       include: { client: { select: { name: true } } },
     });

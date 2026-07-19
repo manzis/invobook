@@ -4,7 +4,7 @@ import { User, Building, Mail, Phone, MapPin, Hash } from 'lucide-react';
 
 const iconClass = 'absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ds-gray-400)] pointer-events-none';
 
-const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) => {
+const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting, isVendor }) => {
   const isEditMode = Boolean(clientToEdit);
 
   const getInitialState = () => {
@@ -47,7 +47,9 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
       <div className="ds-card-static w-full max-w-2xl relative">
         <div className="flex items-center justify-between mb-6">
           <h2 className="ds-card-title text-xl">
-            {isEditMode ? 'Edit Client' : 'Add New Client'}
+            {isEditMode 
+              ? (isVendor ? 'Edit Vendor' : 'Edit Client') 
+              : (isVendor ? 'Add New Vendor' : 'Add New Client')}
           </h2>
           <button
             type="button"
@@ -67,7 +69,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                 <input
                   name="name"
                   type="text"
-                  placeholder="Enter client name"
+                  placeholder={isVendor ? "Enter vendor name" : "Enter client name"}
                   value={formData.name}
                   onChange={handleInputChange}
                   className="ds-input pl-10"
@@ -82,7 +84,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                 <input
                   name="company"
                   type="text"
-                  placeholder="Enter client company"
+                  placeholder={isVendor ? "Enter vendor company" : "Enter client company"}
                   value={formData.company}
                   onChange={handleInputChange}
                   className="ds-input pl-10"
@@ -96,7 +98,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                 <input
                   name="email"
                   type="email"
-                  placeholder="Enter client email"
+                  placeholder={isVendor ? "Enter vendor email" : "Enter client email"}
                   value={formData.email}
                   onChange={handleInputChange}
                   className="ds-input pl-10"
@@ -109,7 +111,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                 <Phone className={iconClass} />
                 <input
                   name="phone"
-                  placeholder="Enter client phone no"
+                  placeholder={isVendor ? "Enter vendor phone no" : "Enter client phone no"}
                   type="number"
                   value={formData.phone}
                   onChange={handleInputChange}
@@ -125,7 +127,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
               <MapPin className="absolute left-3 top-3 w-4 h-4 text-[var(--ds-gray-400)] pointer-events-none" />
               <textarea
                 name="address"
-                placeholder="Enter client address"
+                placeholder={isVendor ? "Enter vendor address" : "Enter client address"}
                 rows={2}
                 value={formData.address}
                 onChange={handleInputChange}
@@ -141,7 +143,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                 <input
                   name="city"
                   type="text"
-                  placeholder="Enter client city"
+                  placeholder={isVendor ? "Enter vendor city" : "Enter client city"}
                   value={formData.city}
                   onChange={handleInputChange}
                   className="ds-input pl-10"
@@ -155,7 +157,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                 <input
                   name="taxId"
                   type="text"
-                  placeholder="Enter client Tax id like: vat pan etc"
+                  placeholder={isVendor ? "Enter vendor Tax id like: vat pan etc" : "Enter client Tax id like: vat pan etc"}
                   value={formData.taxId}
                   onChange={handleInputChange}
                   className="ds-input pl-10"
@@ -179,7 +181,7 @@ const ClientModal = ({ isOpen, onClose, onSave, clientToEdit, isSubmitting }) =>
                   : 'Adding...'
                 : isEditMode
                   ? 'Save Changes'
-                  : 'Add Client'}
+                  : (isVendor ? 'Add Vendor' : 'Add Client')}
             </button>
           </div>
         </form>

@@ -16,7 +16,7 @@ const StatCard = ({ title, value, icon, valueClassName = '' }) => (
   </div>
 );
 
-const ClientStats = ({ clients, currency = 'USD' }) => {
+const ClientStats = ({ clients, currency = 'USD', isVendor }) => {
   const stats = useMemo(() => {
     const totalRevenue = clients.reduce((sum, client) => sum + (client.totalAmount || 0), 0);
     const totalInvoices = clients.reduce((sum, client) => sum + (client.totalInvoices || 0), 0);
@@ -33,23 +33,23 @@ const ClientStats = ({ clients, currency = 'USD' }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <StatCard
-        title="Total Clients"
+        title={isVendor ? "Total Vendors" : "Total Clients"}
         value={stats.totalClients}
         icon={<User className="w-5 h-5" />}
       />
       <StatCard
-        title="Active Clients"
+        title={isVendor ? "Active Vendors" : "Active Clients"}
         value={stats.activeClients}
         icon={<User className="w-5 h-5" />}
         valueClassName="text-[#059669]"
       />
       <StatCard
-        title="Total Revenue"
+        title={isVendor ? "Total Spend" : "Total Revenue"}
         value={formatCurrency(stats.totalRevenue, currency)}
         icon={<FileText className="w-5 h-5" />}
       />
       <StatCard
-        title="Avg. Invoice Value"
+        title={isVendor ? "Avg. Purchase Value" : "Avg. Invoice Value"}
         value={formatCurrency(stats.avgInvoiceValue, currency)}
         icon={<FileText className="w-5 h-5" />}
       />

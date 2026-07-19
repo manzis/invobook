@@ -18,6 +18,7 @@ export default async function handler(req, res) {
     // Authorization check
     const invoice = await prisma.invoice.findFirst({
       where: { id: invoiceId, userId: userId },
+      include: { items: true },
     });
     if (!invoice && req.method !== 'POST') { // Allow POST for creation
       return res.status(404).json({ message: 'Invoice not found or you do not have permission.' });
@@ -81,9 +82,61 @@ export default async function handler(req, res) {
         finalStatus = new Date(mainInvoiceDetails.dueDate) < new Date() ? 'OVERDUE' : 'PENDING';
       }
       
-      // --- 3. UPDATE THE INVOICE DATA IN A TRANSACTION ---
+      // --- 3. INVENTORY STOCK ADJUSTMENT ---
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { inventoryEnabled: true } });
+      const isPurchase = invoice.type === 'PURCHASE';
+      const isSales = invoice.type === 'SALES';
+      const shouldAdjustStock = user?.inventoryEnabled && invoice.status !== 'DRAFT';
+      
+      let stockUpdates = [];
+      if (shouldAdjustStock) {
+        const oldStockMap = {};
+        invoice.items.forEach(item => {
+          if (item.inventoryItemId) {
+            oldStockMap[item.inventoryItemId] = (oldStockMap[item.inventoryItemId] || 0) + item.quantity;
+          }
+        });
+
+        const newStockMap = {};
+        items.forEach(item => {
+          if (item.inventoryItemId) {
+            newStockMap[item.inventoryItemId] = (newStockMap[item.inventoryItemId] || 0) + (parseFloat(item.quantity) || 1);
+          }
+        });
+
+        const allItemIds = new Set([...Object.keys(oldStockMap), ...Object.keys(newStockMap)]);
+        
+        allItemIds.forEach(itemId => {
+          const oldQty = oldStockMap[itemId] || 0;
+          const newQty = newStockMap[itemId] || 0;
+          
+          let adjustment = 0;
+          if (isPurchase) {
+            adjustment = newQty - oldQty;
+          } else if (isSales) {
+            adjustment = oldQty - newQty; // If newQty > oldQty, adjustment is negative (reduces stock)
+          }
+
+          if (adjustment !== 0) {
+            stockUpdates.push(
+              prisma.inventoryItem.update({
+                where: { id: itemId },
+                data: { quantity: { increment: adjustment } }
+              })
+            );
+          }
+        });
+      }
+      
+      // --- 4. UPDATE THE INVOICE DATA IN A TRANSACTION ---
       const updatedInvoice = await prisma.$transaction(async (tx) => {
         await tx.invoiceItem.deleteMany({ where: { invoiceId: invoiceId } });
+        
+        if (stockUpdates.length > 0) {
+          for (const update of stockUpdates) {
+             await tx.inventoryItem.update(update);
+          }
+        }
         
         return await tx.invoice.update({
           where: { id: invoiceId },
@@ -104,6 +157,7 @@ export default async function handler(req, res) {
                 quantity: parseFloat(item.quantity) || 1,
                 rate: parseFloat(item.rate) || 0,
                 amount: parseFloat(item.amount) || 0,
+                inventoryItemId: item.inventoryItemId || null,
               })),
             },
           },

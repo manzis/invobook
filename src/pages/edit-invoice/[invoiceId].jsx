@@ -121,9 +121,8 @@ const EditInvoicePage = () => {
     const fetchInvoiceData = async () => {
       setIsLoading(true);
       try {
-        const [invoiceRes, clientsRes, settingsRes, templateRes, profileRes] = await Promise.all([
+        const [invoiceRes, settingsRes, templateRes, profileRes] = await Promise.all([
           fetch(`/api/updateInvoice/${invoiceId}`),
-          fetch('/api/clients'),
           fetch('/api/invoice-settings'),
           fetch('/api/templates'),
           fetch('/api/profile'),
@@ -134,6 +133,9 @@ const EditInvoicePage = () => {
         }
         
         const fetchedInvoice = await invoiceRes.json();
+        
+        const typeParam = fetchedInvoice.type === 'PURCHASE' ? 'VENDOR' : 'CLIENT';
+        const clientsRes = await fetch(`/api/clients?type=${typeParam}`);
         if (clientsRes.ok) {
           setAllClients(await clientsRes.json());
         }
@@ -277,17 +279,20 @@ const EditInvoicePage = () => {
           onSaveInvoice={handleUpdateInvoice}
           onPreview={() => setIsPreviewOpen(true)}
           isSaving={isSaving} 
+          invoiceType={invoiceData.type}
         />
         <div className="ds-page-inner">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
             <InvoiceDetails {...invoiceData} onFieldChange={handleInvoiceDataChange} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <BusinessDetails {...invoiceData} onFieldChange={handleInvoiceDataChange} onLogoUpload={(e) => setInvoiceData(prev => ({...prev, logoFile: e.target.files[0]}))} />
-              <ClientDetails {...invoiceData} allClients={allClients} onFieldChange={handleInvoiceDataChange} />
+              <BusinessDetails {...invoiceData} onFieldChange={handleInvoiceDataChange} onLogoUpload={(e) => setInvoiceData(prev => ({...prev, logoFile: e.target.files[0]}))} invoiceType={invoiceData.type} />
+              <ClientDetails {...invoiceData} allClients={allClients} onFieldChange={handleInvoiceDataChange} invoiceType={invoiceData.type} />
             </div>
-            <InvoiceItems {...invoiceData} onAddItem={addItem} onUpdateItem={updateItem} onRemoveItem={removeItem} />
-            <AdditionalInfo {...invoiceData} onFieldChange={handleInvoiceDataChange} />
+            <InvoiceItems {...invoiceData} onAddItem={addItem} onUpdateItem={updateItem} onRemoveItem={removeItem} invoiceType={invoiceData.type} />
+            {invoiceData.type !== 'PURCHASE' && (
+              <AdditionalInfo {...invoiceData} onFieldChange={handleInvoiceDataChange} />
+            )}
           </div>
           <InvoiceSummary {...invoiceData} onFieldChange={handleInvoiceDataChange} />
         </div>

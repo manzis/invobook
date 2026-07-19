@@ -60,6 +60,7 @@ export default async function handle(req, res) {
         where: {
           userId: userId,
           status: 'PAID',
+          type: 'SALES',
         },
         _sum: {
           total: true,
@@ -72,7 +73,8 @@ export default async function handle(req, res) {
         where: { 
             userId: userId, 
             status: { in: ['PAID', 'PENDING', 'OVERDUE'] }, 
-            date: { gte: fetchStartDateForTrends } 
+            date: { gte: fetchStartDateForTrends },
+            type: 'SALES',
         },
         select: { status: true, total: true, date: true },
       });

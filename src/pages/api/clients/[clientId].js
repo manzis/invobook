@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     // --- HANDLE PUT REQUEST (UPDATE) ---
     if (req.method === 'PUT') {
-        const { name, email, company, phone, address, city, taxId } = req.body;
+        const { name, email, company, phone, address, city, taxId, type } = req.body;
 
         // Basic validation
         if (!name || !phone) {
@@ -42,6 +42,7 @@ export default async function handler(req, res) {
                 address: address || null,
                 city: city || null,
                 taxId: taxId || null,
+                type: type || undefined, // Update if provided
             },
         });
 

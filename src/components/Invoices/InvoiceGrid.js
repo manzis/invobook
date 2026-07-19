@@ -9,7 +9,10 @@ const InvoiceGrid = ({
   onDeleteInvoice,
   onMarkAsPaid,
   onDownloadPDF,
-  onUpdateInvoiceState
+  onUpdateInvoiceState,
+  isQuotation,
+  isPurchase,
+  onConvert
 }) => {
   if (!invoices || invoices.length === 0) return null;
 
@@ -63,6 +66,9 @@ const InvoiceGrid = ({
                 onDeleteInvoice={onDeleteInvoice}
                 onUpdateInvoiceState={onUpdateInvoiceState}
                 align="end"
+                isQuotation={isQuotation}
+                isPurchase={isPurchase}
+                onConvert={onConvert}
               />
             </div>
 
@@ -70,7 +76,7 @@ const InvoiceGrid = ({
             <div className="mb-6">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[12px] font-semibold text-[var(--ds-gray-500)] uppercase tracking-wider">
-                  INVOICE #{invoice.invoiceNumber}
+                  {isQuotation ? 'QUOTATION' : isPurchase ? 'PURCHASE INVOICE' : 'INVOICE'} #{invoice.invoiceNumber}
                 </span>
                 <span className="text-[12px] font-medium text-[var(--ds-gray-400)] capitalize">{dateStr}</span>
               </div>

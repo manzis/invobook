@@ -42,6 +42,9 @@ const InvoiceActionMenu = ({
   onUpdateInvoiceState,
   align = 'end',
   triggerButton,
+  isQuotation = false,
+  isPurchase = false,
+  onConvert,
 }) => {
   const { toast } = useToast();
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -257,11 +260,20 @@ const InvoiceActionMenu = ({
                     className="ds-dropdown-item"
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    Edit Invoice
+                    Edit {isQuotation ? 'Quotation' : isPurchase ? 'Purchase Invoice' : 'Invoice'}
                   </DropdownMenu.Item>
+                  {isQuotation && (
+                    <DropdownMenu.Item
+                      onSelect={() => onConvert(invoice.id)}
+                      className="ds-dropdown-item text-blue-600"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Convert to Sales Invoice
+                    </DropdownMenu.Item>
+                  )}
                 </DropdownMenu.Group>
 
-                {invoice.status !== 'PAID' && (
+                {!isQuotation && !isPurchase && invoice.status !== 'PAID' && (
                   <DropdownMenu.Group>
                     <DropdownMenu.Item
                       onSelect={() => handlePaymentAction('full')}
@@ -283,60 +295,66 @@ const InvoiceActionMenu = ({
                   </DropdownMenu.Group>
                 )}
 
-                <DropdownMenu.Group>
-                  <DropdownMenu.Item
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setMenuView('download');
-                    }}
-                    className="ds-dropdown-item"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download...
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => handleSendInvoice('email')}
-                    className="ds-dropdown-item"
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send via Email
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => handleSendInvoice('whatsapp')}
-                    className="ds-dropdown-item"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Send via WhatsApp
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setMenuView('share');
-                    }}
-                    className="ds-dropdown-item"
-                  >
-                    <Share className="w-4 h-4 mr-2" />
-                    Share Options...
-                  </DropdownMenu.Item>
-                </DropdownMenu.Group>
-                <DropdownMenu.Separator
-                  className="h-px my-1"
-                  style={{ background: 'var(--ds-gray-100)' }}
-                />
-                <DropdownMenu.Group>
-                  <DropdownMenu.Item
-                    onSelect={() => window.location.href = '/payments'}
-                    className="ds-dropdown-item"
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    <span className="flex-1">Payment Logs</span>
-                    {pendingPayments > 0 && (
-                      <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white min-w-[18px] text-center">
-                        {pendingPayments}
-                      </span>
-                    )}
-                  </DropdownMenu.Item>
-                </DropdownMenu.Group>
+                {!isPurchase && (
+                  <DropdownMenu.Group>
+                    <DropdownMenu.Item
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        setMenuView('download');
+                      }}
+                      className="ds-dropdown-item"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download...
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      onSelect={() => handleSendInvoice('email')}
+                      className="ds-dropdown-item"
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send via Email
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      onSelect={() => handleSendInvoice('whatsapp')}
+                      className="ds-dropdown-item"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Send via WhatsApp
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        setMenuView('share');
+                      }}
+                      className="ds-dropdown-item"
+                    >
+                      <Share className="w-4 h-4 mr-2" />
+                      Share Options...
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Group>
+                )}
+                {!isQuotation && !isPurchase && (
+                  <>
+                    <DropdownMenu.Separator
+                      className="h-px my-1"
+                      style={{ background: 'var(--ds-gray-100)' }}
+                    />
+                    <DropdownMenu.Group>
+                      <DropdownMenu.Item
+                        onSelect={() => window.location.href = '/payments'}
+                        className="ds-dropdown-item"
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        <span className="flex-1">Payment Logs</span>
+                        {pendingPayments > 0 && (
+                          <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white min-w-[18px] text-center">
+                            {pendingPayments}
+                          </span>
+                        )}
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Group>
+                  </>
+                )}
                 <DropdownMenu.Separator
                   className="h-px my-1"
                   style={{ background: 'var(--ds-gray-100)' }}

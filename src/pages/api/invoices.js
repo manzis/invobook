@@ -43,9 +43,15 @@ export default async function handler(req, res) {
   });
       // --- END OF NEW LOGIC ---
 
+      // Extract type from query parameters
+      const { type } = req.query;
+
       // Now, fetch all invoices for the user (including the ones we just updated)
       const invoices = await prisma.invoice.findMany({
-        where: { userId: userId },
+        where: { 
+          userId: userId,
+          ...(type ? { type } : {})
+        },
         include: {
           client: { select: { name: true } },
           items: { select: { id: true } },

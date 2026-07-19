@@ -27,6 +27,7 @@ const ClientDetails = ({
   clientCity,
   clientPhone,
   onFieldChange,
+  invoiceType,
 }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const wrapperRef = useRef(null);
@@ -54,7 +55,7 @@ const ClientDetails = ({
   return (
     <div ref={wrapperRef} className="ds-card-static">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="ds-card-title text-[20px]">Bill To (Client)</h3>
+        <h3 className="ds-card-title text-[20px]">{invoiceType === 'PURCHASE' ? 'Party / Vendor Details' : 'Bill To (Client)'}</h3>
         <User className="w-4 h-4 text-[var(--ds-gray-400)]" />
       </div>
 
@@ -64,7 +65,7 @@ const ClientDetails = ({
             <User className={iconClass} />
             <input
               type="text"
-              placeholder="Search or add client name..."
+              placeholder={invoiceType === 'PURCHASE' ? "Search or add party name..." : "Search or add client name..."}
               value={clientName}
               autoComplete="off"
               onChange={(e) => {
@@ -130,7 +131,7 @@ const ClientDetails = ({
           <Mail className={iconClass} />
           <input
             type="email"
-            placeholder="Client Email"
+            placeholder={invoiceType === 'PURCHASE' ? "Email" : "Client Email"}
             value={clientEmail}
             onChange={(e) => onFieldChange('clientEmail', e.target.value)}
             className="ds-input pl-10"

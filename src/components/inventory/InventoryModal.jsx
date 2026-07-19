@@ -9,6 +9,7 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
     description: '',
     sku: '',
     rate: '',
+    purchasePrice: '',
     quantity: '',
     unit: 'pcs',
     lowStock: '5',
@@ -30,6 +31,7 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
         description: item.description || '',
         sku: item.sku || '',
         rate: item.rate || '',
+        purchasePrice: item.purchasePrice || '',
         quantity: item.quantity || '',
         unit: item.unit || 'pcs',
         lowStock: item.lowStock || '5',
@@ -37,7 +39,7 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
       });
     } else {
       setFormData({
-        name: '', description: '', sku: '', rate: '', quantity: '', unit: 'pcs', lowStock: '5', category: ''
+        name: '', description: '', sku: '', rate: '', purchasePrice: '', quantity: '', unit: 'pcs', lowStock: '5', category: ''
       });
     }
   }, [item, isOpen]);
@@ -46,6 +48,12 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (parseFloat(formData.purchasePrice) > parseFloat(formData.rate)) {
+      toast('Purchase price cannot be higher than the sales rate.');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -59,8 +67,9 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
       });
 
       if (res.ok) {
+        const itemData = await res.json();
         toast(`Product ${item ? 'updated' : 'added'} successfully.`);
-        onSuccess();
+        onSuccess(itemData);
         onClose();
       } else {
         const errorData = await res.json();
@@ -124,7 +133,7 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
             </div>
 
             <div>
-              <label className="ds-form-label">Default Rate *</label>
+              <label className="ds-form-label">Sales Rate *</label>
               <input 
                 type="number" 
                 required 
@@ -133,6 +142,19 @@ const InventoryModal = ({ isOpen, onClose, item, onSuccess }) => {
                 className="ds-input" 
                 value={formData.rate} 
                 onChange={e => setFormData({...formData, rate: e.target.value})} 
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <label className="ds-form-label">Purchase Price</label>
+              <input 
+                type="number" 
+                step="0.01"
+                min="0"
+                className="ds-input" 
+                value={formData.purchasePrice} 
+                onChange={e => setFormData({...formData, purchasePrice: e.target.value})} 
                 placeholder="0.00"
               />
             </div>

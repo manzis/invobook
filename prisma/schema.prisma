@@ -18,6 +18,17 @@
     OVERDUE
   }
 
+  enum InvoiceType {
+    QUOTATION
+    SALES
+    PURCHASE
+  }
+
+  enum ClientType {
+    CLIENT
+    VENDOR
+  }
+
   enum DiscountType {
     PERCENTAGE
     FIXED
@@ -102,6 +113,7 @@
     address   String?
     city      String?  // This should already be here
     taxId     String?  // <-- ADD THIS LINE
+    type      ClientType @default(CLIENT)
     status    String   @default("active")
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -131,6 +143,7 @@
     notes         String?
     terms         String?
     status        InvoiceStatus @default(DRAFT)
+    type          InvoiceType   @default(SALES)
     createdAt     DateTime      @default(now())
     updatedAt     DateTime      @updatedAt
 
@@ -158,6 +171,10 @@
     // An item belongs to one invoice. If the invoice is deleted, delete its items too.
     invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
     invoiceId String
+    
+    // Optional link to inventory item for stock tracking
+    inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+    inventoryItemId String?
   }
 
   model Payment {
@@ -198,6 +215,7 @@
     description String?
     sku         String?
     rate        Decimal
+    purchasePrice Decimal  @default(0)
     quantity    Float    @default(0)
     unit        String   @default("pcs")
     lowStock    Float    @default(5)
@@ -208,6 +226,8 @@
 
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String
+
+    invoiceItems InvoiceItem[]
 
     @@unique([userId, sku])
     @@index([userId])

@@ -50,7 +50,7 @@ export const ClassicTemplate = ({ invoiceData }) => {
         <html lang="en">
             <head>
                 <meta charSet="UTF-8" />
-                <title>{`Invoice #${invoice.invoiceNumber}`}</title>
+                <title>{`${invoice.type === 'QUOTATION' ? 'Quotation' : 'Invoice'} #${invoice.invoiceNumber}`}</title>
                 <style>
                   {`
                     @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
@@ -114,7 +114,7 @@ export const ClassicTemplate = ({ invoiceData }) => {
                             <h1 style={{ marginBottom: '12px' }}>{business.businessName}</h1>
                             <p>{business.address}</p>
                             <p>{business.city}, {business.state} - {business.zipCode}</p>
-                            {business.taxId && <p><b>PAN:</b> {business.taxId}</p>}
+                            {invoice.type !== 'QUOTATION' && business.taxId && <p><b>PAN:</b> {business.taxId}</p>}
 
                            
                         </div>
@@ -123,14 +123,14 @@ export const ClassicTemplate = ({ invoiceData }) => {
                         <div className="header-right">
                             <div style={{ display: 'inline-block', padding: '6px 16px', ...statusStyles, marginBottom: '20px' }}>
                                 <p style={{ fontSize: '13px', fontWeight: '600', margin: 0, color: 'inherit', letterSpacing: '1px' }}>
-                                    INVOICE {invoice.status}
+                                    {invoice.type === 'QUOTATION' ? 'QUOTATION' : `INVOICE ${invoice.status}`}
                                 </p>
                             </div>
 
                             <div style={{ marginBottom: '20px' }}>
-                                <p><b>Invoice #:</b> {invoice.invoiceNumber}</p>
-                                <p><b>Invoice Date:</b> {formatDate(invoice.date)}</p>
-                                <p><b>Due Date:</b> {formatDate(invoice.dueDate)}</p>
+                                <p><b>{invoice.type === 'QUOTATION' ? 'Quotation' : 'Invoice'} #:</b> {invoice.invoiceNumber}</p>
+                                <p><b>{invoice.type === 'QUOTATION' ? 'Date' : 'Invoice Date'}:</b> {formatDate(invoice.date)}</p>
+                                {invoice.type !== 'QUOTATION' && <p><b>Due Date:</b> {formatDate(invoice.dueDate)}</p>}
                             </div>
                             
                             <div style={{ borderTop: '1px solid #dee2e6', paddingTop: '20px' }}>
@@ -139,15 +139,16 @@ export const ClassicTemplate = ({ invoiceData }) => {
                                 <p>{client.address}</p>
                                 <p>{client.city}</p>
                                 {client.phone && <p>{client.phone}</p>}
-                                {client.taxId && <p><b>PAN:</b> {client.taxId}</p>}
+                                {invoice.type !== 'QUOTATION' && client.taxId && <p><b>PAN:</b> {client.taxId}</p>}
                             </div>
- {/* --- RELOCATED BALANCE DUE BOX --- */}
-                            <div className="balance-due-box">
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <p>Balance Due:</p>
-                                    <p>{formatCurrency(invoice.balanceDue, business.currency)}</p>
+                            {invoice.type !== 'QUOTATION' && (
+                                <div className="balance-due-box">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <p>Balance Due:</p>
+                                        <p>{formatCurrency(invoice.balanceDue, business.currency)}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                         </div>
                     </header>
@@ -185,10 +186,12 @@ export const ClassicTemplate = ({ invoiceData }) => {
                                     <b>Grand Total:</b>
                                     <b>{formatCurrency(invoice.total, business.currency)}</b>
                                 </div>
-                                <div className="summary-row">
-                                    <span>Amount Paid:</span>
-                                    <span>-{formatCurrency(invoice.amountPaid, business.currency)}</span>
-                                </div>
+                                {invoice.type !== 'QUOTATION' && (
+                                    <div className="summary-row">
+                                        <span>Amount Paid:</span>
+                                        <span>-{formatCurrency(invoice.amountPaid, business.currency)}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </main>

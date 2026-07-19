@@ -42,7 +42,7 @@ const ClientGridSkeleton = () => (
   </div>
 );
 
-const ClientsPage = () => {
+const VendorsPage = () => {
   const { toast } = useToast();
   const [clients, setClients] = useState([]); // Start with an empty array
   const [currency, setCurrency] = useState('USD');
@@ -70,10 +70,10 @@ const ClientsPage = () => {
       setIsLoading(true);
       try {
         const [clientsRes, settingsRes] = await Promise.all([
-          fetch('/api/clients?type=CLIENT'),
+          fetch('/api/clients?type=VENDOR'),
           fetch('/api/invoice-settings')
         ]);
-        if (!clientsRes.ok) throw new Error("Failed to fetch clients data");
+        if (!clientsRes.ok) throw new Error("Failed to fetch vendors data");
         const data = await clientsRes.json();
         setClients(data);
 
@@ -94,7 +94,7 @@ const ClientsPage = () => {
     if (router.isReady) {
       if (router.query.action === 'add') {
         setIsModalOpen(true); 
-        router.replace('/clients', undefined, { shallow: true });
+        router.replace('/vendors', undefined, { shallow: true });
       }
     }
   }, [router.isReady, router.query]);
@@ -148,7 +148,7 @@ const ClientsPage = () => {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, type: 'VENDOR' }),
       });
 
       if (!res.ok) {
@@ -175,7 +175,7 @@ const ClientsPage = () => {
   };
 
   const handleDeleteClient = async (clientId) => {
-    if (!window.confirm("Are you sure you want to delete this client? This action cannot be undone.")) {
+    if (!window.confirm("Are you sure you want to delete this vendor? This action cannot be undone.")) {
       return;
     }
 
@@ -186,7 +186,7 @@ const ClientsPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete the client.");
+        throw new Error(errorData.message || "Failed to delete the vendor.");
       }
 
       setClients(prevClients => prevClients.filter(client => client.id !== clientId));
@@ -202,8 +202,8 @@ const ClientsPage = () => {
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="ds-section-title m-0">Clients</h1>
-              <p className="ds-page-subtitle m-0">Manage your client list and details</p>
+              <h1 className="ds-section-title m-0">Vendors</h1>
+              <p className="ds-page-subtitle m-0">Manage your vendor list and details</p>
             </div>
             <button 
               onClick={() => setShowStats(prev => !prev)} 
@@ -218,13 +218,13 @@ const ClientsPage = () => {
           <SubNav 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            searchPlaceholder="Search clients by name, email, or company..."
+            searchPlaceholder="Search vendors by name, email, or company..."
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             onAddNewClick={handleOpenAddModal}
             addNewLabel={
               <>
-                <span className="hidden sm:inline">New Client</span>
+                <span className="hidden sm:inline">New Vendor</span>
                 <span className="sm:hidden">New</span>
               </>
             }
@@ -240,12 +240,12 @@ const ClientsPage = () => {
         </>
       ) : clients.length === 0 ? (
         <>
-          {showStats && <ClientStats clients={clients} currency={currency} />}
-          <EmptyClientsState onAddClientClick={handleOpenAddModal} />
+          {showStats && <ClientStats clients={clients} currency={currency} isVendor={true} />}
+          <EmptyClientsState onAddClientClick={handleOpenAddModal} isVendor={true} />
         </>
       ) : (
         <>
-          {showStats && <ClientStats clients={clients} currency={currency} />}
+          {showStats && <ClientStats clients={clients} currency={currency} isVendor={true} />}
           {filteredClients.length > 0 ? (
             <>
               {viewMode === 'grid' ? (
@@ -253,12 +253,14 @@ const ClientsPage = () => {
                   clients={paginatedClients} 
                   onEditClient={handleOpenEditModal}
                   onDeleteClient={handleDeleteClient}
+                  isVendor={true}
                 />
               ) : (
                 <ClientTable 
                   clients={paginatedClients}
                   onEditClient={handleOpenEditModal}
                   onDeleteClient={handleDeleteClient}
+                  isVendor={true}
                 />
               )}
               
@@ -325,9 +327,10 @@ const ClientsPage = () => {
         onSave={handleSaveClient}
         clientToEdit={clientToEdit}
         isSubmitting={isSubmitting}
+        isVendor={true}
       />
     </div>
   );
 };
 
-export default ClientsPage;
+export default VendorsPage;

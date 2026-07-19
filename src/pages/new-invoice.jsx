@@ -83,6 +83,7 @@ const NewInvoicePage = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [activeTemplateName, setActiveTemplateName] = useState('modern-blue'); 
   const { inventoryEnabled } = useInventory(); 
+  const [invoiceType, setInvoiceType] = useState('SALES'); // Default to SALES
 
   const CURRENCY_SYMBOLS = {
   USD: '$', EUR: '€', JPY: '¥', GBP: '£',
@@ -96,10 +97,9 @@ useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
       try {
-        const [profileRes, settingsRes, clientsRes, lastInvoiceRes, templateRes] = await Promise.all([
+        const [profileRes, settingsRes, lastInvoiceRes, templateRes] = await Promise.all([
           fetch('/api/profile'),
           fetch('/api/invoice-settings'),
-          fetch('/api/clients'),
           fetch('/api/invoices/last'),
           fetch('/api/templates'),
         ]);
@@ -110,8 +110,6 @@ useEffect(() => {
         const profile = await profileRes.json();
         const settings = await settingsRes.json();
 
-        const clients = clientsRes.ok ? await clientsRes.json() : [];
-        setAllClients(clients);
         const lastInvoice = lastInvoiceRes.ok ? await lastInvoiceRes.json() : null;
 
         let nextInvoiceNumberValue;
@@ -189,6 +187,22 @@ useEffect(() => {
     fetchInitialData();
   }, []);
 
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const typeParam = invoiceType === 'PURCHASE' ? 'VENDOR' : 'CLIENT';
+        const res = await fetch(`/api/clients?type=${typeParam}`);
+        if (res.ok) {
+          const clients = await res.json();
+          setAllClients(clients);
+        }
+      } catch (err) {
+        console.error("Failed to fetch clients/vendors:", err);
+      }
+    };
+    fetchClients();
+  }, [invoiceType]);
+
   
   const handleCreateInvoice = async (status = 'PENDING') => {
     setIsSaving(true);
@@ -215,7 +229,7 @@ useEffect(() => {
     
 
     try {
-        const payload = { ...invoiceData, status };
+        const payload = { ...invoiceData, status, type: invoiceType };
         const res = await fetch('/api/create-invoice', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -344,6 +358,8 @@ const handleInvoiceDataChange = (field, value) => {
   return (
     <div className="flex flex-col h-full w-full">
         <InvoiceHeader 
+          invoiceType={invoiceType}
+          onTypeChange={setInvoiceType}
           onCreateInvoice={handleCreateInvoice} 
           onPreview={() => setIsPreviewOpen(true)}
           isSaving={isSaving} />
@@ -367,6 +383,7 @@ const handleInvoiceDataChange = (field, value) => {
                 businessPhone={invoiceData.businessPhone}
                 onFieldChange={handleInvoiceDataChange}
                 onLogoUpload={handleLogoUpload}
+                invoiceType={invoiceType}
               />
               <ClientDetails
                 allClients={allClients}
@@ -378,6 +395,7 @@ const handleInvoiceDataChange = (field, value) => {
                 clientCompany={invoiceData.clientCompany} // <-- PASS PROP
                 clientTaxId={invoiceData.clientTaxId} 
                 onFieldChange={handleInvoiceDataChange}
+                invoiceType={invoiceType}
               />
             </div>
             <InvoiceItems
@@ -387,12 +405,15 @@ const handleInvoiceDataChange = (field, value) => {
               onUpdateItem={updateItem}
               onRemoveItem={removeItem}
               inventoryEnabled={inventoryEnabled}
+              invoiceType={invoiceType}
             />
-            <AdditionalInfo
-              notes={invoiceData.notes}
-              terms={invoiceData.terms}
-              onFieldChange={handleInvoiceDataChange}
-            />
+            {invoiceType !== 'PURCHASE' && (
+              <AdditionalInfo
+                notes={invoiceData.notes}
+                terms={invoiceData.terms}
+                onFieldChange={handleInvoiceDataChange}
+              />
+            )}
           </div>
           <InvoiceSummary
             subtotal={invoiceData.subtotal}

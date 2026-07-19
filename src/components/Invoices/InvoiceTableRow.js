@@ -46,6 +46,9 @@ const InvoiceTableRow = ({
   onEditInvoice,
   onUpdateInvoiceState,
   currency = 'USD',
+  isQuotation = false,
+  isPurchase = false,
+  onConvert
 }) => {
   const { toast } = useToast();
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -205,7 +208,7 @@ const InvoiceTableRow = ({
             </div>
             <div>
               <p className="text-sm font-medium m-0" style={{ color: 'var(--ds-black)' }}>
-                {invoice.invoiceNumber}
+                {isQuotation ? 'QUOT-' : isPurchase ? 'PURC-' : ''}{invoice.invoiceNumber}
               </p>
               <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--ds-gray-500)' }}>
                 {itemCount} items
@@ -351,7 +354,19 @@ const InvoiceTableRow = ({
                     </div>
                   ) : menuView === 'main' ? (
                     <>
-                      {invoice.status !== 'PAID' && (
+                      {isQuotation && (
+                        <DropdownMenu.Group>
+                          <DropdownMenu.Item
+                            onSelect={() => onConvert(invoice.id)}
+                            className="ds-dropdown-item text-blue-600"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Convert to Sales Invoice
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Group>
+                      )}
+
+                      {!isQuotation && invoice.status !== 'PAID' && (
                         <DropdownMenu.Group>
                           <DropdownMenu.Item
                             onSelect={() => handlePaymentAction('full')}
@@ -399,24 +414,28 @@ const InvoiceTableRow = ({
                           Share
                         </DropdownMenu.Item>
                       </DropdownMenu.Group>
-                      <DropdownMenu.Separator
-                        className="h-px my-1"
-                        style={{ background: 'var(--ds-gray-100)' }}
-                      />
-                      <DropdownMenu.Group>
-                        <DropdownMenu.Item
-                          onSelect={() => window.location.href = '/payments'}
-                          className="ds-dropdown-item"
-                        >
-                          <CreditCard className="w-4 h-4 mr-2" />
-                          <span className="flex-1">Payment Logs</span>
-                          {pendingPayments > 0 && (
-                            <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white min-w-[18px] text-center">
-                              {pendingPayments}
-                            </span>
-                          )}
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Group>
+                      {!isQuotation && (
+                        <>
+                          <DropdownMenu.Separator
+                            className="h-px my-1"
+                            style={{ background: 'var(--ds-gray-100)' }}
+                          />
+                          <DropdownMenu.Group>
+                            <DropdownMenu.Item
+                              onSelect={() => window.location.href = '/payments'}
+                              className="ds-dropdown-item"
+                            >
+                              <CreditCard className="w-4 h-4 mr-2" />
+                              <span className="flex-1">Payment Logs</span>
+                              {pendingPayments > 0 && (
+                                <span className="ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white min-w-[18px] text-center">
+                                  {pendingPayments}
+                                </span>
+                              )}
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Group>
+                        </>
+                      )}
                       <DropdownMenu.Separator
                         className="h-px my-1"
                         style={{ background: 'var(--ds-gray-100)' }}

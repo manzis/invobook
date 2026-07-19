@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   FileText,
   Users,
+  Building,
   Settings,
   FilePlus,
   BarChart3,
@@ -87,8 +88,10 @@ export default function Sidebar() {
   // Menu items grouped logically
   const primarySection = [
     { id: 'dashboard', label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { id: 'quotations', label: 'Quotations', href: '/quotations', icon: FileText },
     { id: 'invoices', label: 'Invoices', href: '/invoices', icon: FileText },
     { id: 'clients', label: 'Clients', href: '/clients', icon: Users },
+    { id: 'vendors', label: 'Vendors', href: '/vendors', icon: Building },
     ...(inventoryEnabled ? [{ id: 'inventory', label: 'Inventory', href: '/inventory', icon: Package }] : []),
   ];
 

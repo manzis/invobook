@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     // --- PUT: Update item ---
     if (req.method === 'PUT') {
-      const { name, description, sku, rate, quantity, unit, lowStock, category } = req.body;
+      const { name, description, sku, rate, purchasePrice, quantity, unit, lowStock, category } = req.body;
 
       const updated = await prisma.inventoryItem.update({
         where: { id: itemId },
@@ -40,6 +40,7 @@ export default async function handler(req, res) {
           ...(description !== undefined && { description }),
           ...(sku !== undefined && { sku: sku || null }),
           ...(rate !== undefined && { rate: parseFloat(rate) }),
+          ...(purchasePrice !== undefined && { purchasePrice: parseFloat(purchasePrice) }),
           ...(quantity !== undefined && { quantity: parseFloat(quantity) }),
           ...(unit !== undefined && { unit }),
           ...(lowStock !== undefined && { lowStock: parseFloat(lowStock) }),

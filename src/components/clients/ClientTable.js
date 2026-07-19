@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, Phone, Building2, Edit, Trash2 } from 'lucide-react';
 
-const ClientTable = ({ clients, onEditClient, onDeleteClient }) => {
+const ClientTable = ({ clients, onEditClient, onDeleteClient, isVendor }) => {
   if (!clients || clients.length === 0) return null;
 
   return (
@@ -10,7 +10,7 @@ const ClientTable = ({ clients, onEditClient, onDeleteClient }) => {
         <table className="ds-table">
           <thead>
             <tr>
-              <th>Client</th>
+              <th>{isVendor ? 'Vendor' : 'Client'}</th>
               <th>Contact Info</th>
               <th>Address</th>
               <th className="text-right">Actions</th>
@@ -69,14 +69,14 @@ const ClientTable = ({ clients, onEditClient, onDeleteClient }) => {
                       <button 
                         onClick={() => onEditClient(client)}
                         className="w-8 h-8 rounded-md hover:bg-[var(--ds-gray-100)] flex items-center justify-center text-[var(--ds-gray-500)] hover:text-blue-600 transition-colors"
-                        title="Edit Client"
+                        title={isVendor ? "Edit Vendor" : "Edit Client"}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => onDeleteClient(client.id)}
                         className="w-8 h-8 rounded-md hover:bg-[var(--ds-gray-100)] flex items-center justify-center text-[var(--ds-gray-500)] hover:text-red-600 transition-colors"
-                        title="Delete Client"
+                        title={isVendor ? "Delete Vendor" : "Delete Client"}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

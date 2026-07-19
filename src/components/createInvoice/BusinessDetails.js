@@ -8,13 +8,14 @@ const BusinessDetails = ({
   businessCity,
   businessEmail,
   businessPhone,
+  invoiceType,
 }) => {
   return (
     <div className="ds-card-static">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="ds-card-title text-[20px] flex items-center gap-2">
-            From (Your Business) <Lock className="w-3.5 h-3.5 text-[var(--ds-gray-400)]" />
+            {invoiceType === 'PURCHASE' ? 'To (Your Business)' : 'From (Your Business)'} <Lock className="w-3.5 h-3.5 text-[var(--ds-gray-400)]" />
           </h3>
           <p className="text-xs text-[var(--ds-gray-500)] mt-1">Edit these details in your settings.</p>
         </div>

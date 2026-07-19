@@ -1,20 +1,22 @@
 import React from 'react';
 import { Eye, Send } from 'lucide-react';
 
-const EditInvoiceHeader = ({ onSaveInvoice, onPreview, isSaving }) => {
+const EditInvoiceHeader = ({ onSaveInvoice, onPreview, isSaving, invoiceType }) => {
   return (
     <div className="sticky top-0 z-[40] bg-white w-full pt-6 pb-2">
       <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-4">
           <div>
-            <h1 className="ds-section-title">Edit Invoice</h1>
-            <p className="ds-page-subtitle">Fill in the details to edit your invoice</p>
+            <h1 className="ds-section-title">{invoiceType === 'PURCHASE' ? 'Edit Purchase Record' : 'Edit Invoice'}</h1>
+            <p className="ds-page-subtitle">Fill in the details to edit your {invoiceType === 'PURCHASE' ? 'purchase record' : 'invoice'}</p>
           </div>
           <div className="flex flex-wrap gap-3 items-center">
-            <button type="button" onClick={onPreview} className="ds-btn-ghost gap-2">
-              <Eye className="w-4 h-4" />
-              <span>Preview</span>
-            </button>
+            {invoiceType !== 'PURCHASE' && (
+              <button type="button" onClick={onPreview} className="ds-btn-ghost gap-2">
+                <Eye className="w-4 h-4" />
+                <span>Preview</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onSaveInvoice('PENDING')}
@@ -22,7 +24,7 @@ const EditInvoiceHeader = ({ onSaveInvoice, onPreview, isSaving }) => {
               className="ds-btn-dark gap-2"
             >
               <Send className="w-4 h-4" />
-              <span>{isSaving ? 'Editing...' : 'Save Invoice'}</span>
+              <span>{isSaving ? 'Saving...' : invoiceType === 'PURCHASE' ? 'Update Record' : 'Save Invoice'}</span>
             </button>
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
   Settings,
   MoreHorizontal,
   Users,
+  Building,
   Package,
   CreditCard,
   FilePlus,
@@ -79,6 +80,8 @@ export default function MobileBottomNav() {
 
   const secondaryTabs = [
     { id: 'clients', label: 'Clients', href: '/clients', icon: Users },
+    { id: 'vendors', label: 'Vendors', href: '/vendors', icon: Building },
+    { id: 'quotations', label: 'Quotations', href: '/quotations', icon: FileText },
     ...(inventoryEnabled ? [{ id: 'inventory', label: 'Inventory', href: '/inventory', icon: Package }] : []),
     { id: 'payments', label: 'Payments', href: '/payments', icon: CreditCard, badge: pendingCount > 0 ? pendingCount : null },
     { id: 'upgrade', label: 'Upgrade to Pro', href: '/upgrade', icon: Zap },
