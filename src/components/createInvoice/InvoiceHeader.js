@@ -1,57 +1,69 @@
 import React from 'react';
-import { Eye, Save, Send } from 'lucide-react';
+import { Eye, Save, Send, ChevronDown } from 'lucide-react';
 
-const InvoiceHeader = ({ invoiceType, onTypeChange, onCreateInvoice, onPreview, isSaving }) => {
+const InvoiceHeader = ({ invoiceType, onTypeChange, onCreateInvoice, onPreview, isSaving, inventoryEnabled = true }) => {
   const types = [
     { id: 'QUOTATION', label: 'Quotation' },
     { id: 'SALES', label: 'Sales Invoice' },
-    { id: 'PURCHASE', label: 'Purchase Invoice' },
+    { 
+      id: 'PURCHASE', 
+      label: inventoryEnabled ? 'Purchase Invoice' : 'Purchase Invoice (Enable Inventory in Settings)',
+      disabled: !inventoryEnabled
+    },
   ];
 
   const getTitle = () => {
     switch (invoiceType) {
-      case 'QUOTATION': return 'Create New Quotation';
-      case 'PURCHASE': return 'Create Purchase Invoice';
-      default: return 'Create New Invoice';
+      case 'QUOTATION': return 'New Quotation';
+      case 'PURCHASE': return 'New Purchase';
+      default: return 'New Invoice';
+    }
+  };
+
+  const getSelectStyle = () => {
+    switch (invoiceType) {
+      case 'QUOTATION': return 'bg-black text-white focus:ring-black';
+      case 'SALES': return 'bg-emerald-500 text-white focus:ring-emerald-500';
+      case 'PURCHASE': return 'bg-yellow-400 text-black focus:ring-yellow-400';
+      default: return 'bg-[var(--ds-gray-100)] text-[var(--ds-gray-800)]';
     }
   };
 
   return (
-    <div className="sticky top-0 z-[40] bg-white w-full pt-6 pb-2">
-      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
-        {/* Type Switcher */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex bg-[var(--ds-gray-100)] p-1 rounded-lg">
-            {types.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => onTypeChange(t.id)}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  invoiceType === t.id
-                    ? 'bg-white text-[var(--ds-black)] shadow-sm'
-                    : 'text-[var(--ds-gray-500)] hover:text-[var(--ds-gray-700)] hover:bg-[var(--ds-gray-200)]'
-                }`}
+    <div className="sticky top-0 z-[40] bg-white/80 backdrop-blur-md w-full pt-4 pb-4">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-row items-center justify-between md:justify-start gap-6">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-[var(--ds-black)] tracking-tight">{getTitle()}</h1>
+              <p className="text-sm text-[var(--ds-gray-500)] hidden sm:block mt-1">Fill in the details to generate your document</p>
+            </div>
+            
+            {/* Type Switcher Dropdown */}
+            <div className="relative mt-1 sm:mt-0">
+              <select
+                value={invoiceType}
+                onChange={(e) => onTypeChange(e.target.value)}
+                className={`appearance-none border-none text-sm font-semibold rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-offset-1 cursor-pointer outline-none transition-colors ${getSelectStyle()}`}
               >
-                {t.label}
-              </button>
-            ))}
+                {types.map((t) => (
+                  <option key={t.id} value={t.id} disabled={t.disabled} className="bg-white text-black font-medium">
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className={`w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${invoiceType === 'PURCHASE' ? 'text-black' : 'text-white'}`} />
+            </div>
           </div>
-        </div>
-        
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-4">
-          <div>
-            <h1 className="ds-section-title">{getTitle()}</h1>
-            <p className="ds-page-subtitle">Fill in the details to generate your document</p>
-          </div>
-          <div className="flex flex-wrap gap-3 items-center">
+          
+          <div className="flex flex-row gap-2 items-center justify-end">
             {invoiceType !== 'PURCHASE' && (
               <>
-                <button type="button" onClick={onPreview} className="ds-btn-ghost gap-2">
+                <button type="button" onClick={onPreview} className="ds-btn-ghost gap-2 text-sm px-3 py-2 flex-1 md:flex-none justify-center">
                   <Eye className="w-4 h-4" />
                   <span>Preview</span>
                 </button>
-                <button type="button" className="ds-btn-ghost gap-2">
+                <button type="button" className="ds-btn-ghost gap-2 text-sm px-3 py-2 hidden sm:flex">
                   <Save className="w-4 h-4" />
                   <span>Save Draft</span>
                 </button>
@@ -61,17 +73,17 @@ const InvoiceHeader = ({ invoiceType, onTypeChange, onCreateInvoice, onPreview, 
               type="button"
               onClick={() => onCreateInvoice('PENDING')}
               disabled={isSaving}
-              className="ds-btn-dark gap-2"
+              className="ds-btn-dark gap-2 text-sm px-4 py-2 flex-1 md:flex-none justify-center"
             >
               <Send className="w-4 h-4" />
               <span>
                 {isSaving 
                   ? 'Saving...' 
                   : invoiceType === 'PURCHASE' 
-                    ? 'Record Invoice' 
+                    ? 'Record' 
                     : invoiceType === 'QUOTATION' 
-                      ? 'Create Quotation' 
-                      : 'Create Invoice'
+                      ? 'Create' 
+                      : 'Create'
                 }
               </span>
             </button>

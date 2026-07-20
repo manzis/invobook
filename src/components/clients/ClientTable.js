@@ -28,7 +28,11 @@ const ClientTable = ({ clients, onEditClient, onDeleteClient, isVendor }) => {
               }
 
               return (
-                <tr key={client.id} className="group">
+                <tr 
+                  key={client.id} 
+                  className="group cursor-pointer hover:bg-[var(--ds-gray-50)] transition-colors"
+                  onClick={() => onEditClient(client)}
+                >
                   <td>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm flex-shrink-0">
@@ -65,17 +69,17 @@ const ClientTable = ({ clients, onEditClient, onDeleteClient, isVendor }) => {
                     </div>
                   </td>
                   <td className="text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                       <button 
                         onClick={() => onEditClient(client)}
-                        className="w-8 h-8 rounded-md hover:bg-[var(--ds-gray-100)] flex items-center justify-center text-[var(--ds-gray-500)] hover:text-blue-600 transition-colors"
+                        className="w-8 h-8 rounded-md hover:bg-[var(--ds-gray-200)] flex items-center justify-center text-[var(--ds-gray-500)] hover:text-blue-600 transition-colors"
                         title={isVendor ? "Edit Vendor" : "Edit Client"}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => onDeleteClient(client.id)}
-                        className="w-8 h-8 rounded-md hover:bg-[var(--ds-gray-100)] flex items-center justify-center text-[var(--ds-gray-500)] hover:text-red-600 transition-colors"
+                        className="w-8 h-8 rounded-md hover:bg-[rgba(255,91,79,0.1)] flex items-center justify-center text-[var(--ds-gray-500)] hover:text-red-600 transition-colors"
                         title={isVendor ? "Delete Vendor" : "Delete Client"}
                       >
                         <Trash2 className="w-4 h-4" />

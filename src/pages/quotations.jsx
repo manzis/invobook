@@ -342,7 +342,7 @@ const QuotationsPage = () => {
         <EmptyState onNewInvoiceClick={() => router.push('/new-invoice')} />
       ) : (
         <>
-          {showStats && <StatsCards invoices={invoices} currency={currency} />}
+          {showStats && <StatsCards invoices={invoices} currency={currency} isQuotation={true} />}
           {viewMode === 'list' ? (
             <InvoiceTable
               invoices={paginatedInvoices}

@@ -77,7 +77,7 @@ export async function getServerSideProps(context) {
 export default function ShareInvoicePage({ invoice }) {
   const [showPayForm, setShowPayForm] = useState(false);
   const [amount, setAmount] = useState(invoice.balanceDueRaw.toString());
-  const [method, setMethod] = useState('bank_transfer');
+  const [method, setMethod] = useState('qr_code');
   const [referenceNo, setReferenceNo] = useState('');
   const [proofImageUrl, setProofImageUrl] = useState('');
   const [note, setNote] = useState('');
@@ -122,6 +122,11 @@ export default function ShareInvoicePage({ invoice }) {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0) {
       setErrorMessage('Please enter a valid payment amount.');
+      return;
+    }
+
+    if (method === 'qr_code' && !proofImageUrl) {
+      setErrorMessage('Please upload a screenshot of your payment proof.');
       return;
     }
     
@@ -284,11 +289,7 @@ export default function ShareInvoicePage({ invoice }) {
                     className="ds-select w-full"
                     style={{ height: '38px', lineHeight: '38px' }}
                   >
-                    <option value="bank_transfer">Bank Transfer</option>
-                    <option value="qr_code">QR Code / Scan</option>
-                    <option value="esewa">eSewa</option>
-                    <option value="khalti">Khalti</option>
-                    <option value="other">Other</option>
+                    <option value="qr_code">Pay via QR</option>
                   </select>
                 </div>
 

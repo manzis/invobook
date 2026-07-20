@@ -44,6 +44,7 @@ const InvoiceTableRow = ({
   onSelectInvoice,
   onDeleteInvoice,
   onEditInvoice,
+  onViewInvoice,
   onUpdateInvoiceState,
   currency = 'USD',
   isQuotation = false,
@@ -191,8 +192,11 @@ const InvoiceTableRow = ({
     <>
       {isSharing && createPortal(<LoaderOverlay />, document.body)}
 
-      <tr>
-        <td className="whitespace-nowrap">
+      <tr 
+        onClick={() => onViewInvoice && onViewInvoice(invoice.id)}
+        className="cursor-pointer hover:bg-[var(--ds-gray-50)] transition-colors"
+      >
+        <td className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"
             checked={isSelected}
@@ -250,7 +254,7 @@ const InvoiceTableRow = ({
           </div>
         </td>
 
-        <td className="whitespace-nowrap text-right">
+        <td className="whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-end gap-1">
             <button
               type="button"

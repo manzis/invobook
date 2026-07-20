@@ -21,23 +21,71 @@ export default async function handler(req, res) {
 
     const items = await prisma.inventoryItem.findMany({
       where: { userId, isActive: true },
-      select: { rate: true, quantity: true, lowStock: true },
+      select: { id: true, name: true, rate: true, purchasePrice: true, quantity: true, lowStock: true },
     });
 
     const totalProducts = items.length;
     let totalStockValue = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
+    
+    let totalProfitMarginPercent = 0;
+    let marginCount = 0;
 
     for (const item of items) {
       const rate = parseFloat(item.rate || 0);
-      const qty = item.quantity || 0;
+      const qty = parseFloat(item.quantity || 0);
+      const cost = parseFloat(item.purchasePrice || 0);
+      
       totalStockValue += rate * qty;
 
       if (qty <= 0) {
         outOfStockCount++;
       } else if (qty <= item.lowStock) {
         lowStockCount++;
+      }
+      
+      if (rate > 0) {
+        const margin = ((rate - cost) / rate) * 100;
+        totalProfitMarginPercent += margin;
+        marginCount++;
+      }
+    }
+    
+    const averageProfitMargin = marginCount > 0 ? (totalProfitMarginPercent / marginCount).toFixed(1) + '%' : '0%';
+
+    // Top Selling Product
+    const sales = await prisma.invoiceItem.groupBy({
+      by: ['inventoryItemId'],
+      where: {
+        invoice: {
+          userId: userId,
+          type: 'SALES',
+          status: { not: 'DRAFT' },
+        },
+        inventoryItemId: { not: null },
+      },
+      _sum: {
+        quantity: true,
+      },
+      orderBy: {
+        _sum: {
+          quantity: 'desc'
+        }
+      },
+      take: 1
+    });
+
+    let topProductStr = 'None';
+    if (sales.length > 0 && sales[0].inventoryItemId) {
+      const topItemId = sales[0].inventoryItemId;
+      const qtySold = sales[0]._sum.quantity || 0;
+      let topProduct = items.find(i => i.id === topItemId);
+      if (!topProduct) {
+         topProduct = await prisma.inventoryItem.findUnique({ where: { id: topItemId } });
+      }
+      if (topProduct) {
+         topProductStr = `${topProduct.name} (${qtySold})`;
       }
     }
 
@@ -70,6 +118,8 @@ export default async function handler(req, res) {
       totalStockValue: stockValueDisplay,
       lowStockCount,
       outOfStockCount,
+      averageProfitMargin,
+      topProductStr
     });
 
   } catch (error) {

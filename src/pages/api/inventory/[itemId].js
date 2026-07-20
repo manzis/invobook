@@ -15,18 +15,84 @@ export default async function handler(req, res) {
     const userId = decoded.userId;
     const { itemId } = req.query;
 
-    // Verify the item belongs to this user
-    const existingItem = await prisma.inventoryItem.findFirst({
+    // --- GET: Single item with Analytics ---
+    if (req.method === 'GET') {
+      const existingItem = await prisma.inventoryItem.findFirst({
+        where: { id: itemId, userId },
+        include: {
+          invoiceItems: {
+            include: {
+              invoice: {
+                include: {
+                  client: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!existingItem) {
+        return res.status(404).json({ message: 'Inventory item not found.' });
+      }
+
+      // Compute analytics
+      const salesItems = existingItem.invoiceItems.filter(item => item.invoice && item.invoice.type === 'SALES');
+      const totalSold = salesItems.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
+      
+      const uniqueBuyersMap = new Map();
+      const recentInvoices = [];
+
+      salesItems.forEach(item => {
+        const inv = item.invoice;
+        recentInvoices.push({
+          id: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          date: inv.date,
+          status: inv.status,
+          quantitySold: parseFloat(item.quantity) || 0,
+          amount: parseFloat(item.amount) || 0,
+          clientName: inv.client?.name || 'Unknown'
+        });
+
+        if (inv.client) {
+          if (!uniqueBuyersMap.has(inv.client.id)) {
+            uniqueBuyersMap.set(inv.client.id, {
+              id: inv.client.id,
+              name: inv.client.name,
+              totalQuantity: 0,
+              totalAmount: 0
+            });
+          }
+          const buyer = uniqueBuyersMap.get(inv.client.id);
+          buyer.totalQuantity += parseFloat(item.quantity) || 0;
+          buyer.totalAmount += parseFloat(item.amount) || 0;
+        }
+      });
+
+      // Sort invoices by date desc
+      recentInvoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const analytics = {
+        totalSold,
+        recentInvoices,
+        uniqueBuyers: Array.from(uniqueBuyersMap.values()).sort((a, b) => b.totalQuantity - a.totalQuantity)
+      };
+
+      // Exclude the raw invoiceItems to save payload size
+      const { invoiceItems, ...itemData } = existingItem;
+      const responseData = { ...itemData, analytics };
+
+      return res.status(200).json(JSON.parse(JSON.stringify(responseData)));
+    }
+
+    // Verify the item exists for PUT/DELETE
+    const exists = await prisma.inventoryItem.findFirst({
       where: { id: itemId, userId },
     });
 
-    if (!existingItem) {
+    if (!exists) {
       return res.status(404).json({ message: 'Inventory item not found.' });
-    }
-
-    // --- GET: Single item ---
-    if (req.method === 'GET') {
-      return res.status(200).json(JSON.parse(JSON.stringify(existingItem)));
     }
 
     // --- PUT: Update item ---

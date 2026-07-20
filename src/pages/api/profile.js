@@ -3,6 +3,14 @@ import prisma from '../../lib/prisma';
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 export default async function handler(req, res) {
   const { authToken } = req.cookies;
 

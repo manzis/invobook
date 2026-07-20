@@ -16,7 +16,10 @@ const ClientCard = ({ client, onDelete, onEdit, isVendor }) => {
     client.status === 'active' ? 'ds-status ds-status-paid' : 'ds-status ds-status-draft';
 
   return (
-    <div className="ds-card flex flex-col">
+    <div 
+      className="ds-card flex flex-col cursor-pointer hover:border-[var(--ds-gray-200)] transition-colors"
+      onClick={onEdit}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 ds-surface-muted rounded-[var(--ds-radius-button)] flex items-center justify-center">
@@ -67,13 +70,7 @@ const ClientCard = ({ client, onDelete, onEdit, isVendor }) => {
             {isVendor ? 'Last purchase:' : 'Last invoice:'}{' '}
             {client.lastInvoice ? new Date(client.lastInvoice).toLocaleDateString() : 'N/A'}
           </span>
-          <div className="flex items-center gap-1">
-            <button type="button" className="ds-icon-btn" aria-label={isVendor ? "View vendor" : "View client"}>
-              <Eye className="w-4 h-4" />
-            </button>
-            <button type="button" onClick={onEdit} className="ds-icon-btn" aria-label={isVendor ? "Edit vendor" : "Edit client"}>
-              <Edit className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => onDelete()}

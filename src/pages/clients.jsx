@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import AddClientModal from '../components/AddClientModal';
+import ClientDrawer from '../components/clients/ClientDrawer';
 import ClientStats from '../components/clients/ClientStats';
 import ClientGrid from '../components/clients/ClientGrid';
 import ClientTable from '../components/clients/ClientTable';
@@ -53,7 +53,6 @@ const ClientsPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clientToEdit, setClientToEdit] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const router = useRouter(); 
   
@@ -138,41 +137,6 @@ const ClientsPage = () => {
     setClientToEdit(null); // Clear client data on close
   };
 
-  const handleSaveClient = async (formData, clientId) => {
-    setIsSubmitting(true);
-    const isEditMode = Boolean(clientId);
-    const url = isEditMode ? `/api/clients/${clientId}` : '/api/clients';
-    const method = isEditMode ? 'PUT' : 'POST';
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        toast(errorData.message);
-        return; 
-      }
-
-      const result = await res.json();
-
-      if (isEditMode) {
-        setClients(prev => prev.map(c => (c.id === clientId ? result : c)));
-      } else {
-        setClients(prev => [result, ...prev]);
-      }
-      
-      handleCloseModal();
-    } catch (error) {
-      console.error("Save Client Error:", error);
-      toast("An unexpected error occurred. Please check your connection and try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleDeleteClient = async (clientId) => {
     if (!window.confirm("Are you sure you want to delete this client? This action cannot be undone.")) {
@@ -319,12 +283,18 @@ const ClientsPage = () => {
       )}
       </div>
 
-      <AddClientModal 
+      <ClientDrawer 
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onSave={handleSaveClient}
-        clientToEdit={clientToEdit}
-        isSubmitting={isSubmitting}
+        onSuccess={(itemData, isEdit) => {
+          if (isEdit) {
+            setClients(prev => prev.map(c => (c.id === itemData.id ? itemData : c)));
+          } else {
+            setClients(prev => [itemData, ...prev]);
+          }
+        }}
+        client={clientToEdit}
+        currency={currency}
       />
     </div>
   );

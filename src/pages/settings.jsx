@@ -91,42 +91,31 @@ const SettingsPage = () => {
     let profilePayload = { ...profileData };
     let invoicePayload = { ...invoiceSettings };
 
+    const toBase64 = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+
     try {
       if (profilePayload.logoFile) {
-        setStatusMessage('Uploading logo...');
-
+        setStatusMessage('Encoding logo...');
         const file = profilePayload.logoFile;
-        const response = await fetch(
-          `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`,
-          { method: 'POST', body: file }
-        );
-
-        const newBlob = await response.json();
-        if (!response.ok) {
-          throw new Error(newBlob.message || 'Logo upload failed.');
-        }
-
-        profilePayload.logoUrl = newBlob.url;
+        const base64 = await toBase64(file);
+        
+        // Save base64 string directly to the database instead of external storage
+        profilePayload.logoUrl = base64;
       }
 
-
       // --- Step 2: NEW - Handle Payment Image (QR Code) Upload ---
-      // This block checks if a new payment image file has been selected.
       if (invoicePayload.paymentImageFile) {
-        setStatusMessage('Uploading payment image...');
+        setStatusMessage('Encoding payment image...');
         const file = invoicePayload.paymentImageFile;
+        const base64 = await toBase64(file);
 
-        // We reuse the same generic upload API
-        const response = await fetch(
-          `/api/avatar-upload?filename=${encodeURIComponent(file.name)}`,
-          { method: 'POST', body: file }
-        );
-
-        const newBlob = await response.json();
-        if (!response.ok) throw new Error(newBlob.message || 'Payment image upload failed.');
-
-        // Set the returned URL on the payload that will be saved to the database.
-        invoicePayload.paymentImageUrl = newBlob.url;
+        // Save base64 string directly to the database instead of external storage
+        invoicePayload.paymentImageUrl = base64;
       }
 
       // Step 3: Clean up temporary file objects from the payloads

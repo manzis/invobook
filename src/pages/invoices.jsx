@@ -9,6 +9,7 @@ import InvoiceTable from '../components/Invoices/InvoiceTable';
 import InvoiceGrid from '../components/Invoices/InvoiceGrid';
 import StatsCards from '../components/Invoices/StatsCards';
 import EmptyState from '../components/Invoices/EmptyState';
+import InvoiceDrawer from '../components/Invoices/InvoiceDrawer';
 import { useToast } from '../context/ToastContext';
 
 const InvoicesStatsSkeleton = () => (
@@ -75,6 +76,10 @@ const InvoicesPage = () => {
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+
+  // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerInvoiceId, setDrawerInvoiceId] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -228,6 +233,16 @@ const InvoicesPage = () => {
     router.push(`/edit-invoice/${invoiceId}`);
   }, [router]);
 
+  const handleOpenDrawer = useCallback((invoiceId) => {
+    setDrawerInvoiceId(invoiceId);
+    setIsDrawerOpen(true);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setIsDrawerOpen(false);
+    setDrawerInvoiceId(null);
+  }, []);
+
   const handleUpdateInvoiceState = useCallback((updatedInvoice) => {
     setInvoices(currentInvoices =>
       currentInvoices.map(inv =>
@@ -340,6 +355,7 @@ const InvoicesPage = () => {
               onDeleteInvoice={handleDeleteInvoice}
               onDownloadPDF={handleDownloadPDF}
               onEditInvoice={handleInvoiceEdit}
+              onViewInvoice={handleOpenDrawer}
               onUpdateInvoiceState={handleUpdateInvoiceState}
               currency={currency}
             />
@@ -351,6 +367,7 @@ const InvoicesPage = () => {
               onDeleteInvoice={handleDeleteInvoice}
               onMarkAsPaid={handleMarkAsPaid}
               onDownloadPDF={handleDownloadPDF}
+              onViewInvoice={handleOpenDrawer}
               onUpdateInvoiceState={handleUpdateInvoiceState}
             />
           )}
@@ -406,6 +423,15 @@ const InvoicesPage = () => {
         </>
       )}
       </div>
+
+      <InvoiceDrawer 
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        invoiceId={drawerInvoiceId}
+        onEditInvoice={handleInvoiceEdit}
+        onDownloadPDF={handleDownloadPDF}
+        currency={currency}
+      />
     </div>
   );
 };

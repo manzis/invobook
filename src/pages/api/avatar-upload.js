@@ -1,11 +1,10 @@
-// /pages/api/avatar-upload.js (Corrected and Final)
-
 import { put } from '@vercel/blob';
 
-// Disable the default Next.js body parser to handle the raw file stream
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
   },
 };
 
@@ -15,14 +14,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  // The filename is passed as a query parameter from the frontend
-  const filename = req.query.filename || 'untitled-file';
-
   try {
-    // The `req` object itself is the stream in the Pages Router
-    const blob = await put(filename, req, {
+    const { filename, base64 } = req.body;
+    
+    if (!filename || !base64) {
+      return res.status(400).json({ message: 'Missing file data (filename or base64)' });
+    }
+
+    // Remove the data URL scheme (e.g., "data:image/png;base64,")
+    const base64Data = base64.split(',')[1];
+    
+    if (!base64Data) {
+      return res.status(400).json({ message: 'Invalid base64 string' });
+    }
+
+    // Convert base64 string to a Buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Upload the buffer to Vercel Blob
+    const blob = await put(filename, buffer, {
       access: 'public',
-      
       addRandomSuffix: true, 
     });
 

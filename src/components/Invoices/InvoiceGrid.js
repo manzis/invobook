@@ -10,6 +10,7 @@ const InvoiceGrid = ({
   onMarkAsPaid,
   onDownloadPDF,
   onUpdateInvoiceState,
+  onViewInvoice,
   isQuotation,
   isPurchase,
   onConvert
@@ -52,14 +53,19 @@ const InvoiceGrid = ({
         if (invoice.status === 'PARTIALLY_PAID') statusClass = 'bg-blue-50 text-blue-700 border-blue-100';
 
         return (
-          <div key={invoice.id} className="bg-white rounded-[12px] border border-[var(--ds-gray-100)] p-5 flex flex-col group relative">
+          <div 
+            key={invoice.id} 
+            className="bg-white rounded-[12px] border border-[var(--ds-gray-100)] p-5 flex flex-col group relative cursor-pointer hover:border-[var(--ds-gray-200)] transition-colors hover:shadow-sm"
+            onClick={() => onViewInvoice && onViewInvoice(invoice.id)}
+          >
 
             {/* Top Bar */}
             <div className="flex justify-between items-start mb-5">
               <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${statusClass}`}>
                 {invoice.status || 'DRAFT'}
               </span>
-              <InvoiceActionMenu
+              <div onClick={(e) => e.stopPropagation()}>
+                <InvoiceActionMenu
                 invoice={invoice}
                 currency={currency}
                 onEditInvoice={onEditInvoice}
@@ -70,6 +76,7 @@ const InvoiceGrid = ({
                 isPurchase={isPurchase}
                 onConvert={onConvert}
               />
+              </div>
             </div>
 
             {/* Invoice Number, Date & Total */}

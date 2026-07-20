@@ -23,6 +23,15 @@ export default async function handler(req, res) {
       return res.status(404).json({ message: 'Invoice not found or you do not have permission.' });
     }
 
+    // --- HANDLE GET REQUEST ---
+    if (req.method === 'GET') {
+      const fullInvoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, userId: userId },
+        include: { client: true, items: true },
+      });
+      return res.status(200).json(fullInvoice);
+    }
+
     if (req.method === 'DELETE') {
       await prisma.invoice.delete({ where: { id: invoiceId } });
       return res.status(204).end();
@@ -121,7 +130,7 @@ export default async function handler(req, res) {
       }
     }
 
-    res.setHeader('Allow', ['DELETE', 'PATCH']);
+    res.setHeader('Allow', ['GET', 'DELETE', 'PATCH']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
     
   } catch (error) {

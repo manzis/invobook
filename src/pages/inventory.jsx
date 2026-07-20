@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { Plus, Search, Filter, Box, AlertCircle, Edit, Trash2 } from 'lucide-react';
-import InventoryModal from '../components/inventory/InventoryModal';
+import InventoryItemDrawer from '../components/inventory/InventoryItemDrawer';
 import InventoryStatsCards from '../components/inventory/InventoryStatsCards';
 import PurchaseInvoicesList from '../components/inventory/PurchaseInvoicesList';
 import { useToast } from '../context/ToastContext';
@@ -96,7 +96,7 @@ const InventoryPage = () => {
           )}
         </div>
 
-        <div className="flex border-b border-[var(--ds-gray-200)] mb-6">
+        <div className="flex overflow-x-auto whitespace-nowrap border-b border-[var(--ds-gray-200)] mb-6 scrollbar-hide">
           <button
             onClick={() => setActiveTab('products')}
             className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
@@ -181,7 +181,11 @@ const InventoryPage = () => {
                   </tr>
                 ) : (
                   items.map(item => (
-                    <tr key={item.id} className="group hover:bg-[var(--ds-gray-50)] transition-colors">
+                    <tr 
+                      key={item.id} 
+                      className="group hover:bg-[var(--ds-gray-50)] transition-colors cursor-pointer"
+                      onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
+                    >
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-[var(--ds-radius-button)] bg-[var(--ds-gray-100)] flex items-center justify-center shrink-0">
@@ -211,14 +215,14 @@ const InventoryPage = () => {
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
-                            onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
+                            onClick={(e) => { e.stopPropagation(); setEditingItem(item); setIsModalOpen(true); }}
                             className="ds-icon-btn text-[var(--ds-gray-500)] hover:text-[var(--ds-black)]"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => handleDelete(item.id)}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
                             className="ds-icon-btn text-[var(--ds-gray-500)] hover:text-[var(--ds-ship-red)] hover:bg-[rgba(255,91,79,0.1)]"
                             title="Delete"
                           >
@@ -234,7 +238,7 @@ const InventoryPage = () => {
           </div>
         </div>
 
-        <InventoryModal 
+        <InventoryItemDrawer 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
           item={editingItem}

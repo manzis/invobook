@@ -14,7 +14,7 @@ const STAT_ICONS = {
 };
 
 const StatCard = ({ title, value, variant }) => {
-  const { icon: Icon, color } = STAT_ICONS[variant];
+  const { icon: Icon, color } = STAT_ICONS[variant] || STAT_ICONS.count;
 
   return (
     <div className="ds-card-static flex flex-col">
@@ -29,24 +29,60 @@ const StatCard = ({ title, value, variant }) => {
   );
 };
 
-const StatsCards = ({ invoices = [], currency = 'USD' }) => {
+const StatsCards = ({ invoices = [], currency = 'USD', isQuotation = false, isPurchase = false }) => {
   const stats = useMemo(() => {
     const format = (amount) => formatCurrency(amount, currency);
 
     const totalBilledAmount = invoices.reduce((sum, inv) => sum + parseFloat(inv.total || 0), 0);
     const totalAmountPaid = invoices.reduce((sum, inv) => sum + parseFloat(inv.amountPaid || 0), 0);
     const totalBalanceDue = invoices.reduce((sum, inv) => sum + parseFloat(inv.balanceDue || 0), 0);
+    
+    // For normal invoices and purchases
     const overdueAmount = invoices
       .filter((inv) => inv.status === 'OVERDUE')
       .reduce((sum, inv) => sum + parseFloat(inv.balanceDue || 0), 0);
+      
+    // For quotations
+    const pendingAmount = invoices
+      .filter((inv) => inv.status === 'PENDING')
+      .reduce((sum, inv) => sum + parseFloat(inv.total || 0), 0);
+      
+    const approvedAmount = invoices
+      .filter((inv) => inv.status === 'PAID') // Assuming PAID is used for approved quotations
+      .reduce((sum, inv) => sum + parseFloat(inv.total || 0), 0);
 
     return {
       totalBilledAmount: format(totalBilledAmount),
       totalAmountPaid: format(totalAmountPaid),
       totalBalanceDue: format(totalBalanceDue),
       overdueAmount: format(overdueAmount),
+      pendingAmount: format(pendingAmount),
+      approvedAmount: format(approvedAmount)
     };
-  }, [invoices]);
+  }, [invoices, currency]);
+
+  if (isQuotation) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard title="Total Quotations" value={invoices.length} variant="count" />
+        <StatCard title="Total Quoted" value={stats.totalBilledAmount} variant="billed" />
+        <StatCard title="Pending" value={stats.pendingAmount} variant="outstanding" />
+        <StatCard title="Approved" value={stats.approvedAmount} variant="collected" />
+      </div>
+    );
+  }
+  
+  if (isPurchase) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+        <StatCard title="Total Purchases" value={invoices.length} variant="count" />
+        <StatCard title="Total Expense" value={stats.totalBilledAmount} variant="billed" />
+        <StatCard title="Total Paid" value={stats.totalAmountPaid} variant="collected" />
+        <StatCard title="Balance Due" value={stats.totalBalanceDue} variant="outstanding" />
+        <StatCard title="Overdue" value={stats.overdueAmount} variant="overdue" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">

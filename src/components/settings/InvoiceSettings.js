@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
-import { Upload, Image } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Upload, Image, X, Download } from 'lucide-react';
 
 const InvoiceSettings = ({ data, setData }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -40,6 +47,36 @@ const InvoiceSettings = ({ data, setData }) => {
 
   return (
     <div className="ds-card-static">
+      {/* Full Screen Image Modal using createPortal to escape parent layout constraints */}
+      {isFullScreen && imageSource && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 p-4" style={{ position: 'fixed' }}>
+          <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center">
+            <div className="absolute top-0 right-0 flex gap-4 p-4 z-10">
+              <a
+                href={imageSource}
+                download="Payment_QR_Code"
+                className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <Download className="w-4 h-4" /> Save
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsFullScreen(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-colors shadow-lg"
+              >
+                <X className="w-4 h-4" /> Close
+              </button>
+            </div>
+            <img
+              src={imageSource}
+              alt="Payment QR Code Full Screen"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl bg-white/5 p-2"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+
       <h3 className="ds-card-title text-lg mb-6">Invoice Defaults & Content</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -153,7 +190,11 @@ const InvoiceSettings = ({ data, setData }) => {
         <div className="mt-6">
           <label className="ds-form-label">Payment Image (QR Code)</label>
           <div className="flex items-center gap-4">
-            <div className="w-24 h-24 ds-surface-muted rounded-[var(--ds-radius-button)] flex items-center justify-center overflow-hidden">
+            <div 
+              className={`w-24 h-24 ds-surface-muted rounded-[var(--ds-radius-button)] flex items-center justify-center overflow-hidden border border-[var(--ds-gray-200)] ${imageSource ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+              onClick={() => imageSource && setIsFullScreen(true)}
+              title={imageSource ? 'Click to view full screen' : ''}
+            >
               {imageSource ? (
                 <img
                   src={imageSource}

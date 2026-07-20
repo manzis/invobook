@@ -362,7 +362,8 @@ const handleInvoiceDataChange = (field, value) => {
           onTypeChange={setInvoiceType}
           onCreateInvoice={handleCreateInvoice} 
           onPreview={() => setIsPreviewOpen(true)}
-          isSaving={isSaving} />
+          isSaving={isSaving}
+          inventoryEnabled={inventoryEnabled} />
 
         <div className="ds-page-inner">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
