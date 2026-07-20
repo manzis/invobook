@@ -132,11 +132,22 @@ const InvoiceActionMenu = ({
 
     if (method === 'whatsapp') {
       const cleanPhone = clientPhone.replace(/[\s\-()]/g, '');
+      let formattedPhone = cleanPhone;
+      
+      if (formattedPhone) {
+        // Remove '+' if present because wa.me expects numbers without '+'
+        formattedPhone = formattedPhone.replace('+', '');
+        // If it's a 10-digit number (standard Nepal mobile), prepend 977 automatically
+        if (formattedPhone.length === 10) {
+          formattedPhone = `977${formattedPhone}`;
+        }
+      }
+
       const message = encodeURIComponent(
         `Hi,\n\nPlease find your invoice *${invNumber}* for *${amount}*.\n\n📅 Due Date: ${dueDate}\n📄 Download: ${pdfUrl}\n\nThank you!`
       );
-      const whatsappUrl = cleanPhone
-        ? `https://wa.me/${cleanPhone}?text=${message}`
+      const whatsappUrl = formattedPhone
+        ? `https://wa.me/${formattedPhone}?text=${message}`
         : `https://wa.me/?text=${message}`;
       window.open(whatsappUrl, '_blank');
     } else if (method === 'email') {

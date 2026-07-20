@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Head from 'next/head';
 import prisma from '../../lib/prisma';
-import { Download, Calendar, FileText, CreditCard, UploadCloud, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Download, Calendar, FileText, CreditCard, UploadCloud, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react';
 
 export async function getServerSideProps(context) {
   const { invoiceId } = context.params;
@@ -87,6 +88,13 @@ export default function ShareInvoicePage({ invoice }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const formattedDate = new Date(invoice.date).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -102,18 +110,18 @@ export default function ShareInvoicePage({ invoice }) {
     setIsUploading(true);
     setUploadError('');
     try {
-      const response = await fetch(`/api/avatar-upload?filename=${encodeURIComponent(file.name)}`, {
-        method: 'POST',
-        body: file,
-      });
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-      const data = await response.json();
-      setProofImageUrl(data.url);
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        setProofImageUrl(reader.result);
+        setIsUploading(false);
+      };
+      reader.onerror = () => {
+        setUploadError('Failed to encode image');
+        setIsUploading(false);
+      };
     } catch (err) {
       setUploadError('Failed to upload screenshot. Please try again.');
-    } finally {
       setIsUploading(false);
     }
   };
@@ -179,6 +187,36 @@ export default function ShareInvoicePage({ invoice }) {
         <meta name="twitter:description" content={ogDescription} />
         <meta name="twitter:image" content={ogImage} />
       </Head>
+
+      {/* Full Screen Image Modal using createPortal to escape parent layout constraints */}
+      {isFullScreen && invoice.paymentImageUrl && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 p-4" style={{ position: 'fixed' }}>
+          <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center">
+            <div className="absolute top-0 right-0 flex gap-4 p-4 z-10">
+              <a
+                href={invoice.paymentImageUrl}
+                download="Payment_QR_Code"
+                className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <Download className="w-4 h-4" /> Save
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsFullScreen(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-colors shadow-lg"
+              >
+                <X className="w-4 h-4" /> Close
+              </button>
+            </div>
+            <img
+              src={invoice.paymentImageUrl}
+              alt="Payment QR Code Full Screen"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl bg-white/5 p-2"
+            />
+          </div>
+        </div>,
+        document.body
+      )}
 
       <div className="min-h-screen bg-[var(--ds-gray-50)] flex flex-col items-center justify-center p-6" style={{ fontFamily: 'var(--ds-font-sans)' }}>
         <div className="w-full max-w-[480px] bg-[var(--ds-white)] rounded-[var(--ds-radius-card)] overflow-hidden" style={{ boxShadow: 'var(--ds-shadow-card-full)' }}>
@@ -257,13 +295,19 @@ export default function ShareInvoicePage({ invoice }) {
                       </p>
                     )}
                     {invoice.paymentImageUrl && (
-                      <div className="mt-4 flex flex-col items-center justify-center p-3 bg-[var(--ds-white)] rounded-[var(--ds-radius-button)] border border-[var(--ds-gray-100)] max-w-[200px] mx-auto">
+                      <div 
+                        className="mt-4 flex flex-col items-center justify-center p-3 bg-[var(--ds-white)] rounded-[var(--ds-radius-button)] border border-[var(--ds-gray-100)] max-w-[200px] mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setIsFullScreen(true)}
+                        title="Click to view full screen"
+                      >
                         <img
                           src={invoice.paymentImageUrl}
                           alt="Payment QR Code"
                           className="w-full h-auto object-contain rounded"
                         />
-                        <span className="text-[10px] text-[var(--ds-gray-400)] font-medium tracking-wider uppercase mt-2">Scan to Pay</span>
+                        <span className="text-[10px] text-[var(--ds-gray-400)] font-medium tracking-wider uppercase mt-2 flex items-center gap-1">
+                          Scan to Pay
+                        </span>
                       </div>
                     )}
                   </div>
