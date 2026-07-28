@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, SlidersHorizontal, LayoutGrid, List, ChevronDown, X } from 'lucide-react';
 
 const SubNav = ({
+  leftContent,
   searchTerm,
   onSearchChange,
   searchPlaceholder = "Search...",
@@ -17,6 +18,11 @@ const SubNav = ({
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      {leftContent && (
+        <div className="w-full sm:w-auto shrink-0">
+          {leftContent}
+        </div>
+      )}
       {/* Search Input */}
       <div className="relative w-full sm:flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ds-gray-400)] pointer-events-none" />

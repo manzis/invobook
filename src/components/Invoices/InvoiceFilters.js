@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { CheckCircle, Trash2, X, Check, Download } from 'lucide-react';
 import SubNav from '../ui/SubNav';
 
 const InvoiceFilters = ({
+  activeType,
   searchTerm,
   setSearchTerm,
   statusFilter,
@@ -25,8 +27,38 @@ const InvoiceFilters = ({
   setViewMode,
   onAddNewClick
 }) => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const currentTab = activeType || (router.pathname.includes('quotation') ? 'QUOTATION' : 'SALES');
+
+  const switcher = (
+    <div className="flex items-center border border-[var(--ds-gray-200)] rounded-md bg-[var(--ds-gray-100)] p-0.5 h-[36px] w-full sm:w-auto">
+      <button
+        type="button"
+        onClick={() => router.push('/invoices')}
+        className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center rounded-sm text-xs font-medium transition-all duration-150 ${
+          currentTab === 'SALES'
+            ? 'bg-white shadow-sm text-[var(--ds-black)] font-semibold'
+            : 'text-[var(--ds-gray-600)] hover:text-[var(--ds-black)]'
+        }`}
+      >
+        Sales Invoices
+      </button>
+      <button
+        type="button"
+        onClick={() => router.push('/quotations')}
+        className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center rounded-sm text-xs font-medium transition-all duration-150 ${
+          currentTab === 'QUOTATION'
+            ? 'bg-white shadow-sm text-[var(--ds-black)] font-semibold'
+            : 'text-[var(--ds-gray-600)] hover:text-[var(--ds-black)]'
+        }`}
+      >
+        Quotations
+      </button>
+    </div>
+  );
 
   // Click outside handler to close dropdown
   useEffect(() => {
@@ -60,6 +92,7 @@ const InvoiceFilters = ({
     <div className="w-full">
       <div className="relative" ref={dropdownRef}>
         <SubNav 
+          leftContent={switcher}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder="Search by invoice # or client..."
