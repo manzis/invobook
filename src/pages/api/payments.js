@@ -14,15 +14,43 @@ export default async function handler(req, res) {
     const decoded = verify(authToken, SECRET_KEY);
     const userId = decoded.userId;
 
-    // --- GET: List all payments for merchant's invoices ---
+    // --- GET: List all payments for merchant's invoices or fetch single proof ---
     if (req.method === 'GET') {
+      const { paymentId } = req.query;
+
+      // If specific payment requested, return only id and proofImageUrl
+      if (paymentId) {
+        const payment = await prisma.payment.findFirst({
+          where: {
+            id: String(paymentId),
+            invoice: { userId: userId },
+          },
+          select: {
+            id: true,
+            proofImageUrl: true,
+          },
+        });
+        if (!payment) return res.status(404).json({ message: 'Payment not found.' });
+        return res.status(200).json(payment);
+      }
+
+      // Otherwise fetch list WITHOUT multi-megabyte proofImageUrl
       const payments = await prisma.payment.findMany({
         where: {
           invoice: {
             userId: userId,
           },
         },
-        include: {
+        select: {
+          id: true,
+          amount: true,
+          method: true,
+          referenceNo: true,
+          status: true,
+          note: true,
+          createdAt: true,
+          updatedAt: true,
+          invoiceId: true,
           invoice: {
             select: {
               invoiceNumber: true,
@@ -42,7 +70,26 @@ export default async function handler(req, res) {
         },
       });
 
-      return res.status(200).json(payments);
+      // Check which payments have proof images without transferring the base64 strings
+      const paymentIds = payments.map(p => p.id);
+      let proofIds = new Set();
+      if (paymentIds.length > 0) {
+        const paymentsWithProof = await prisma.payment.findMany({
+          where: {
+            id: { in: paymentIds },
+            proofImageUrl: { not: null },
+          },
+          select: { id: true },
+        });
+        proofIds = new Set(paymentsWithProof.map(p => p.id));
+      }
+
+      const formattedPayments = payments.map(p => ({
+        ...p,
+        hasProofImage: proofIds.has(p.id),
+      }));
+
+      return res.status(200).json(formattedPayments);
     }
 
     // --- PATCH: Verify or Reject a payment ---

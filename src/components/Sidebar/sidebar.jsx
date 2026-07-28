@@ -66,13 +66,13 @@ export default function Sidebar() {
     if (!user || loading) return;
     
     const fetchPendingCount = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       try {
-        const res = await fetch('/api/payments');
+        const res = await fetch('/api/payments/pending-count');
         if (res.ok) {
-          const payments = await res.json();
-          if (Array.isArray(payments)) {
-            const count = payments.filter(p => p.status === 'pending').length;
-            setPendingCount(count);
+          const data = await res.json();
+          if (data && typeof data.count === 'number') {
+            setPendingCount(data.count);
           }
         }
       } catch (err) {
@@ -81,7 +81,7 @@ export default function Sidebar() {
     };
 
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 10000);
+    const interval = setInterval(fetchPendingCount, 30000);
     return () => clearInterval(interval);
   }, [user, loading]);
 

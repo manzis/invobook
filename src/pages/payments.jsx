@@ -77,6 +77,33 @@ const PaymentsPage = () => {
   const [currency, setCurrency] = useState('NPR');
   
   const [selectedProofUrl, setSelectedProofUrl] = useState(null);
+  const [isFetchingProof, setIsFetchingProof] = useState(false);
+
+  const handleViewProof = async (paymentId, existingUrl) => {
+    if (existingUrl) {
+      setSelectedProofUrl(existingUrl);
+      return;
+    }
+    setIsFetchingProof(true);
+    try {
+      const res = await fetch(`/api/payments?paymentId=${paymentId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.proofImageUrl) {
+          setSelectedProofUrl(data.proofImageUrl);
+        } else {
+          toast('No receipt image found for this payment.');
+        }
+      } else {
+        toast('Failed to load receipt image.');
+      }
+    } catch (err) {
+      console.error('Error fetching proof:', err);
+      toast('Failed to load receipt image.');
+    } finally {
+      setIsFetchingProof(false);
+    }
+  };
   
   // Verification states
   const [actioningPaymentId, setActioningPaymentId] = useState(null);
@@ -415,13 +442,14 @@ const PaymentsPage = () => {
                       </td>
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {payment.proofImageUrl && (
+                          {(payment.hasProofImage || payment.proofImageUrl) && (
                             <button
-                              onClick={() => setSelectedProofUrl(payment.proofImageUrl)}
+                              onClick={() => handleViewProof(payment.id, payment.proofImageUrl)}
+                              disabled={isFetchingProof}
                               className="ds-icon-btn"
                               title="View Proof Receipt"
                             >
-                              <Eye className="w-4 h-4" />
+                              {isFetchingProof ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             </button>
                           )}
                           
