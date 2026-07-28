@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { CheckCircle, Trash2, X, Check, Download } from 'lucide-react';
+import { CheckCircle, Trash2, X, Check, Download, ChevronDown } from 'lucide-react';
 import SubNav from '../ui/SubNav';
 
 const InvoiceFilters = ({
@@ -29,34 +29,61 @@ const InvoiceFilters = ({
 }) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isTypeOpen, setIsTypeOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const typeDropdownRef = useRef(null);
 
   const currentTab = activeType || (router.pathname.includes('quotation') ? 'QUOTATION' : 'SALES');
 
   const switcher = (
-    <div className="flex items-center border border-[var(--ds-gray-200)] rounded-md bg-[var(--ds-gray-100)] p-0.5 h-[36px] w-full sm:w-auto">
+    <div className="relative" ref={typeDropdownRef}>
       <button
         type="button"
-        onClick={() => router.push('/invoices')}
-        className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center rounded-sm text-xs font-medium transition-all duration-150 ${
-          currentTab === 'SALES'
-            ? 'bg-white shadow-sm text-[var(--ds-black)] font-semibold'
-            : 'text-[var(--ds-gray-600)] hover:text-[var(--ds-black)]'
-        }`}
+        onClick={() => setIsTypeOpen(!isTypeOpen)}
+        className="h-[36px] px-2.5 sm:px-3 flex items-center gap-1.5 border border-[var(--ds-gray-100)] hover:bg-[var(--ds-gray-50)] bg-white rounded-md text-xs font-medium text-[var(--ds-gray-700)] hover:text-[var(--ds-black)] transition-colors shadow-sm"
+        title="Switch Invoice Type"
       >
-        Sales Invoices
+        <span>{currentTab === 'QUOTATION' ? 'Quotations' : 'Sales Invoices'}</span>
+        <ChevronDown className="w-3.5 h-3.5 text-[var(--ds-gray-400)]" />
       </button>
-      <button
-        type="button"
-        onClick={() => router.push('/quotations')}
-        className={`flex-1 sm:flex-initial h-full px-3.5 flex items-center justify-center rounded-sm text-xs font-medium transition-all duration-150 ${
-          currentTab === 'QUOTATION'
-            ? 'bg-white shadow-sm text-[var(--ds-black)] font-semibold'
-            : 'text-[var(--ds-gray-600)] hover:text-[var(--ds-black)]'
-        }`}
-      >
-        Quotations
-      </button>
+
+      {isTypeOpen && (
+        <div
+          className="absolute left-0 top-[42px] w-40 ds-dropdown-content animate-page-in bg-white border border-[var(--ds-gray-100)] rounded-md py-1 shadow-lg z-50"
+          style={{ boxShadow: 'var(--ds-shadow-card-full)' }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setIsTypeOpen(false);
+              router.push('/invoices');
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors ${
+              currentTab === 'SALES'
+                ? 'bg-[var(--ds-gray-50)] text-[var(--ds-black)] font-semibold'
+                : 'text-[var(--ds-gray-600)] hover:bg-[var(--ds-gray-50)] hover:text-[var(--ds-black)]'
+            }`}
+          >
+            <span>Sales Invoices</span>
+            {currentTab === 'SALES' && <Check className="w-3.5 h-3.5 text-blue-600" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsTypeOpen(false);
+              router.push('/quotations');
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors ${
+              currentTab === 'QUOTATION'
+                ? 'bg-[var(--ds-gray-50)] text-[var(--ds-black)] font-semibold'
+                : 'text-[var(--ds-gray-600)] hover:bg-[var(--ds-gray-50)] hover:text-[var(--ds-black)]'
+            }`}
+          >
+            <span>Quotations</span>
+            {currentTab === 'QUOTATION' && <Check className="w-3.5 h-3.5 text-blue-600" />}
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -65,6 +92,9 @@ const InvoiceFilters = ({
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
+      }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
+        setIsTypeOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -92,7 +122,7 @@ const InvoiceFilters = ({
     <div className="w-full">
       <div className="relative" ref={dropdownRef}>
         <SubNav 
-          leftContent={switcher}
+          typeSwitcher={switcher}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder="Search by invoice # or client..."
