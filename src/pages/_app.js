@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import LogoutLoader from '../components/logout'; // Import the new loader
 import { ToastProvider } from '../context/ToastContext';
 import { InventoryProvider } from '../context/InventoryContext';
+import { StatsProvider } from '../context/StatsContext';
 import '../styles/globals.css';
 
 const geistSans = Geist({
@@ -41,13 +42,15 @@ function MyApp({ Component, pageProps }) {
     <AuthProvider>
       <InventoryProvider>
         <ToastProvider>
-          <style dangerouslySetInnerHTML={{ __html: `
-            :root {
-              --font-geist-sans: ${geistSans.style.fontFamily};
-              --font-geist-mono: ${geistMono.style.fontFamily};
-            }
-          `}} />
-          <AppContent Component={Component} pageProps={pageProps} />
+          <StatsProvider>
+            <style dangerouslySetInnerHTML={{ __html: `
+              :root {
+                --font-geist-sans: ${geistSans.style.fontFamily};
+                --font-geist-mono: ${geistMono.style.fontFamily};
+              }
+            `}} />
+            <AppContent Component={Component} pageProps={pageProps} />
+          </StatsProvider>
         </ToastProvider>
       </InventoryProvider>
     </AuthProvider>

@@ -3,7 +3,7 @@
 // 1. Import useCallback
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { Eye, EyeOff } from 'lucide-react';
+import { useStats } from '../context/StatsContext';
 import InvoiceFilters from '../components/Invoices/InvoiceFilters';
 import InvoiceTable from '../components/Invoices/InvoiceTable';
 import InvoiceGrid from '../components/Invoices/InvoiceGrid';
@@ -69,7 +69,7 @@ const InvoicesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInvoices, setSelectedInvoices] = useState([]);
-  const [showStats, setShowStats] = useState(true);
+  const { showStats } = useStats();
   const [viewMode, setViewMode] = useState('list');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -86,11 +86,9 @@ const InvoicesPage = () => {
   const itemsPerPage = 10;
 
   // Initialize view mode based on screen size on client-side
-  // Initialize view mode and stats visibility based on screen size on client-side
   useEffect(() => {
     if (window.innerWidth < 768) {
       setViewMode('grid');
-      setShowStats(false);
     }
   }, []);
 
@@ -298,14 +296,6 @@ const InvoicesPage = () => {
               <h1 className="ds-section-title m-0">All Invoices</h1>
               <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>
             </div>
-            <button 
-              onClick={() => setShowStats(prev => !prev)} 
-              className="ds-btn-ghost gap-2 h-9 px-3 text-sm text-[var(--ds-gray-600)] hover:text-[var(--ds-black)] transition-colors"
-            >
-              {showStats ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span className="hidden sm:inline">{showStats ? 'Hide Stats' : 'Show Stats'}</span>
-              <span className="sm:hidden">{showStats ? 'Hide' : 'Show'}</span>
-            </button>
           </div>
 
           <InvoiceFilters
@@ -338,6 +328,13 @@ const InvoicesPage = () => {
       {isLoading ? (
         <>
           {showStats && <InvoicesStatsSkeleton />}
+          {showStats && (
+            <div className="mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-[var(--ds-black)] tracking-tight">
+                All Invoices
+              </h2>
+            </div>
+          )}
           <InvoicesTableSkeleton />
         </>
       ) : invoices.length === 0 ? (
@@ -345,6 +342,13 @@ const InvoicesPage = () => {
       ) : (
         <>
           {showStats && <StatsCards invoices={invoices} currency={currency} />}
+          {showStats && (
+            <div className="mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-[var(--ds-black)] tracking-tight">
+                All Invoices
+              </h2>
+            </div>
+          )}
           {viewMode === 'list' ? (
             <InvoiceTable
               invoices={paginatedInvoices}

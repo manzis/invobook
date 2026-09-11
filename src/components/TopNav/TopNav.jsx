@@ -14,10 +14,13 @@ import {
   HelpCircle,
   CheckCircle,
   Home,
-  X
+  X,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useToast } from '../../context/ToastContext';
+import { useStats } from '../../context/StatsContext';
 
 // Hook to detect clicking outside the dropdown container
 function useOutsideAlerter(ref, callback) {
@@ -35,6 +38,8 @@ function useOutsideAlerter(ref, callback) {
 export default function TopNav() {
   const router = useRouter();
   const { toast } = useToast();
+  const { showStats, toggleStats } = useStats();
+  const isInvoicePage = router.pathname === '/invoices';
   const [isOpen, setIsOpen] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [cacheStatus, setCacheStatus] = useState('Idle');
@@ -226,6 +231,23 @@ export default function TopNav() {
                     <Sliders className="w-4 h-4 mr-2.5 text-[var(--ds-gray-500)]" />
                     <span>Settings & Profile</span>
                   </Link>
+                  {isInvoicePage && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleStats();
+                        setIsOpen(false);
+                      }}
+                      className="ds-dropdown-item w-full text-left"
+                    >
+                      {showStats ? (
+                        <EyeOff className="w-4 h-4 mr-2.5 text-[var(--ds-gray-500)]" />
+                      ) : (
+                        <Eye className="w-4 h-4 mr-2.5 text-[var(--ds-gray-500)]" />
+                      )}
+                      <span>{showStats ? 'Hide Stats' : 'Show Stats'}</span>
+                    </button>
+                  )}
 
                   <div className="my-1 border-t border-[var(--ds-gray-100)]" />
 
