@@ -291,9 +291,9 @@ const InvoicesPage = () => {
 
   return (
     <div className="flex flex-col h-full w-full">
-      <div className="sticky top-0 z-[40] bg-white w-full pt-6 pb-2">
-        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 w-full">
-          <div className="flex justify-between items-center mb-6">
+      <div className="sticky top-0 z-[40] bg-white w-full pt-3 sm:pt-6 pb-2">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 w-full">
+          <div className="hidden sm:flex justify-between items-center mb-6">
             <div>
               <h1 className="ds-section-title m-0">All Invoices</h1>
               <p className="ds-page-subtitle m-0">Manage and track all your invoices</p>

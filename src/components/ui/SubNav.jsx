@@ -17,9 +17,9 @@ const SubNav = ({
   addNewLabel = "Add New..."
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
       {/* Search Input */}
-      <div className="relative w-full sm:flex-1">
+      <div className="relative w-full sm:flex-1 order-2 sm:order-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--ds-gray-400)] pointer-events-none" />
         <input
           type="text"
@@ -39,22 +39,23 @@ const SubNav = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+      <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto py-0.5 order-1 sm:order-2">
         {typeSwitcher && (
-          <div className="shrink-0">
+          <div className="flex-1 sm:flex-initial">
             {typeSwitcher}
           </div>
         )}
         {/* Filter Button */}
         {onFilterClick && (
           <button
+            type="button"
             onClick={onFilterClick}
-            className={`h-[36px] w-[36px] flex items-center justify-center border border-[var(--ds-gray-100)] rounded-md transition-colors relative ${
+            className={`h-[36px] w-[36px] min-w-[36px] shrink-0 flex items-center justify-center border border-[var(--ds-gray-100)] rounded-md transition-colors relative ${
               hasActiveFilters ? 'bg-[var(--ds-gray-100)]' : 'bg-white hover:bg-[var(--ds-gray-50)]'
             } text-[var(--ds-gray-600)]`}
             title="Filters"
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="w-4 h-4 shrink-0" />
             {hasActiveFilters && (
               <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-blue-600" />
             )}
@@ -63,10 +64,11 @@ const SubNav = ({
 
         {/* View Mode Toggles */}
         {onViewModeChange && (
-          <div className="flex items-center border border-[var(--ds-gray-100)] rounded-md bg-[var(--ds-gray-50)] p-0.5 h-[36px]">
+          <div className="shrink-0 flex items-center border border-[var(--ds-gray-100)] rounded-md bg-[var(--ds-gray-50)] p-0.5 h-[36px]">
             <button
+              type="button"
               onClick={() => onViewModeChange('grid')}
-              className={`h-full w-9 flex items-center justify-center rounded-sm transition-colors ${
+              className={`h-full w-8 sm:w-9 flex items-center justify-center rounded-sm transition-colors ${
                 viewMode === 'grid' 
                   ? 'bg-white shadow-sm text-[var(--ds-black)]' 
                   : 'text-[var(--ds-gray-500)] hover:text-[var(--ds-gray-800)]'
@@ -76,8 +78,9 @@ const SubNav = ({
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => onViewModeChange('list')}
-              className={`h-full w-9 flex items-center justify-center rounded-sm transition-colors ${
+              className={`h-full w-8 sm:w-9 flex items-center justify-center rounded-sm transition-colors ${
                 viewMode === 'list' 
                   ? 'bg-white shadow-sm text-[var(--ds-black)]' 
                   : 'text-[var(--ds-gray-500)] hover:text-[var(--ds-gray-800)]'
@@ -92,8 +95,9 @@ const SubNav = ({
         {/* Add New Button */}
         {onAddNewClick && (
           <button
+            type="button"
             onClick={onAddNewClick}
-            className="h-[36px] px-3 flex items-center gap-1.5 bg-[var(--ds-black)] hover:bg-[#333] text-white rounded-md text-sm font-medium transition-colors shadow-sm ml-1"
+            className="shrink-0 h-[36px] px-2.5 sm:px-3 flex items-center gap-1 sm:gap-1.5 bg-[var(--ds-black)] hover:bg-[#333] text-white rounded-md text-xs sm:text-sm font-medium transition-colors shadow-sm"
           >
             {addNewLabel}
             <ChevronDown className="w-3.5 h-3.5 opacity-70" />

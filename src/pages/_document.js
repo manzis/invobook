@@ -4,7 +4,9 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+        {process.env.NODE_ENV === 'production' && (
+          <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+        )}
       </Head>
       <body className="antialiased">
         <Main />

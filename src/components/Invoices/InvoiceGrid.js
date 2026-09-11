@@ -1,6 +1,33 @@
 import React from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
+import { MoreVertical } from 'lucide-react';
 import InvoiceActionMenu from './InvoiceActionMenu';
+
+const GridActionMenuTrigger = React.forwardRef((props, ref) => {
+  return (
+    <button
+      {...props}
+      ref={ref}
+      type="button"
+      className="ds-icon-btn"
+      aria-label="More actions"
+      onPointerDown={(e) => {
+        // Prevent Radix's default behavior of opening on pointerdown,
+        // which inadvertently opens the menu when touching to scroll.
+        e.preventDefault();
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        // Open strictly on an intentional click or tap release (not on scroll)
+        props.onPointerDown?.(e);
+        props.onClick?.(e);
+      }}
+    >
+      <MoreVertical className="w-4 h-4" />
+    </button>
+  );
+});
+GridActionMenuTrigger.displayName = 'GridActionMenuTrigger';
 
 const InvoiceGrid = ({
   invoices,
@@ -66,16 +93,17 @@ const InvoiceGrid = ({
               </span>
               <div onClick={(e) => e.stopPropagation()}>
                 <InvoiceActionMenu
-                invoice={invoice}
-                currency={currency}
-                onEditInvoice={onEditInvoice}
-                onDeleteInvoice={onDeleteInvoice}
-                onUpdateInvoiceState={onUpdateInvoiceState}
-                align="end"
-                isQuotation={isQuotation}
-                isPurchase={isPurchase}
-                onConvert={onConvert}
-              />
+                  invoice={invoice}
+                  currency={currency}
+                  onEditInvoice={onEditInvoice}
+                  onDeleteInvoice={onDeleteInvoice}
+                  onUpdateInvoiceState={onUpdateInvoiceState}
+                  align="end"
+                  isQuotation={isQuotation}
+                  isPurchase={isPurchase}
+                  onConvert={onConvert}
+                  triggerButton={<GridActionMenuTrigger />}
+                />
               </div>
             </div>
 
